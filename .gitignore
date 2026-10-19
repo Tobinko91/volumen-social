@@ -1,0 +1,5 @@
+secrets.yaml
+sperrliste.txt
+ausgabe/
+__pycache__/
+*.pyc

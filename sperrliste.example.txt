@@ -1,0 +1,3 @@
+# Coins, in denen Tobias eine Position haelt: darueber entsteht KEIN Video.
+# Ein Ticker pro Zeile. Echte Liste: sperrliste.txt (nur auf dem Server, spaeter per Telegram gepflegt).
+# BTC
