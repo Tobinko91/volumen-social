@@ -33,7 +33,8 @@ text:
 
 stimme:
   anbieter: elevenlabs
-  voice_id: pqHfZKP75CvOlQylNhV4   # "Bill" (ausgewaehlt 20.10.2026)
+  voice_name: "WhaleSqueeze DE"   # eigene Stimme aus Voice Design (20.10.2026); ID wird per Name gesucht
+  voice_id: null                  # optional: feste ID statt Name
   modell: eleven_multilingual_v2
 
 hinweise:                    # wird in JEDES Video eingeblendet

@@ -24,8 +24,27 @@ def _stille(datei: Path, sekunden: float) -> None:
     )
 
 
+class StimmeFehlt(Exception):
+    pass
+
+
+def voice_id(cfg: dict, key: str) -> str:
+    """Feste ID aus config.yaml oder Suche nach dem Namen der eigenen Stimme im ElevenLabs-Konto."""
+    st = cfg["stimme"]
+    if st.get("voice_id"):
+        return st["voice_id"]
+    name = (st.get("voice_name") or "").strip().lower()
+    r = requests.get("https://api.elevenlabs.io/v1/voices", headers={"xi-api-key": key}, timeout=30)
+    r.raise_for_status()
+    for v in r.json().get("voices", []):
+        if (v.get("name") or "").strip().lower() == name:
+            st["voice_id"] = v["voice_id"]          # fuer diesen Lauf merken
+            return v["voice_id"]
+    raise StimmeFehlt(f"Stimme '{st.get('voice_name')}' nicht im ElevenLabs-Konto gefunden")
+
+
 def _elevenlabs(text: str, datei: Path, cfg: dict, key: str) -> None:
-    vid = cfg["stimme"]["voice_id"]
+    vid = voice_id(cfg, key)
     r = requests.post(
         f"https://api.elevenlabs.io/v1/text-to-speech/{vid}",
         headers={"xi-api-key": key, "accept": "audio/mpeg", "content-type": "application/json"},
@@ -40,7 +59,7 @@ def _elevenlabs(text: str, datei: Path, cfg: dict, key: str) -> None:
 def sprechen(zeilen: list[str], ordner: Path, cfg: dict, key: str | None) -> tuple[list[Path], list[float], str]:
     """Erzeugt je Zeile eine Tondatei. Gibt (Dateien, Dauern, Quelle) zurueck."""
     ordner.mkdir(parents=True, exist_ok=True)
-    echt = bool(key and cfg["stimme"].get("voice_id"))
+    echt = bool(key and (cfg["stimme"].get("voice_id") or cfg["stimme"].get("voice_name")))
     dateien, dauern = [], []
     for i, z in enumerate(zeilen):
         if echt:
