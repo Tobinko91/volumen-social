@@ -11,6 +11,7 @@ SYSTEM = {
 Regeln:
 - Pro Szene ein kurzer gesprochener Satz, in der vorgegebenen Reihenfolge. Ruhig, sachlich, verständlich, Du-Form.
 - Nutze NUR Zahlen und Fakten aus dem JSON. Erfinde keine Ursachen, Kurse, Prognosen oder Kursziele.
+- Steht bei einem Coin kein Auslöser, sag nichts über den Grund der Bewegung (keine Vermutung wie "spekulativ").
 - Keine Empfehlung, keine Aufforderung zu kaufen oder zu verkaufen, keine Hype-Wörter, keine Emojis.
 - Sag "Prozent", nicht "%". Zahlen genau wie angegeben, mit Komma und einer Nachkommastelle.
 - Insgesamt höchstens {max_woerter} Wörter.
@@ -19,6 +20,7 @@ Antworte nur mit JSON: {{"zeilen": ["Satz 1", "Satz 2", ...]}} mit genau {n} Zei
 Rules:
 - One short spoken line per scene, in the given order. Plain, calm, factual English.
 - Use ONLY numbers and facts from the JSON. Never invent causes, prices, predictions or targets.
+- If a coin has no trigger, say nothing about why it moved (no guesses like "speculative").
 - No advice, no calls to action to buy or sell, no hype words, no emojis.
 - Say "percent", not "%". Keep numbers exactly as given (one decimal).
 - Total length at most {max_woerter} words.
