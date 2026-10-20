@@ -19,7 +19,8 @@ python main.py markt --daten beispieldaten
 |---|---|
 | `config.yaml` | Farben, Laenge, Hinweise, verbotene Woerter |
 | `social/daten.py` | liest die Bot-Dateien, Altcoin-Breite |
-| `social/formate.py` | Formate (bisher: Market in 30 seconds) |
+| `social/formate.py` | Formate (bisher: Krypto-Markt in 30 Sekunden) |
+| `social/sprache.py` | alle Texte je Sprache (Start: Deutsch, Englisch vorbereitet) |
 | `social/texte.py` | Sprechtext ueber Claude-API, nur aus Fakten |
 | `social/pruefung.py` | automatische Pruefung |
 | `social/bilder.py` | Bilder 1080x1920 in den Website-Farben |

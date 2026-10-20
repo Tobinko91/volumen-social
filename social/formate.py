@@ -4,38 +4,13 @@ Jede Szene = ein Bild + ein gesprochener Satz. Der Text darf nur Fakten aus `fak
 """
 from __future__ import annotations
 
-import datetime as dt
-
 from .daten import Daten, marktbreite
-
-# Hashtags des Bots (deutsch) -> englische Beschreibung fuer den Sprechtext
-TAG_EN = {
-    "Listing": "a new exchange listing",
-    "Delisting": "a delisting notice",
-    "Partnerschaft": "a partnership announcement",
-    "Upgrade": "a network upgrade",
-    "Unlock": "a token unlock",
-    "Rueckkauf": "a token buyback",
-    "Airdrop": "an airdrop",
-    "Funding": "a funding round",
-    "ETF": "ETF news",
-    "Hack": "a hack",
-    "Klage": "a lawsuit",
-    "Wale": "whale activity",
-}
+from .sprache import TAG, T, datum, zahl
 
 
-def _datum(ts: int) -> str:
-    d = dt.datetime.fromtimestamp(ts, dt.timezone.utc)
-    return d.strftime("%B %-d")
-
-
-def _vz(x: float) -> str:
-    return f"+{x:.1f}" if x >= 0 else f"{x:.1f}"
-
-
-def markt_30s(d: Daten, sperrliste: set[str], anzahl_mover: int = 3) -> dict:
-    """'Market in 30 seconds': Altcoin-Breite + staerkste Bewegungen mit Ausloeser."""
+def markt_30s(d: Daten, sperrliste: set[str], lang: str = "de", anzahl_mover: int = 3) -> dict:
+    """'Krypto-Markt in 30 Sekunden': Altcoin-Breite + staerkste Bewegungen mit Ausloeser."""
+    t = T[lang]
     breite = marktbreite(d)
     mover = []
     for n in sorted(d.news, key=lambda n: abs(n.get("chg24") or 0), reverse=True):
@@ -44,40 +19,35 @@ def markt_30s(d: Daten, sperrliste: set[str], anzahl_mover: int = 3) -> dict:
             continue
         drv = n.get("driver") or None
         tag = (drv.get("tags") or [None])[0] if drv else None
-        mover.append({
-            "base": base,
-            "chg24": round(n["chg24"], 1),
-            "ausloeser": TAG_EN.get(tag) if tag else None,
-        })
+        mover.append({"base": base, "chg24": round(n["chg24"], 1),
+                      "ausloeser": TAG[lang].get(tag) if tag else None})
         if len(mover) >= anzahl_mover:
             break
     if not mover:
         raise ValueError("Keine Bewegungen in news.json – kein Video")
 
-    datum = _datum(d.ts)
-    szenen = [{"typ": "titel", "daten": {"datum": datum},
-               "vorlage": f"Crypto market in 30 seconds. {datum}."}]
+    tag_txt = datum(d.ts, lang)
+    szenen = [{"typ": "titel", "daten": {"datum": tag_txt}, "vorlage": t["s_titel"].format(datum=tag_txt)}]
     if breite:
-        szenen.append({"typ": "breite", "daten": breite,
-                       "vorlage": (f"Across {breite['anzahl']} small caps, the median coin moved "
-                                   f"{_vz(breite['median_24h'])} percent in 24 hours. "
-                                   f"{breite['anteil_plus']} percent are green.")})
+        szenen.append({"typ": "breite", "daten": breite, "vorlage": t["s_breite"].format(
+            anzahl=breite["anzahl"], median=zahl(abs(breite["median_24h"]), lang), plus=breite["anteil_plus"],
+            richtung=t["gestiegen"] if breite["median_24h"] >= 0 else t["gefallen"])})
     for m in mover:
-        richtung = "up" if m["chg24"] >= 0 else "down"
-        grund = (f"Likely trigger: {m['ausloeser']}." if m["ausloeser"]
-                 else "No clear news. The move looks speculative or futures-driven.")
-        szenen.append({"typ": "mover", "daten": m,
-                       "vorlage": f"{m['base']} is {richtung} {abs(m['chg24']):.1f} percent. {grund}"})
-    szenen.append({"typ": "outro", "daten": {},
-                   "vorlage": "Every signal and its result is public at whalesqueeze dot com."})
+        grund = t["grund_ja"].format(ausloeser=m["ausloeser"]) if m["ausloeser"] else t["grund_nein"]
+        szenen.append({"typ": "mover", "daten": m, "vorlage": t["s_mover"].format(
+            base=m["base"], wert=zahl(abs(m["chg24"]), lang),
+            richtung=t["hoeher"] if m["chg24"] >= 0 else t["tiefer"], grund=grund)})
+    szenen.append({"typ": "outro", "daten": {}, "vorlage": t["s_outro"]})
 
     return {
-        "format": "market_30s",
-        "titel": f"Crypto market in 30 seconds – {datum}",
+        "format": "markt_30s",
+        "sprache": lang,
+        "titel": f"{t['titel']} – {tag_txt}",
         "ts": d.ts,
-        "fakten": {"titel": "Crypto market in 30 seconds", "zeitraum": "24 hours", "datum": datum, "breite": breite, "mover": mover},
+        "fakten": {"titel": t["titel"], "zeitraum": t["zeitraum"], "datum": tag_txt,
+                   "breite": breite, "mover": mover},
         "szenen": szenen,
-        "hashtags": ["#crypto", "#altcoins", "#cryptonews", "#bitcoin"],
+        "hashtags": t["hashtags"],
     }
 
 

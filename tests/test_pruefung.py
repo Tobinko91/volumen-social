@@ -27,6 +27,21 @@ class PruefungTest(unittest.TestCase):
         b = formate.markt_30s(D, {"BAT"})
         assert all(m["base"] != "BAT" for m in b["fakten"]["mover"])
 
+    def test_deutsche_verbotene_wendung(self):
+        b = formate.markt_30s(D, set())
+        z = texte.vorlage(b); z[-1] = "Jetzt kaufen, bevor es zu spät ist."
+        self.assertTrue(any("jetzt kaufen" in f for f in pruefung.pruefen(z, b, CFG, set())))
+
+    def test_deutsche_zahl_mit_komma(self):
+        b = formate.markt_30s(D, set(), "de")
+        text = " ".join(texte.vorlage(b))
+        self.assertIn("52,8 Prozent", text)
+        self.assertEqual(pruefung.pruefen(texte.vorlage(b), b, CFG, set()), [])
+
+    def test_englisch_bleibt_moeglich(self):
+        b = formate.markt_30s(D, set(), "en")
+        self.assertEqual(pruefung.pruefen(texte.vorlage(b), b, CFG, set()), [])
+
 
 if __name__ == "__main__":
     unittest.main()
