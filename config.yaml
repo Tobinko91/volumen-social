@@ -1,0 +1,64 @@
+# WhaleSqueeze Redaktion – Einstellungen
+# Schluessel (Claude-API, ElevenLabs, Telegram, Kanaele) stehen NUR auf dem Server in secrets.yaml.
+
+daten:
+  # Ordner, in den der Bot alle 5 Minuten schreibt (nur lesen!)
+  dir: /opt/volumen-bot/web
+  max_alter_min: 30          # aeltere Daten -> kein Video, Warnung
+
+sprache: en                  # Social Media auf Englisch (entschieden 19.10.2026)
+
+video:
+  breite: 1080
+  hoehe: 1920
+  fps: 30
+  musik: null                # Pfad zu lizenzfreier Musik (mp3), null = ohne
+  musik_db: -22
+  woerter_pro_sekunde: 2.6   # nur fuer die Probe ohne Stimme
+  min_szene_s: 2.5
+
+farben:                      # dunkle Website-Farben (stil.css)
+  grund: "#0C1E27"
+  flaeche: "#12293A"
+  text: "#E2ECEC"
+  neben: "#93AAB3"
+  linie: "#24414F"
+  amber: "#F2B33D"
+  plus: "#4CC79C"
+  minus: "#F07884"
+
+text:
+  modell: claude-sonnet-5-5
+  max_woerter: 85            # ca. 30 Sekunden
+
+stimme:
+  anbieter: elevenlabs
+  voice_id: null             # wird nach Auswahl der Hoerprobe eingetragen
+  modell: eleven_multilingual_v2
+
+hinweise:                    # wird in JEDES Video eingeblendet
+  fusszeile: "Not financial advice · AI-generated · Data: WhaleSqueeze bot"
+  konflikt: "The creator may hold crypto assets. Coins he holds are never featured."
+  outro: "Full track record: whalesqueeze.com"
+
+pruefung:
+  # Woerter/Wendungen, die nie in einem Video vorkommen duerfen (Kleinschreibung)
+  verboten:
+    - "buy now"
+    - "buy the dip"
+    - "sell now"
+    - "guaranteed"
+    - "can't lose"
+    - "risk-free"
+    - "risk free"
+    - "to the moon"
+    - "100x"
+    - "1000x"
+    - "financial advice"   # nur in der festen Fusszeile, nie im Sprechtext
+    - "entry"
+    - "take profit"
+    - "stop loss"
+    - "price target"
+    - "you should"
+    - "not too late"
+  zahlen_toleranz: 0.06      # Zahl im Text darf max. 0,06 von einer Datenzahl abweichen (Rundung)
