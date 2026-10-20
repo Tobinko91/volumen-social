@@ -7,6 +7,7 @@ Beispiele:
 from __future__ import annotations
 
 import argparse
+import os
 import json
 import sys
 import time
@@ -14,20 +15,23 @@ from pathlib import Path
 
 import yaml
 
-from social import bilder, daten, formate, pruefung, stimme, texte, video
+from social import bilder, daten, formate, pruefung, stimme, telegram, texte, video
 
 HIER = Path(__file__).resolve().parent
+# Auf dem Server liegen Schluessel und Sperrliste ausserhalb des Codes (/opt/volumen-social),
+# damit ein Update sie nie ueberschreibt. Lokal: neben main.py.
+GEHEIM_ORDNER = Path(os.environ.get("SOCIAL_GEHEIM", HIER))
 
 
 def lade_cfg() -> tuple[dict, dict]:
     cfg = yaml.safe_load((HIER / "config.yaml").read_text(encoding="utf-8"))
-    geheim_p = HIER / "secrets.yaml"
+    geheim_p = GEHEIM_ORDNER / "secrets.yaml"
     geheim = yaml.safe_load(geheim_p.read_text(encoding="utf-8")) if geheim_p.exists() else {}
     return cfg, geheim or {}
 
 
 def lade_sperrliste() -> set[str]:
-    p = HIER / "sperrliste.txt"
+    p = GEHEIM_ORDNER / "sperrliste.txt"
     if not p.exists():
         return set()
     return {z.split("#")[0].strip().upper() for z in p.read_text(encoding="utf-8").splitlines()
@@ -38,7 +42,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("format", choices=sorted(formate.FORMATE))
     ap.add_argument("--daten", help="Datenordner (Standard: config.yaml daten.dir)")
-    ap.add_argument("--out", default=str(HIER / "ausgabe"))
+    ap.add_argument("--out", default=os.environ.get("SOCIAL_AUSGABE", str(HIER / "ausgabe")))
+    ap.add_argument("--senden", action="store_true", help="Video per Telegram an Tobias schicken")
     args = ap.parse_args()
 
     cfg, geheim = lade_cfg()
@@ -72,6 +77,10 @@ def main() -> int:
         "fakten": beitrag["fakten"], "video": str(ziel),
     }
     (ordner / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
+    if args.senden:
+        status = "✅ Prüfung bestanden" if not fehler else "⚠️ Prüfung: " + "; ".join(fehler)
+        ok = telegram.video_senden(geheim, ziel, f"{beitrag['titel']}\n{status}\nText: {textquelle}, Stimme: {tonquelle}")
+        print("Telegram:", "gesendet" if ok else "nicht gesendet (Token/Chat-ID fehlen?)")
     print(json.dumps({k: meta[k] for k in ("titel", "dauer_s", "text", "stimme", "pruefung", "video")},
                      ensure_ascii=False, indent=2))
     return 1 if fehler else 0

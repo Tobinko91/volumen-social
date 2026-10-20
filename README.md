@@ -32,3 +32,10 @@ python main.py markt --daten beispieldaten
 ## Schutzregeln (fest eingebaut)
 Risiko- und KI-Hinweis in jedem Bild, Interessenkonflikt-Hinweis im Abspann, keine Einstiegskurse,
 keine Kauf-/Verkaufsaufforderung, keine Zahl ohne Datenquelle, keine Coins von der Sperrliste.
+
+## Server
+Einmalig als root: `bash einrichten.sh` (aus `tools/`). Legt `/opt/volumen-social` an:
+`app/` (Code, root), `secrets.yaml` und `sperrliste.txt` (nur Benutzer `redaktion`), `ausgabe/` (Videos, nach 3 Tagen geloescht).
+Schluessel eintragen: `python3 /opt/volumen-social/app/tools/schluessel.py` (Eingabe unsichtbar).
+Probevideo an Telegram: `bash /opt/volumen-social/app/tools/probe.sh`.
+Updates: cron alle 15 Minuten, nur nach gruenen Tests.
