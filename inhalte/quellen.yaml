@@ -1,0 +1,11 @@
+# Nachrichtenquellen (RSS/Atom). Nur Titel und Kurztext werden gelesen, nie ganze Artikel kopiert.
+# gewicht: offizielle Stellen zaehlen mehr. Funktioniert ein Feed nicht, wird er uebersprungen
+# (pruefen mit: python3 tools/quellen_test.py).
+- {name: CoinDesk, url: "https://www.coindesk.com/arc/outboundfeeds/rss/", land: US, gewicht: 1.0}
+- {name: Cointelegraph, url: "https://cointelegraph.com/rss", land: US, gewicht: 1.0}
+- {name: The Block, url: "https://www.theblock.co/rss.xml", land: US, gewicht: 1.0}
+- {name: Decrypt, url: "https://decrypt.co/feed", land: US, gewicht: 0.9}
+- {name: BTC-ECHO, url: "https://www.btc-echo.de/feed/", land: DE, gewicht: 1.0}
+- {name: Cointelegraph Deutschland, url: "https://de.cointelegraph.com/rss", land: DE, gewicht: 0.9}
+- {name: SEC, url: "https://www.sec.gov/news/pressreleases.rss", land: US, gewicht: 1.5, offiziell: true, filter: krypto}
+- {name: EZB, url: "https://www.ecb.europa.eu/rss/press.html", land: EU, gewicht: 1.5, offiziell: true, filter: krypto}

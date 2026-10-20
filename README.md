@@ -41,3 +41,6 @@ Einmalig als root: `bash einrichten.sh` (aus `tools/`). Legt `/opt/volumen-socia
 Schluessel eintragen: `python3 /opt/volumen-social/app/tools/schluessel.py` (Eingabe unsichtbar).
 Probevideo an Telegram: `bash /opt/volumen-social/app/tools/probe.sh`.
 Updates: cron alle 15 Minuten, nur nach gruenen Tests.
+News: `python3 main.py news` (Quellen in `inhalte/quellen.yaml`, Test: `python3 tools/quellen_test.py`).
+Tagesplan: `tools/plan.sh` per cron (`deploy/plan.cron`), 07:30 Markt, 08/13/19 Uhr News, 17 Uhr Lernen,
+stuendlich Eilmeldungen, Ruhe 22–7 Uhr. Pause: `touch /opt/volumen-social/pause` (weiter: Datei loeschen).

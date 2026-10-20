@@ -1,0 +1,2 @@
+# WhaleSqueeze Redaktion: Tagesplan (wird bei jedem Update automatisch eingespielt)
+0,30 * * * * root /bin/bash /opt/volumen-social/app/tools/plan.sh >> /var/log/volumen-social-plan.log 2>&1

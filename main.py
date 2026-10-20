@@ -15,7 +15,8 @@ from pathlib import Path
 
 import yaml
 
-from social import bilder, daten, formate, post, pruefung, stimme, telegram, texte, video, wissen
+from social import (bilder, daten, formate, news, news_post, news_text, post, pruefung, stimme, telegram,
+                    texte, video, wissen)
 
 HIER = Path(__file__).resolve().parent
 # Auf dem Server liegen Schluessel und Sperrliste ausserhalb des Codes (/opt/volumen-social),
@@ -40,8 +41,9 @@ def lade_sperrliste() -> set[str]:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("format", choices=sorted(formate.FORMATE) + ["wissen"])
+    ap.add_argument("format", choices=sorted(formate.FORMATE) + ["wissen", "news"])
     ap.add_argument("--thema", help="nur bei wissen: bestimmtes Thema (id aus inhalte/wissen.yaml)")
+    ap.add_argument("--eil", action="store_true", help="nur bei news: nur senden, wenn es eine Eilmeldung gibt")
     ap.add_argument("--daten", help="Datenordner (Standard: config.yaml daten.dir)")
     ap.add_argument("--out", default=os.environ.get("SOCIAL_AUSGABE", str(HIER / "ausgabe")))
     ap.add_argument("--senden", action="store_true", help="Video per Telegram an Tobias schicken")
@@ -53,6 +55,8 @@ def main() -> int:
     sperr = lade_sperrliste()
     if args.format == "wissen":
         return wissen_beitrag(args, cfg, geheim, sperr)
+    if args.format == "news":
+        return news_beitrag(args, cfg, geheim, sperr)
     probe = bool(args.daten)
     d = daten.laden(args.daten or cfg["daten"]["dir"],
                     None if probe else cfg["daten"]["max_alter_min"])
@@ -125,6 +129,58 @@ def wissen_beitrag(args, cfg, geheim, sperr) -> int:
     if not args.thema:
         wissen.merken(stand, t["id"], time.time())
     return 1 if fehler else 0
+
+
+def news_beitrag(args, cfg, geheim, sperr, laden=None, schreiber=None) -> int:
+    """Wichtigste noch nicht gezeigte Krypto-Nachricht als Bild + Text (Telegram und X)."""
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    stand_p = out / "news_stand.json"
+    stand = news.stand_laden(stand_p)
+    meldungen, status = news.einsammeln(laden=laden)
+    print("Quellen:", ", ".join(f"{k}: {v}" for k, v in status.items()))
+    gruppen = [g for g in news.buendeln(meldungen) if not news.schon_gezeigt(g, stand)]
+    if args.eil:
+        heute = [t for t in stand.get("eil", []) if time.time() - t < 86400]
+        gruppen = [g for g in gruppen if g["eil"]] if len(heute) < 2 else []
+    if not gruppen:
+        print("Keine neue Nachricht." if not args.eil else "Keine Eilmeldung.")
+        return 0
+    api = geheim.get("anthropic_api_key")
+    if not api and not schreiber:
+        print("Kein Claude-Schluessel – News brauchen eigene Texte, Abbruch.")
+        return 1
+    schreiber = schreiber or (lambda g: news_text.schreiben(g, cfg, api))
+    for g in gruppen[:4]:   # ungeeignete Meldungen ueberspringen
+        try:
+            d = schreiber(g)
+        except Exception as e:
+            print("Claude-Fehler:", e)
+            continue
+        if not d:
+            news.stand_merken(stand_p, g)
+            continue
+        txt = news_post.texte(d, g, cfg, eil=args.eil)
+        quelltext = " ".join(m["titel"] + " " + m["kurz"] for m in g["meldungen"])
+        fehler = pruefung.pruefen([txt["x"], d["kernsatz"], " ".join(d["punkte"]), d["schlagzeile"]],
+                                  {"fakten": quelltext, "szenen": [0] * 4}, cfg, sperr, erlaubt_fusszeile=True)
+        fehler += [f"Coin auf der Sperrliste: {c}" for c in d.get("coins", []) if str(c).upper() in sperr]
+        fehler = list(dict.fromkeys(fehler))
+        ordner = out / f"{time.strftime('%Y%m%d-%H%M')}_news"
+        b = news_post.bild(d, g, cfg, ordner / "post.png", eil=args.eil)
+        (ordner / "post_x.txt").write_text(txt["x"], encoding="utf-8")
+        (ordner / "post_telegram.txt").write_text(txt["telegram"], encoding="utf-8")
+        (ordner / "quellen.json").write_text(json.dumps(g["meldungen"], ensure_ascii=False, indent=1), encoding="utf-8")
+        print(f"News: {d['schlagzeile']} | Quellen {g['quellen']} | Punkte {g['punkte']} | Pruefung:",
+              fehler or "bestanden")
+        if args.senden:
+            hinweis = "" if not fehler else "⚠️ Automatische Prüfung: " + "; ".join(fehler) + "\n\n"
+            telegram.bild_senden(geheim, b, txt["telegram"])
+            telegram.text_senden(geheim, hinweis + "So würde der Beitrag auf X lauten:\n\n" + txt["x"])
+        news.stand_merken(stand_p, g, eil=args.eil)
+        return 1 if fehler else 0
+    print("Keine geeignete Nachricht gefunden.")
+    return 0
 
 
 if __name__ == "__main__":
