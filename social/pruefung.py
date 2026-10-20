@@ -44,13 +44,15 @@ def pruefen(zeilen: list[str], beitrag: dict, cfg: dict, sperrliste: set[str],
             fehler.append(f"Coin auf der Sperrliste: {coin}")
 
     erlaubt = _zahlen_aus(beitrag["fakten"])
-    for z in ZAHL.findall(text):
+    ohne_aufzaehlung = re.sub(r"(?m)^\s*\d+\.\s", " ", text)   # "1. ", "2. " am Zeilenanfang sind keine Daten
+    for z in ZAHL.findall(ohne_aufzaehlung):
         wert = abs(float(z.replace(",", ".")))
         if not any(abs(wert - e) <= p["zahlen_toleranz"] for e in erlaubt):
             fehler.append(f"Zahl {z} steht nicht in den Daten")
 
     woerter = len(text.split())
-    if woerter > cfg["text"]["max_woerter"] + 10:
+    grenze = 220 if erlaubt_fusszeile else cfg["text"]["max_woerter"] + 10   # Posts (X + Telegram) duerfen laenger sein
+    if woerter > grenze:
         fehler.append(f"zu lang: {woerter} Woerter")
     if len(zeilen) != len(beitrag["szenen"]):
         fehler.append("Zeilenzahl passt nicht zu den Szenen")

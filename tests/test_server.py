@@ -8,7 +8,7 @@ HIER = Path(__file__).resolve().parent.parent
 
 class ServerTest(unittest.TestCase):
     def test_skripte_sind_gueltiges_bash(self):
-        for s in ["einrichten.sh", "auto_update.sh", "probe.sh"]:
+        for s in ["einrichten.sh", "auto_update.sh", "probe.sh", "probe_wissen.sh"]:
             r = subprocess.run(["bash", "-n", str(HIER / "tools" / s)], capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, f"{s}: {r.stderr}")
 
