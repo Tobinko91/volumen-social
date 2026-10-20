@@ -5,7 +5,7 @@ Jede Szene = ein Bild + ein gesprochener Satz. Der Text darf nur Fakten aus `fak
 from __future__ import annotations
 
 from .daten import Daten, marktbreite
-from .sprache import TAG, T, datum, zahl
+from .sprache import TAG, T, datum, zahl, zahl_gesprochen
 
 
 def markt_30s(d: Daten, sperrliste: set[str], lang: str = "de", anzahl_mover: int = 3) -> dict:
@@ -30,13 +30,13 @@ def markt_30s(d: Daten, sperrliste: set[str], lang: str = "de", anzahl_mover: in
     szenen = [{"typ": "titel", "daten": {"datum": tag_txt}, "vorlage": t["s_titel"].format(datum=tag_txt)}]
     if breite:
         szenen.append({"typ": "breite", "daten": breite, "vorlage": t["s_breite"].format(
-            anzahl=breite["anzahl"], median=zahl(abs(breite["median_24h"]), lang), plus=breite["anteil_plus"],
-            richtung=t["gestiegen"] if breite["median_24h"] >= 0 else t["gefallen"])})
+            anzahl=breite["anzahl"], median_gesprochen=zahl_gesprochen(breite["median_24h"], lang),
+            plus=breite["anteil_plus"])})
     for m in mover:
         grund = t["grund_ja"].format(ausloeser=m["ausloeser"]) if m["ausloeser"] else t["grund_nein"]
         szenen.append({"typ": "mover", "daten": m, "vorlage": t["s_mover"].format(
             base=m["base"], wert=zahl(abs(m["chg24"]), lang),
-            richtung=t["hoeher"] if m["chg24"] >= 0 else t["tiefer"], grund=grund)})
+            richtung=t["hoeher"] if m["chg24"] >= 0 else t["tiefer"], grund=grund).strip()})
     szenen.append({"typ": "outro", "daten": {}, "vorlage": t["s_outro"]})
 
     return {

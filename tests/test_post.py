@@ -27,6 +27,20 @@ class PostTest(unittest.TestCase):
         self.assertIn("Keine Anlageberatung", self.t["x"])
         self.assertIn("Keine Anlageberatung", self.t["telegram"])
 
+    def test_ohne_ausloeser_kein_hinweis(self):
+        b = formate.markt_30s(D, set())
+        for m in b["fakten"]["mover"]:
+            m["ausloeser"] = None
+        t = post.markt_texte(b, CFG)
+        for wort in ("keine klare", "spekulativ", "Futures", "Auslöser"):
+            self.assertNotIn(wort, t["telegram"])
+            self.assertNotIn(wort, t["x"])
+
+    def test_kein_mittlerer_coin(self):
+        alles = self.t["x"] + self.t["telegram"] + " ".join(s["vorlage"] for s in self.b["szenen"])
+        self.assertNotIn("mittlere", alles)
+        self.assertIn("Hälfte", alles)
+
 
 if __name__ == "__main__":
     unittest.main()

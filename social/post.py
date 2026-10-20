@@ -25,7 +25,7 @@ def markt_texte(beitrag: dict, cfg: dict) -> dict:
     b = f.get("breite")
     zeilen_x = [f"Krypto-Markt am {f['datum']}"]
     if b:
-        zeilen_x.append(f"Small Caps: Median {zahl(b['median_24h'], lang, True)} % in 24 Std., "
+        zeilen_x.append(f"{b['anzahl']} Small Caps in 24 Std.: Hälfte über {zahl(b['median_24h'], lang, True)} %, "
                         f"{b['anteil_plus']} % im Plus.")
     zeilen_x.append("Größte Bewegungen: " + ", ".join(_kurz(m["base"], m["chg24"], lang) for m in f["mover"]))
     zeilen_x.append("Keine Anlageberatung.")
@@ -36,14 +36,14 @@ def markt_texte(beitrag: dict, cfg: dict) -> dict:
 
     tg = [f"📊 <b>Krypto-Markt am {f['datum']}</b>", ""]
     if b:
-        tg.append(f"Von {b['anzahl']} Small Caps ist der mittlere Coin in 24 Stunden um "
-                  f"{zahl(abs(b['median_24h']), lang)} % {'gestiegen' if b['median_24h'] >= 0 else 'gefallen'}. "
+        tg.append(f"Die Hälfte der {b['anzahl']} Small Caps lag in 24 Stunden über "
+                  f"{zahl(b['median_24h'], lang, True)} %, die andere Hälfte darunter. "
                   f"{b['anteil_plus']} % stehen im Plus.")
         tg.append("")
     tg.append("<b>Größte Bewegungen</b>")
     for m in f["mover"]:
-        grund = m["ausloeser"] or "keine klare Nachricht"
-        tg.append(f"• {m['base']}: {zahl(m['chg24'], lang, True)} % – Auslöser: {grund}")
+        zusatz = f" – Auslöser: {m['ausloeser']}" if m["ausloeser"] else ""
+        tg.append(f"• {m['base']}: {zahl(m['chg24'], lang, True)} %{zusatz}")
     tg += ["", f"<i>{cfg['hinweise']['fusszeile']}. {cfg['hinweise']['konflikt']}</i>"]
     return {"x": x, "telegram": "\n".join(tg)}
 
@@ -63,7 +63,7 @@ def markt_bild(beitrag: dict, cfg: dict, ziel: Path) -> Path:
     b = f.get("breite")
     if b:
         m = b["median_24h"]
-        d.text((80, y), "Small Caps · 24 Std. · Median", font=_font("SemiBold", 40), fill=lw.f["neben"])
+        d.text((80, y), f"{b['anzahl']} Small Caps · 24 Std. · Hälfte darüber", font=_font("SemiBold", 40), fill=lw.f["neben"])
         d.text((80, y + 45), f"{zahl(m, lw.lang, True)} %", font=_font("Black", 130), fill=lw.farbe_wert(m))
         x0, x1, yb = 80, lw.W - 80, y + 210
         teil = x0 + (x1 - x0) * b["anteil_plus"] / 100
@@ -80,8 +80,8 @@ def markt_bild(beitrag: dict, cfg: dict, ziel: Path) -> Path:
         wert = f"{zahl(mv['chg24'], lw.lang, True)} %"
         fw = _font("Black", 60)
         d.text((lw.W - 115 - d.textlength(wert, font=fw), y + 22), wert, font=fw, fill=lw.farbe_wert(mv["chg24"]))
-        grund = ("Auslöser: " + mv["ausloeser"]) if mv.get("ausloeser") else "keine klare Nachricht"
-        d.text((115, y + 90), grund, font=_font("Medium", 28), fill=lw.f["amber"] if mv.get("ausloeser") else lw.f["neben"])
+        if mv.get("ausloeser"):   # ohne bekannte Nachricht: keine Zeile
+            d.text((115, y + 90), "Auslöser: " + mv["ausloeser"], font=_font("Medium", 28), fill=lw.f["amber"])
         y += 142
     d.line([(80, 1225), (lw.W - 80, 1225)], fill=lw.f["linie"], width=2)
     d.text((80, 1243), cfg["hinweise"]["fusszeile"], font=_font("Medium", 28), fill=lw.f["neben"])

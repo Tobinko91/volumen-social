@@ -66,13 +66,18 @@ class Leinwand:
 
     def untertitel(self, d, text, y=1230):
         """Gesprochener Satz als Untertitel (wichtig: viele schauen ohne Ton)."""
-        font = _font("SemiBold", 50)
+        groesse, breite = 50, 30
         text = text.replace(self.t["adresse_gesprochen"], ".com")   # Stimme sagt "Punkt com", Bild zeigt die Adresse
-        zeilen = textwrap.wrap(text, width=30)[:4]
-        hoehe = len(zeilen) * 66 + 50
+        zeilen = textwrap.wrap(text, width=breite)
+        while len(zeilen) > 4 and groesse > 38:   # lange Saetze: kleiner statt abgeschnitten
+            groesse, breite = groesse - 4, breite + 3
+            zeilen = textwrap.wrap(text, width=breite)
+        font = _font("SemiBold", groesse)
+        abstand = int(groesse * 1.32)
+        hoehe = len(zeilen) * abstand + 50
         d.rounded_rectangle([70, y, self.W - 70, y + hoehe], radius=28, fill=self.f["flaeche"])
         for i, z in enumerate(zeilen):
-            self.mitte(d, y + 25 + i * 66, z, font, self.f["text"])
+            self.mitte(d, y + 25 + i * abstand, z, font, self.f["text"])
 
     def farbe_wert(self, x):
         return self.f["plus"] if x >= 0 else self.f["minus"]
@@ -115,7 +120,10 @@ class Leinwand:
         self.mitte(d, 500, daten["base"], _font("Black", 180), self.f["text"])
         c = daten["chg24"]
         self.mitte(d, 710, f"{zahl(c, self.lang, True)} %  {self.t['b_24h']}", _font("Black", 100), self.farbe_wert(c))
-        grund = self.t["b_ausloeser"].format(a=daten["ausloeser"]).upper() if daten.get("ausloeser") else self.t["b_keine"]
+        if not daten.get("ausloeser"):   # ohne bekannte Nachricht: gar keinen Hinweis zeigen
+            self.untertitel(d, text)
+            return img
+        grund = self.t["b_ausloeser"].format(a=daten["ausloeser"]).upper()
         groesse = 38
         f = _font("Bold", groesse)
         while d.textlength(grund, font=f) + 70 > self.W - 160 and groesse > 24:
@@ -123,7 +131,7 @@ class Leinwand:
             f = _font("Bold", groesse)
         w = d.textlength(grund, font=f) + 70
         x = (self.W - w) / 2
-        farbe = self.f["amber"] if daten.get("ausloeser") else self.f["neben"]
+        farbe = self.f["amber"]
         d.rounded_rectangle([x, 900, x + w, 976], radius=38, outline=farbe, width=4)
         d.text((x + 35, 917), grund, font=f, fill=farbe)
         self.untertitel(d, text)
