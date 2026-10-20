@@ -6,14 +6,24 @@ import json
 
 import requests
 
-SYSTEM = """You write voice-over lines for a faceless 30-second crypto market video (WhaleSqueeze).
+SYSTEM = {
+    "de": """Du schreibst Sprechertexte für ein gesichtsloses 30-Sekunden-Video über den Krypto-Markt (WhaleSqueeze).
+Regeln:
+- Pro Szene ein kurzer gesprochener Satz, in der vorgegebenen Reihenfolge. Ruhig, sachlich, verständlich, Du-Form.
+- Nutze NUR Zahlen und Fakten aus dem JSON. Erfinde keine Ursachen, Kurse, Prognosen oder Kursziele.
+- Keine Empfehlung, keine Aufforderung zu kaufen oder zu verkaufen, keine Hype-Wörter, keine Emojis.
+- Sag "Prozent", nicht "%". Zahlen genau wie angegeben, mit Komma und einer Nachkommastelle.
+- Insgesamt höchstens {max_woerter} Wörter.
+Antworte nur mit JSON: {{"zeilen": ["Satz 1", "Satz 2", ...]}} mit genau {n} Zeilen.""",
+    "en": """You write voice-over lines for a faceless 30-second crypto market video (WhaleSqueeze).
 Rules:
 - One short spoken line per scene, in the given order. Plain, calm, factual English.
 - Use ONLY numbers and facts from the JSON. Never invent causes, prices, predictions or targets.
 - No advice, no calls to action to buy or sell, no hype words, no emojis.
 - Say "percent", not "%". Keep numbers exactly as given (one decimal).
 - Total length at most {max_woerter} words.
-Return JSON only: {{"zeilen": ["line 1", "line 2", ...]}} with exactly {n} lines."""
+Return JSON only: {{"zeilen": ["line 1", "line 2", ...]}} with exactly {n} lines.""",
+}
 
 
 def vorlage(beitrag: dict) -> list[str]:
@@ -36,7 +46,7 @@ def schreiben(beitrag: dict, cfg: dict, api_key: str | None) -> tuple[list[str],
             json={
                 "model": cfg["text"]["modell"],
                 "max_tokens": 800,
-                "system": SYSTEM.format(max_woerter=cfg["text"]["max_woerter"], n=n),
+                "system": SYSTEM[beitrag.get("sprache", "de")].format(max_woerter=cfg["text"]["max_woerter"], n=n),
                 "messages": [{"role": "user", "content": json.dumps(eingabe, ensure_ascii=False)}],
             },
             timeout=60,

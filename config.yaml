@@ -6,7 +6,7 @@ daten:
   dir: /opt/volumen-bot/web
   max_alter_min: 30          # aeltere Daten -> kein Video, Warnung
 
-sprache: en                  # Social Media auf Englisch (entschieden 19.10.2026)
+sprache: de                  # Start auf Deutsch (entschieden 20.10.2026), Englisch spaeter als eigene Kanaele
 
 video:
   breite: 1080
@@ -33,17 +33,38 @@ text:
 
 stimme:
   anbieter: elevenlabs
-  voice_id: null             # wird nach Auswahl der Hoerprobe eingetragen
+  voice_id: pqHfZKP75CvOlQylNhV4   # "Bill" (ausgewaehlt 20.10.2026)
   modell: eleven_multilingual_v2
 
 hinweise:                    # wird in JEDES Video eingeblendet
-  fusszeile: "Not financial advice · AI-generated · Data: WhaleSqueeze bot"
-  konflikt: "The creator may hold crypto assets. Coins he holds are never featured."
-  outro: "Full track record: whalesqueeze.com"
+  fusszeile: "Keine Anlageberatung · KI-erstellt · Totalverlust möglich"
+  konflikt: "Der Betreiber kann Kryptowerte halten. Coins, die er hält, kommen in keinem Video vor."
 
 pruefung:
   # Woerter/Wendungen, die nie in einem Video vorkommen duerfen (Kleinschreibung)
   verboten:
+    # Deutsch
+    - "jetzt kaufen"
+    - "kauf jetzt"
+    - "jetzt verkaufen"
+    - "nachkaufen"
+    - "garantiert"
+    - "sicherer gewinn"
+    - "ohne risiko"
+    - "risikofrei"
+    - "kann nicht verlieren"
+    - "zum mond"
+    - "anlageberatung"      # nur in der festen Fusszeile, nie im Sprechtext
+    - "einstieg"
+    - "kaufzone"            # nur in Bildungs-Formaten mit historischen Beispielen (eigene Pruefung)
+    - "kursziel"
+    - "take profit"
+    - "stop-loss bei"
+    - "du solltest"
+    - "noch nicht zu spät"
+    - "verpass nicht"
+    - "reich werden"
+    # Englisch
     - "buy now"
     - "buy the dip"
     - "sell now"

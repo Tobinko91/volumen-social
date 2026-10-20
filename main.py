@@ -47,7 +47,7 @@ def main() -> int:
     d = daten.laden(args.daten or cfg["daten"]["dir"],
                     None if probe else cfg["daten"]["max_alter_min"])
 
-    beitrag = formate.FORMATE[args.format](d, sperr)
+    beitrag = formate.FORMATE[args.format](d, sperr, cfg.get("sprache", "de"))
     zeilen, textquelle = texte.schreiben(beitrag, cfg, geheim.get("anthropic_api_key"))
     fehler = pruefung.pruefen(zeilen, beitrag, cfg, sperr)
     if fehler and textquelle == "claude":
