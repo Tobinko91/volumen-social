@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+<channel><title>Test</title>
+<item><title>SEC approves first Solana spot ETF</title><link>https://example.com/a1</link>
+<description><![CDATA[<p>The SEC approved the first spot Solana ETF on Monday. Trading starts with fees of 0.25%.</p>]]></description>
+<pubDate>Tue, 20 Oct 2026 10:00:00 +0000</pubDate></item>
+<item><title>Bitcoin miners sell 2,000 BTC in a week</title><link>https://example.com/a2</link>
+<description>Miners sold 2,000 BTC, data shows.</description><pubDate>Tue, 20 Oct 2026 09:00:00 +0000</pubDate></item>
+</channel></rss>

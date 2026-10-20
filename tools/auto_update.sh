@@ -3,6 +3,9 @@
 # Schlagen die Tests fehl, bleibt die alte Version.
 APP=/opt/volumen-social/app
 cd "$APP" || exit 1
+# Tagesplan aus dem Repository einspielen (aendert sich nur per freigegebenem Pull Request)
+[ -f deploy/plan.cron ] && ! cmp -s deploy/plan.cron /etc/cron.d/volumen-social-plan && \
+  cp deploy/plan.cron /etc/cron.d/volumen-social-plan && echo "$(date '+%F %T') Tagesplan eingespielt"
 git fetch -q origin main || exit 1
 ALT=$(git rev-parse HEAD)
 NEU=$(git rev-parse origin/main)
