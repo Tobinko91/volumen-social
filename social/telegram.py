@@ -29,3 +29,24 @@ def chat_id_finden(token: str) -> str | None:
         if msg.get("chat", {}).get("type") == "private":
             return str(msg["chat"]["id"])
     return None
+
+
+def bild_senden(geheim: dict, datei: Path, text: str) -> bool:
+    """Bild mit Text (HTML) an Tobias – so sieht der spaetere Telegram-Beitrag aus."""
+    token, chat = geheim.get("telegram_token"), geheim.get("telegram_chat_id")
+    if not (token and chat):
+        return False
+    with open(datei, "rb") as fh:
+        r = requests.post(API.format(token=token, methode="sendPhoto"),
+                          data={"chat_id": chat, "caption": text[:1024], "parse_mode": "HTML"},
+                          files={"photo": (datei.name, fh, "image/png")}, timeout=60)
+    return r.ok
+
+
+def text_senden(geheim: dict, text: str) -> bool:
+    token, chat = geheim.get("telegram_token"), geheim.get("telegram_chat_id")
+    if not (token and chat):
+        return False
+    r = requests.post(API.format(token=token, methode="sendMessage"),
+                      data={"chat_id": chat, "text": text[:4000], "disable_web_page_preview": "true"}, timeout=30)
+    return r.ok

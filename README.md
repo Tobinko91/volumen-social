@@ -26,6 +26,8 @@ python main.py markt --daten beispieldaten
 | `social/bilder.py` | Bilder 1080x1920 in den Website-Farben |
 | `social/stimme.py` | ElevenLabs oder Stille |
 | `social/video.py` | ffmpeg-Zusammenbau |
+| `social/post.py` | Bild (4:5) + Text fuer Telegram und X (dort Hauptformat) |
+| `social/wissen.py`, `inhalte/wissen.yaml` | Lern-Beitraege: 10 Themen, jede Zahl nachgerechnet |
 | `secrets.example.yaml` | Vorlage fuer Schluessel (echte Datei nur auf dem Server) |
 | `sperrliste.example.txt` | Vorlage: Coins mit eigener Position |
 

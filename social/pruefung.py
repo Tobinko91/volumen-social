@@ -23,12 +23,17 @@ def _zahlen_aus(obj) -> list[float]:
     return out
 
 
-def pruefen(zeilen: list[str], beitrag: dict, cfg: dict, sperrliste: set[str]) -> list[str]:
+def pruefen(zeilen: list[str], beitrag: dict, cfg: dict, sperrliste: set[str],
+            erlaubt_fusszeile: bool = False) -> list[str]:
     """Liste der Fehler; leer = bestanden."""
     fehler = []
     text = " ".join(zeilen)
-    klein = text.lower()
     p = cfg["pruefung"]
+    if erlaubt_fusszeile:  # feste Hinweise duerfen in Posts stehen, sie werden nicht mitgeprueft
+        for h in cfg["hinweise"].values():
+            text = text.replace(h, " ")
+        text = text.replace("Keine Anlageberatung", " ")
+    klein = text.lower()
 
     for w in p["verboten"]:
         if w in klein:
@@ -39,13 +44,15 @@ def pruefen(zeilen: list[str], beitrag: dict, cfg: dict, sperrliste: set[str]) -
             fehler.append(f"Coin auf der Sperrliste: {coin}")
 
     erlaubt = _zahlen_aus(beitrag["fakten"])
-    for z in ZAHL.findall(text):
+    ohne_aufzaehlung = re.sub(r"(?m)^\s*\d+\.\s", " ", text)   # "1. ", "2. " am Zeilenanfang sind keine Daten
+    for z in ZAHL.findall(ohne_aufzaehlung):
         wert = abs(float(z.replace(",", ".")))
         if not any(abs(wert - e) <= p["zahlen_toleranz"] for e in erlaubt):
             fehler.append(f"Zahl {z} steht nicht in den Daten")
 
     woerter = len(text.split())
-    if woerter > cfg["text"]["max_woerter"] + 10:
+    grenze = 220 if erlaubt_fusszeile else cfg["text"]["max_woerter"] + 10   # Posts (X + Telegram) duerfen laenger sein
+    if woerter > grenze:
         fehler.append(f"zu lang: {woerter} Woerter")
     if len(zeilen) != len(beitrag["szenen"]):
         fehler.append("Zeilenzahl passt nicht zu den Szenen")

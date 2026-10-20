@@ -39,7 +39,7 @@ stimme:
 
 hinweise:                    # wird in JEDES Video eingeblendet
   fusszeile: "Keine Anlageberatung · KI-erstellt · Totalverlust möglich"
-  konflikt: "Der Betreiber kann Kryptowerte halten. Coins, die er hält, kommen in keinem Video vor."
+  konflikt: "Der Betreiber kann Kryptowerte halten. Coins, die er hält, kommen in keinem Beitrag vor."
 
 pruefung:
   # Woerter/Wendungen, die nie in einem Video vorkommen duerfen (Kleinschreibung)
