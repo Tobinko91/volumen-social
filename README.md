@@ -23,7 +23,8 @@ python main.py markt --daten beispieldaten
 | `social/sprache.py` | alle Texte je Sprache (Start: Deutsch, Englisch vorbereitet) |
 | `social/texte.py` | Sprechtext ueber Claude-API, nur aus Fakten |
 | `social/pruefung.py` | automatische Pruefung |
-| `social/bilder.py` | Bilder 1080x1920 in den Website-Farben |
+| `social/design.py`, `social/grafik.py` | Corporate Design Nachtleuchten: Farben, Schrift, Logo, 5 Hintergruende, Grafiken |
+| `social/bilder.py` | Videobilder 1080x1920 |
 | `social/stimme.py` | ElevenLabs oder Stille |
 | `social/video.py` | ffmpeg-Zusammenbau |
 | `social/post.py` | Bild (4:5) + Text fuer Telegram und X (dort Hauptformat) |

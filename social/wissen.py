@@ -8,7 +8,7 @@ from pathlib import Path
 
 import yaml
 
-from .bilder import Leinwand, _font
+from .design import de
 
 HIER = Path(__file__).resolve().parent.parent
 
@@ -38,39 +38,83 @@ def texte(t: dict, cfg: dict) -> dict:
     return {"x": t["x"], "telegram": "\n".join(tg)}
 
 
-def bild(t: dict, cfg: dict, ziel: Path) -> Path:
-    c = dict(cfg)
-    c["video"] = dict(cfg["video"], hoehe=1350)
-    lw = Leinwand(c)
-    img, d = lw.neu()
-    lw.logo(d, 80, 70, 2.0)
-    d.text((160, 77), "WHALESQUEEZE", font=_font("Bold", 38), fill=lw.f["text"])
-    d.text((80, 150), t["saeule"].upper(), font=_font("Bold", 34), fill=lw.f["amber"])
-    y = 200
-    for z in textwrap.wrap(t["titel"], width=24)[:3]:
-        d.text((80, y), z, font=_font("Black", 62), fill=lw.f["text"])
-        y += 74
-    y += 30
-    d.rounded_rectangle([80, y, lw.W - 80, y + 250], radius=28, fill=lw.f["flaeche"])
-    groesse = 120
-    fg = _font("Black", groesse)
-    while d.textlength(t["gross"], font=fg) > lw.W - 240 and groesse > 60:
-        groesse -= 8
-        fg = _font("Black", groesse)
-    d.text((115, y + 25), t["gross"], font=fg, fill=lw.f["amber"])
-    for i, z in enumerate(textwrap.wrap(t["gross_text"], width=44)[:2]):
-        d.text((115, y + 170 + i * 38), z, font=_font("Medium", 32), fill=lw.f["neben"])
-    y += 290
-    fp = _font("Medium", 33)
-    for p in t["punkte"]:
-        zeilen = textwrap.wrap(p, width=50)[:3]
-        d.ellipse([84, y + 14, 100, y + 30], fill=lw.f["amber"])
-        for i, z in enumerate(zeilen):
-            d.text((120, y + i * 42), z, font=fp, fill=lw.f["text"])
-        y += len(zeilen) * 42 + 26
-    d.line([(80, 1225), (lw.W - 80, 1225)], fill=lw.f["linie"], width=2)
-    d.text((80, 1243), cfg["hinweise"]["fusszeile"], font=_font("Medium", 28), fill=lw.f["neben"])
-    d.text((80, 1285), "whalesqueeze.com", font=_font("Bold", 30), fill=lw.f["amber"])
+def _grafik(img, t, th, box):
+    """Passende Grafik je Thema (Werte nachgerechnet, siehe tests/test_wissen.py)."""
+    from . import grafik as g
+    from .design import MINUS
+    i = t["id"]
+    if i == "risiko-1-prozent":
+        g.linien(img, th, box, [
+            {"name": "1 % Risiko", "werte": [100 * 0.99 ** n for n in range(11)], "farbe": th.akzent, "endtext": "90,4 %"},
+            {"name": "5 % Risiko", "werte": [100 * 0.95 ** n for n in range(11)], "farbe": th.minus, "endtext": "59,9 %"},
+        ], ["0", "", "2", "", "4", "", "6", "", "8", "", "10"], titel="Kontostand nach Verlusten in Folge",
+            y_min=55, y_max=100)
+    elif i == "verlust-falle":
+        g.balken(img, th, box, [
+            {"label": "−20 %", "wert": 25, "text": "+25 %", "farbe": th.akzent},
+            {"label": "−50 %", "wert": 100, "text": "+100 %", "farbe": th.akzent2},
+            {"label": "−90 %", "wert": 900, "text": "+900 %", "farbe": th.minus},
+        ], titel="Verlust → nötiger Gewinn bis zurück auf null")
+    elif i == "hebel":
+        g.balken(img, th, box, [
+            {"label": f"{h}-fach", "wert": 100 / h, "text": f"{de(100 / h, 0)} %",
+             "farbe": [th.akzent, th.akzent, th.akzent2, th.minus, th.minus][k]}
+            for k, h in enumerate([2, 5, 10, 20, 50])
+        ], titel="Gegenbewegung bis zum Totalverlust (vereinfacht)")
+    elif i == "weg-100k-200":
+        g.balken(img, th, box, [
+            {"label": "0 % Rendite", "wert": 41.7, "text": "41,7 Jahre", "farbe": th.minus},
+            {"label": "5 % Rendite", "wert": 22.6, "text": "22,6 Jahre", "farbe": th.akzent2},
+            {"label": "7 % Rendite", "wert": 19.6, "text": "19,6 Jahre", "farbe": th.akzent},
+        ], titel="Jahre bis 100.000 € mit 200 € im Monat (Rendite angenommen)")
+    elif i == "erste-10k":
+        g.balken(img, th, box, [
+            {"label": f"{k}. 10.000 €", "wert": m, "text": f"{m} Monate",
+             "farbe": th.minus if k == 1 else th.akzent}
+            for k, m in enumerate([45, 35, 29, 24, 22], 1)
+        ], titel="Monate je 10.000 € (200 € im Monat, 7 % angenommen)")
+    elif i == "zinseszins":
+        g.linien(img, th, box, [
+            {"name": "8 % im Jahr", "werte": [100 * 1.08 ** j for j in range(31)], "farbe": th.akzent,
+             "endtext": "1.006 €"},
+        ], ["0"] + [""] * 9 + ["10"] + [""] * 9 + ["20"] + [""] * 9 + ["30 Jahre"], titel="Aus 100 € werden …",
+            y_min=0)
+    elif i == "unterstuetzung":
+        g.schema(img, th, box, "unterstuetzung")
+    elif i == "liquiditaetszone":
+        g.schema(img, th, box, "liquiditaet")
+    elif i == "pump-and-dump":
+        g.schema(img, th, box, "pump")
+    elif i == "fake-guru":
+        g.liste_x(img, th, box, ["zeigt nie Verluste", "verspricht feste Renditen", "drängt zur Eile",
+                                 "verkauft teure Gruppen", "verschweigt eigene Positionen"])
+    else:
+        return False
+    _ = MINUS
+    return True
+
+
+def bild(t: dict, cfg: dict, ziel: Path, tag: str | None = None) -> Path:
+    import datetime as _dt
+    from PIL import ImageDraw
+    from .design import absatz, etikett, fuss, hintergrund, marke, punkte, thema_waehlen, ueberschrift
+    tag = tag or _dt.date.today().isoformat()
+    th = thema_waehlen("wissen", f"{tag}:{t['id']}")
+    W, H = 1080, 1350
+    img = hintergrund(th, W, H, saat=len(t["id"]))
+    marke(img, th, 80, 64, 64)
+    d = ImageDraw.Draw(img)
+    etikett(d, th, 80, 170, t["saeule"].upper())
+    y = ueberschrift(d, th, 80, 252, t["titel"], W - 160, groesse=66, max_zeilen=3) + 26
+    box = (80, y, W - 80, y + 470)
+    if _grafik(img, t, th, box):
+        y = box[3] + 34
+    else:
+        y = absatz(d, th, 80, y, t["gross"], W - 160, groesse=110, farbe=th.akzent, gewicht="Bold")
+        y = absatz(d, th, 80, y, t["gross_text"], W - 160, groesse=32, farbe=th.neben) + 20
+    d = ImageDraw.Draw(img)
+    punkte(d, th, 80, y, t["punkte"], W - 160, groesse=29, bis_y=H - 120)
+    fuss(img, th, cfg["hinweise"]["fusszeile"])
     ziel.parent.mkdir(parents=True, exist_ok=True)
-    img.save(ziel)
+    img.convert("RGB").save(ziel)
     return ziel

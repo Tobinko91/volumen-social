@@ -9,7 +9,6 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
-from .bilder import Leinwand, _font
 from .sprache import zahl
 
 X_MAX = 280
@@ -49,43 +48,43 @@ def markt_texte(beitrag: dict, cfg: dict) -> dict:
 
 
 def markt_bild(beitrag: dict, cfg: dict, ziel: Path) -> Path:
-    c = dict(cfg)
-    c["video"] = dict(cfg["video"], hoehe=1350)
-    lw = Leinwand(c)
-    img, d = lw.neu()
+    """Markt-Beitrag 4:5: Ring (Anteil im Plus), Halbwert, Balken der groessten Bewegungen."""
+    import datetime as _dt
+    from . import grafik
+    from .design import absatz, etikett, fuss, hintergrund, karte, marke, thema_waehlen, font
     f = beitrag["fakten"]
-    # Kopf (ohne die Abstaende fuer App-Knoepfe wie im Video)
-    lw.logo(d, 80, 70, 2.0)
-    d.text((160, 77), "WHALESQUEEZE", font=_font("Bold", 38), fill=lw.f["text"])
-    d.text((80, 140), "KRYPTO-MARKT", font=_font("Black", 72), fill=lw.f["text"])
-    d.text((80, 228), f["datum"], font=_font("SemiBold", 40), fill=lw.f["amber"])
-    y = 310
+    lang = beitrag.get("sprache", "de")
+    tag = _dt.date.fromtimestamp(beitrag.get("ts") or _dt.datetime.now().timestamp()).isoformat()
+    th = thema_waehlen("markt", tag)
+    W, H = 1080, 1350
+    img = hintergrund(th, W, H, saat=sum(map(ord, tag)))
+    marke(img, th, 80, 64, 64, untertitel=f["datum"])
+    d = ImageDraw.Draw(img)
+    etikett(d, th, 80, 170, "KRYPTO-MARKT · 24 STD.")
+    y = 260
     b = f.get("breite")
     if b:
+        karte(img, th, (80, y, W - 80, y + 330))
+        grafik.anteil(img, th, (110, y + 30, 380, y + 300), b["anteil_plus"])
+        d = ImageDraw.Draw(img)
         m = b["median_24h"]
-        d.text((80, y), f"{b['anzahl']} Small Caps · 24 Std. · Hälfte darüber", font=_font("SemiBold", 40), fill=lw.f["neben"])
-        d.text((80, y + 45), f"{zahl(m, lw.lang, True)} %", font=_font("Black", 130), fill=lw.farbe_wert(m))
-        x0, x1, yb = 80, lw.W - 80, y + 210
-        teil = x0 + (x1 - x0) * b["anteil_plus"] / 100
-        d.rounded_rectangle([x0, yb, x1, yb + 44], radius=22, fill=lw.f["minus"])
-        if b["anteil_plus"] > 0:
-            d.rounded_rectangle([x0, yb, max(teil, x0 + 44), yb + 44], radius=22, fill=lw.f["plus"])
-        d.text((x0, yb + 60), f"{b['anteil_plus']} % im Plus", font=_font("Bold", 36), fill=lw.f["plus"])
-        y = yb + 130
-    d.text((80, y), "GRÖSSTE BEWEGUNGEN", font=_font("Bold", 40), fill=lw.f["neben"])
-    y += 70
+        d.text((430, y + 40), f"Die Hälfte der {b['anzahl']} Small Caps lag über", font=font("Medium", 28),
+               fill=th.neben)
+        d.text((430, y + 80), f"{zahl(m, lang, True)} %", font=font("Bold", 120), fill=th.plus if m >= 0 else th.minus)
+        absatz(d, th, 430, y + 230, f"{b['anteil_plus']} % der Coins stehen im Plus, "
+               f"{100 - b['anteil_plus']} % im Minus.", W - 80 - 430 - 30, groesse=26, farbe=th.neben)
+        y += 370
+    reihen = [{"label": mv["base"], "wert": mv["chg24"], "text": f"{zahl(mv['chg24'], lang, True)} %",
+               "farbe": th.plus if mv["chg24"] >= 0 else th.minus} for mv in f["mover"]]
+    unten = y + 130 + 120 * len(reihen)
+    grafik.balken(img, th, (80, y, W - 80, unten), reihen, titel="Größte Bewegungen in 24 Stunden")
+    d = ImageDraw.Draw(img)
+    y = unten + 30
     for mv in f["mover"]:
-        d.rounded_rectangle([80, y, lw.W - 80, y + 128], radius=24, fill=lw.f["flaeche"])
-        d.text((115, y + 22), mv["base"], font=_font("Black", 60), fill=lw.f["text"])
-        wert = f"{zahl(mv['chg24'], lw.lang, True)} %"
-        fw = _font("Black", 60)
-        d.text((lw.W - 115 - d.textlength(wert, font=fw), y + 22), wert, font=fw, fill=lw.farbe_wert(mv["chg24"]))
-        if mv.get("ausloeser"):   # ohne bekannte Nachricht: keine Zeile
-            d.text((115, y + 90), "Auslöser: " + mv["ausloeser"], font=_font("Medium", 28), fill=lw.f["amber"])
-        y += 142
-    d.line([(80, 1225), (lw.W - 80, 1225)], fill=lw.f["linie"], width=2)
-    d.text((80, 1243), cfg["hinweise"]["fusszeile"], font=_font("Medium", 28), fill=lw.f["neben"])
-    d.text((80, 1285), "whalesqueeze.com", font=_font("Bold", 30), fill=lw.f["amber"])
+        if mv.get("ausloeser"):   # nur zeigen, wenn es eine Nachricht gibt
+            y = absatz(d, th, 80, y, f"{mv['base']}: {mv['ausloeser']}", W - 160, groesse=27, farbe=th.akzent2,
+                       gewicht="Medium", abstand=1.3)
+    fuss(img, th, cfg["hinweise"]["fusszeile"])
     ziel.parent.mkdir(parents=True, exist_ok=True)
-    img.save(ziel)
+    img.convert("RGB").save(ziel)
     return ziel
