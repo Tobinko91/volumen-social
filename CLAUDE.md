@@ -14,7 +14,13 @@ einfache Schritte, ein Befehl pro Block, zu jeder Bitte kurz warum. Niemals Pass
 - Python 3 + ffmpeg + Pillow + PyYAML + requests. Keine weiteren Pakete ohne Grund.
 - Tests: `python3 -m unittest discover tests` – jede Änderung braucht grüne Tests.
 - Schlüssel nur in `secrets.yaml` auf dem Server (gitignored). Sperrliste nur in `sperrliste.txt` (gitignored).
-- Social-Media-Inhalte auf Englisch; Code-Kommentare, Chats und Planung auf Deutsch.
+- Social-Media-Inhalte auf Deutsch (Start, entschieden 20.10.2026), Englisch später als eigene Kanäle.
+
+## Design
+- Corporate Design „Nachtleuchten“ (Design 06) aus `volumen-web`: Mitternacht #140F2E, Leuchtminze #3CF2C0,
+  Flieder #B69CFF, Space Grotesk (`assets/schrift`, OFL), Logo `assets/logo-1080.png`. Alles in `social/design.py`.
+- Hintergründe wechseln (Themen nacht, sonar, tiefsee, flieder, minze), Grafiken in `social/grafik.py`.
+  Grafiken nur mit nachgerechneten Werten; Schemas sind als „Schema“ beschriftet.
 
 ## Schutzregeln (nie abschwächen)
 - Jede Zahl im Sprechtext muss in den Bot-Daten stehen (`social/pruefung.py`).

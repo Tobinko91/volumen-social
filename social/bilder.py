@@ -12,37 +12,39 @@ from PIL import Image, ImageDraw, ImageFont
 
 from .sprache import T, zahl
 
-FONT_ORDNER = [
-    Path("/usr/share/fonts/opentype/inter"),
-    Path(__file__).resolve().parent.parent / "fonts",
-]
-FALLBACK = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+from . import design
+
+_GEWICHT = {"Black": "Bold", "ExtraBold": "Bold", "Bold": "Bold", "SemiBold": "SemiBold", "Medium": "Medium",
+            "Regular": "Regular"}
 
 
 def _font(gewicht: str, groesse: int) -> ImageFont.FreeTypeFont:
-    for o in FONT_ORDNER:
-        p = o / f"Inter-{gewicht}.otf"
-        if p.exists():
-            return ImageFont.truetype(str(p), groesse)
-    return ImageFont.truetype(FALLBACK, groesse)
+    """Space Grotesk aus dem Corporate Design (assets/schrift)."""
+    return design.font(_GEWICHT.get(gewicht, "Regular"), groesse)
 
 
 def _hex(c: str) -> tuple[int, int, int]:
-    c = c.lstrip("#")
-    return tuple(int(c[i:i + 2], 16) for i in (0, 2, 4))
+    return design.rgb(c)
 
 
 class Leinwand:
     def __init__(self, cfg: dict):
         self.cfg = cfg
         self.W, self.H = cfg["video"]["breite"], cfg["video"]["hoehe"]
-        self.f = {k: _hex(v) for k, v in cfg["farben"].items()}
+        self.th = cfg.get("_thema") or design.THEMEN["nacht"]
+        th = self.th
+        self.f = {k: _hex(v) for k, v in {
+            "grund": th.grund, "flaeche": th.karte, "text": th.text, "neben": th.neben, "linie": th.linie,
+            "amber": th.akzent2, "plus": th.plus, "minus": th.minus}.items()}
         self.lang = cfg.get("sprache", "de")
         self.t = T[self.lang]
+        self._grund = None
 
     def neu(self) -> tuple[Image.Image, ImageDraw.ImageDraw]:
-        img = Image.new("RGB", (self.W, self.H), self.f["grund"])
-        return img, ImageDraw.Draw(img)
+        if self._grund is None:
+            self._grund = design.hintergrund(self.th, self.W, self.H).convert("RGB")
+        self.img = self._grund.copy()
+        return self.img, ImageDraw.Draw(self.img)
 
     # ---------- Bausteine ----------
     def mitte(self, d, y, text, font, farbe):
@@ -50,17 +52,16 @@ class Leinwand:
         d.text(((self.W - w) / 2, y), text, font=font, fill=farbe)
 
     def logo(self, d, x, y, s=2.2):
-        a = self.f["amber"]
-        d.rounded_rectangle([x + 3 * s, y + 3 * s, x + 29 * s, y + 6.5 * s], radius=1.75 * s, fill=a)
-        d.rounded_rectangle([x + 3 * s, y + 25.5 * s, x + 29 * s, y + 29 * s], radius=1.75 * s, fill=a)
-        flosse = [(16, 23.5), (15.2, 19.5), (14.6, 15.9), (11, 15.6), (7, 12.5), (11.5, 12.1), (15.1, 10.2),
-                  (16, 10.0), (16.9, 10.2), (20.5, 12.1), (25, 12.5), (21, 15.6), (17.4, 15.9), (16.8, 19.5)]
-        d.polygon([(x + px * s, y + py * s) for px, py in flosse], fill=(0x5E, 0xA4, 0xBD))
+        """Logo-Plakette aus dem Corporate Design (s = Groesse / 32 wie frueher)."""
+        g = int(32 * s)
+        self.img.paste(design.logo(g), (int(x), int(y)), design.logo(g))
 
     def kopf(self, d):
         """Marke + feste Fusszeile (Risiko- und KI-Hinweis) oben in der sicheren Zone."""
-        self.logo(d, 90, 215, 2.0)
-        d.text((170, 222), "WHALESQUEEZE", font=_font("Bold", 38), fill=self.f["text"])
+        rgba = self.img.convert("RGBA")
+        design.marke(rgba, self.th, 90, 205, 70)
+        self.img.paste(rgba.convert("RGB"))
+        d = ImageDraw.Draw(self.img)
         d.text((90, 300), self.cfg["hinweise"]["fusszeile"], font=_font("Medium", 31), fill=self.f["neben"])
         d.line([(90, 348), (self.W - 90, 348)], fill=self.f["linie"], width=2)
 
@@ -151,7 +152,9 @@ class Leinwand:
 
 
 def zeichnen(beitrag: dict, zeilen: list[str], ordner: Path, cfg: dict) -> list[Path]:
-    lw = Leinwand(cfg)
+    import datetime as _dt
+    tag = _dt.date.fromtimestamp(beitrag.get("ts") or _dt.datetime.now().timestamp()).isoformat()
+    lw = Leinwand(dict(cfg, _thema=design.thema_waehlen("video", f"{tag}:{beitrag.get('format')}")))
     ordner.mkdir(parents=True, exist_ok=True)
     movers = [s for s in beitrag["szenen"] if s["typ"] == "mover"]
     dateien = []
