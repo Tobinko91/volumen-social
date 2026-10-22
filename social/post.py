@@ -43,7 +43,7 @@ def markt_texte(beitrag: dict, cfg: dict) -> dict:
     for m in f["mover"]:
         zusatz = f" – Auslöser: {m['ausloeser']}" if m["ausloeser"] else ""
         tg.append(f"• {m['base']}: {zahl(m['chg24'], lang, True)} %{zusatz}")
-    tg += ["", f"<i>{cfg['hinweise']['fusszeile']}. {cfg['hinweise']['konflikt']}</i>"]
+    tg += ["", f"<i>{cfg['hinweise']['post_text']}</i>"]
     return {"x": x, "telegram": "\n".join(tg)}
 
 

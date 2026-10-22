@@ -29,7 +29,7 @@ def texte(d: dict, gruppe: dict, cfg: dict, eil: bool = False) -> dict:
     tg = [f"{'🚨 ' if eil else '📰 '}<b>{e(d['schlagzeile'])}</b>", "", e(d["kernsatz"]), ""]
     tg += [f"• {e(p)}" for p in d["punkte"]]
     tg += ["", "Quellen: " + ", ".join(links), "",
-           f"<i>{e(cfg['hinweise']['fusszeile'])}. {e(cfg['hinweise']['konflikt'])}</i>"]
+           f"<i>{e(cfg['hinweise']['post_text'])}</i>"]
     return {"x": x, "telegram": "\n".join(tg), "quellen_x": namen}
 
 

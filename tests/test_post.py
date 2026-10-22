@@ -42,5 +42,14 @@ class PostTest(unittest.TestCase):
         self.assertIn("Hälfte", alles)
 
 
+    def test_telegram_nur_kurzer_hinweis(self):
+        from social import wissen
+        texte = [self.t["telegram"], wissen.texte(wissen.themen()[0], CFG)["telegram"]]
+        for t in texte:
+            self.assertIn("Keine Anlageberatung.", t)
+            for weg in ("KI-erstellt", "Totalverlust", "Betreiber"):
+                self.assertNotIn(weg, t)
+
+
 if __name__ == "__main__":
     unittest.main()
