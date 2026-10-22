@@ -30,7 +30,7 @@ def pruefen(zeilen: list[str], beitrag: dict, cfg: dict, sperrliste: set[str],
     text = " ".join(zeilen)
     p = cfg["pruefung"]
     if erlaubt_fusszeile:  # feste Hinweise duerfen in Posts stehen, sie werden nicht mitgeprueft
-        for h in cfg["hinweise"].values():
+        for h in (h for h in cfg["hinweise"].values() if h):   # leere Hinweise ueberspringen
             text = text.replace(h, " ")
         text = text.replace("Keine Anlageberatung", " ")
     klein = text.lower()

@@ -39,8 +39,8 @@ stimme:
 
 hinweise:                    # fusszeile/konflikt: Bilder und Videos
   post_text: "Keine Anlageberatung."   # unter Telegram-Texten (Wunsch Tobias 22.10.2026: nur dieser Satz)
-  fusszeile: "Keine Anlageberatung · KI-erstellt · Totalverlust möglich"
-  konflikt: "Der Betreiber kann Kryptowerte halten. Coins, die er hält, kommen in keinem Beitrag vor."
+  fusszeile: "Keine Anlageberatung"   # in Bildern und Videos (Wunsch Tobias 22.10.2026: nur das)
+  konflikt: ""                         # entfernt (Wunsch Tobias 22.10.2026)
 
 pruefung:
   # Woerter/Wendungen, die nie in einem Video vorkommen duerfen (Kleinschreibung)

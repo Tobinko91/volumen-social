@@ -1,7 +1,7 @@
 """Freigabe-Dienst: wartet auf Knopfdruecke von Tobias im Redaktions-Bot und postet dann.
 
 Laeuft dauerhaft als systemd-Dienst (deploy/volumen-social-freigabe.service), Benutzer "redaktion".
-Knoepfe: Telegram-Kanal, X, beide, verwerfen. Befehle: /status, /sperre BTC, /entsperre BTC, /pause, /weiter.
+Knoepfe: Telegram-Kanal, X, beide, verwerfen. Befehle: /check AKE, /status, /sperre BTC, /entsperre BTC, /pause, /weiter.
 Nur Nachrichten aus Tobias' Chat werden beachtet.
 """
 from __future__ import annotations
@@ -81,13 +81,22 @@ def befehl(g: dict, text: str) -> str:
             neu.append(coin)
         sperr.write_text("\n".join(neu) + "\n")
         return f"Sperrliste: {', '.join(z.strip() for z in neu) or 'leer'}"
+    if cmd == "/check" and len(teile) > 1:
+        import subprocess
+        coin = teile[1].upper().strip("$#")
+        if not coin.isalnum() or len(coin) > 15:
+            return "Bitte nur den Ticker, z. B. /check AKE"
+        app = Path(__file__).resolve().parent.parent
+        subprocess.Popen([sys.executable, str(app / "main.py"), "coincheck", "--coin", coin, "--senden"],
+                         cwd=str(app), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return f"🔎 Coin-Check für {coin} wird erstellt, kommt in etwa einer Minute."
     if cmd == "/pause":
         PAUSE.touch()
         return "⏸ Pause: keine neuen Vorschläge, bis du /weiter schreibst."
     if cmd == "/weiter":
         PAUSE.unlink(missing_ok=True)
         return "▶️ Geht weiter."
-    return "Befehle: /status, /sperre BTC, /entsperre BTC, /pause, /weiter"
+    return "Befehle: /check AKE, /status, /sperre BTC, /entsperre BTC, /pause, /weiter"
 
 
 def schleife():
