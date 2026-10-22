@@ -45,3 +45,13 @@ Updates: cron alle 15 Minuten, nur nach gruenen Tests.
 News: `python3 main.py news` (Quellen in `inhalte/quellen.yaml`, Test: `python3 tools/quellen_test.py`).
 Tagesplan: `tools/plan.sh` per cron (`deploy/plan.cron`), 07:30 Markt, 08/13/19 Uhr News, 17 Uhr Lernen,
 stuendlich Eilmeldungen, Ruhe 22–7 Uhr. Pause: `touch /opt/volumen-social/pause` (weiter: Datei loeschen).
+
+## Kanaele und Freigabe
+- `tools/freigabe.py` laeuft dauerhaft (`deploy/volumen-social-freigabe.service`, wird per Update eingespielt).
+  Jeder Vorschlag kommt im Redaktions-Bot mit Knoepfen: Telegram-Kanal, X, beide, verwerfen.
+  Befehle im Bot: /status, /sperre BTC, /entsperre BTC, /pause, /weiter.
+- `social/kanaele.py`: Telegram-Kanal (Bot ist Admin) und X (API v2, OAuth 1.0a). Instagram/TikTok folgen.
+- Beitraege aus dem Redaktions-Chat: Ordner `warteschlange/<name>/` mit `post.png`, `post_x.txt`,
+  `post_telegram.txt` auf den Branch `warteschlange`. `plan.sh` holt ihn alle 30 Minuten, `tools/eingang.py`
+  prueft und schickt den Vorschlag. Gepostet wird nur per Knopf.
+- `social/kurse.py`: Kursverlaeufe direkt von Bitunix (sonst Binance), ohne den Bot anzufassen.

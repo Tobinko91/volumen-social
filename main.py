@@ -15,7 +15,7 @@ from pathlib import Path
 
 import yaml
 
-from social import (bilder, daten, formate, news, news_post, news_text, post, pruefung, stimme, telegram,
+from social import (bilder, daten, formate, kurse, news, news_post, news_text, post, pruefung, stimme, telegram,
                     texte, video, wissen)
 
 HIER = Path(__file__).resolve().parent
@@ -77,13 +77,13 @@ def main() -> int:
         txt = post.markt_texte(beitrag, cfg)
         pfehler = pruefung.pruefen([txt["x"], txt["telegram"]], dict(beitrag, szenen=[0, 0]), cfg, sperr,
                                    erlaubt_fusszeile=True)
-        bild = post.markt_bild(beitrag, cfg, ordner / "post.png")
+        holen = None if probe else (lambda coins: {c: kurse.verlauf(c) for c in coins})
+        bild = post.markt_bild(beitrag, cfg, ordner / "post.png", verlauf_holen=holen)
         (ordner / "post_x.txt").write_text(txt["x"], encoding="utf-8")
         (ordner / "post_telegram.txt").write_text(txt["telegram"], encoding="utf-8")
         print(f"Post: X {len(txt['x'])} Zeichen, Pruefung:", pfehler or "bestanden")
         if args.senden:
-            telegram.bild_senden(geheim, bild, txt["telegram"])
-            telegram.text_senden(geheim, "So würde der Beitrag auf X lauten:\n\n" + txt["x"])
+            telegram.vorschlag_senden(geheim, ordner, "⚠️ " + "; ".join(pfehler) if pfehler else "")
         if args.art == "post":
             return 1 if pfehler else 0
 
@@ -124,8 +124,7 @@ def wissen_beitrag(args, cfg, geheim, sperr) -> int:
     (ordner / "post_telegram.txt").write_text(txt["telegram"], encoding="utf-8")
     print(f"Wissen: {t['id']}, X {len(txt['x'])} Zeichen, Pruefung:", fehler or "bestanden")
     if args.senden and not fehler:
-        telegram.bild_senden(geheim, b, txt["telegram"])
-        telegram.text_senden(geheim, "So würde der Beitrag auf X lauten:\n\n" + txt["x"])
+        telegram.vorschlag_senden(geheim, ordner)
     if not args.thema:
         wissen.merken(stand, t["id"], time.time())
     return 1 if fehler else 0
@@ -174,9 +173,8 @@ def news_beitrag(args, cfg, geheim, sperr, laden=None, schreiber=None) -> int:
         print(f"News: {d['schlagzeile']} | Quellen {g['quellen']} | Punkte {g['punkte']} | Pruefung:",
               fehler or "bestanden")
         if args.senden:
-            hinweis = "" if not fehler else "⚠️ Automatische Prüfung: " + "; ".join(fehler) + "\n\n"
-            telegram.bild_senden(geheim, b, txt["telegram"])
-            telegram.text_senden(geheim, hinweis + "So würde der Beitrag auf X lauten:\n\n" + txt["x"])
+            hinweis = "" if not fehler else "⚠️ Automatische Prüfung: " + "; ".join(fehler)
+            telegram.vorschlag_senden(geheim, ordner, hinweis)
         news.stand_merken(stand_p, g, eil=args.eil)
         return 1 if fehler else 0
     print("Keine geeignete Nachricht gefunden.")

@@ -8,10 +8,18 @@
 export TZ=Europe/Berlin
 H=$(date +%H); M=$(date +%M)
 SLOT="$H:$([ "$M" -lt 30 ] && echo 00 || echo 30)"
-[ -f /opt/volumen-social/pause ] && exit 0      # Pause: Datei anlegen mit  touch /opt/volumen-social/pause
 cd /opt/volumen-social/app || exit 1
-lauf() { sudo -u redaktion env TZ=Europe/Berlin SOCIAL_GEHEIM=/opt/volumen-social \
-         SOCIAL_AUSGABE=/opt/volumen-social/ausgabe python3 main.py "$@" --senden; }
+UMGEBUNG="TZ=Europe/Berlin SOCIAL_GEHEIM=/opt/volumen-social SOCIAL_AUSGABE=/opt/volumen-social/ausgabe"
+# Beitraege aus dem Redaktions-Chat (Branch warteschlange) holen und als Vorschlag schicken
+if git fetch -q origin warteschlange 2>/dev/null; then
+  rm -rf /opt/volumen-social/eingang && mkdir -p /opt/volumen-social/eingang
+  git archive origin/warteschlange warteschlange 2>/dev/null | tar -x -C /opt/volumen-social/eingang --strip-components=1
+  chmod -R a+rX /opt/volumen-social/eingang
+  sudo -u redaktion env $UMGEBUNG python3 tools/eingang.py
+fi
+# Pause: im Redaktions-Bot /pause schreiben (oder Datei anlegen), weiter mit /weiter
+[ -f /opt/volumen-social/pause ] || [ -f /opt/volumen-social/ausgabe/.pause ] && exit 0
+lauf() { sudo -u redaktion env $UMGEBUNG python3 main.py "$@" --senden; }
 case "$SLOT" in
   07:30) lauf markt --art post ;;
   08:00|13:00|19:00) lauf news ;;

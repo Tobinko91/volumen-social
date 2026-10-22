@@ -15,7 +15,13 @@ FELDER = [
     ("anthropic_api_key", "Claude-API-Schluessel (beginnt mit sk-ant-)"),
     ("elevenlabs_api_key", "ElevenLabs-Schluessel (beginnt mit sk_)"),
     ("telegram_token", "Token des Redaktions-Bots von @BotFather (Zahlen:Buchstaben)"),
+    ("telegram_kanal", "Telegram-Kanal, z. B. @whalesqueeze (Redaktions-Bot muss dort Admin sein)"),
+    ("x_api_key", "X: API Key (Consumer Key)"),
+    ("x_api_secret", "X: API Key Secret (Consumer Secret)"),
+    ("x_access_token", "X: Access Token"),
+    ("x_access_secret", "X: Access Token Secret"),
 ]
+OFFEN = {"telegram_kanal"}   # kein Geheimnis: Eingabe sichtbar
 
 
 def main():
@@ -29,7 +35,10 @@ def main():
     if not wahl.isdigit() or not 1 <= int(wahl) <= len(FELDER):
         print("Nichts geaendert."); return
     k, text = FELDER[int(wahl) - 1]
-    wert = getpass.getpass(f"{text} einfuegen (unsichtbar), dann Enter: ").strip()
+    if k in OFFEN:
+        wert = input(f"{text}: ").strip()
+    else:
+        wert = getpass.getpass(f"{text} einfuegen (unsichtbar), dann Enter: ").strip()
     if not wert:
         print("Leer – nichts geaendert."); return
     daten[k] = wert
