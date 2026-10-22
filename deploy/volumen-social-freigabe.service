@@ -1,0 +1,14 @@
+[Unit]
+Description=WhaleSqueeze Redaktion: Freigabe-Knoepfe und Posten
+After=network-online.target
+
+[Service]
+User=redaktion
+Environment=TZ=Europe/Berlin SOCIAL_GEHEIM=/opt/volumen-social SOCIAL_AUSGABE=/opt/volumen-social/ausgabe PYTHONUNBUFFERED=1
+WorkingDirectory=/opt/volumen-social/app
+ExecStart=/usr/bin/python3 /opt/volumen-social/app/tools/freigabe.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

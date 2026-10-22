@@ -1,5 +1,5 @@
-"""Telegram fuer die Redaktion: eigener Bot (nicht der Signal-Bot), schickt Videos an Tobias.
-Spaeter (Phase 2) kommen die Knoepfe "Posten" und "Verwerfen" dazu."""
+"""Telegram fuer die Redaktion: eigener Bot (nicht der Signal-Bot), schickt Vorschlaege an Tobias.
+Jeder Vorschlag kommt mit Knoepfen: auf Telegram-Kanal und/oder X posten oder verwerfen (tools/freigabe.py)."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -49,4 +49,30 @@ def text_senden(geheim: dict, text: str) -> bool:
         return False
     r = requests.post(API.format(token=token, methode="sendMessage"),
                       data={"chat_id": chat, "text": text[:4000], "disable_web_page_preview": "true"}, timeout=30)
+    return r.ok
+
+
+def knoepfe(beitrag_id: str) -> dict:
+    """Inline-Knoepfe fuer die Freigabe. callback_data hoechstens 64 Zeichen."""
+    def k(text, ziel):
+        return {"text": text, "callback_data": f"p|{ziel}|{beitrag_id}"[:64]}
+    return {"inline_keyboard": [[k("📢 Telegram-Kanal", "tg"), k("𝕏 X", "x")],
+                                [k("✅ Beide posten", "alle"), k("🗑 Verwerfen", "nein")]]}
+
+
+def vorschlag_senden(geheim: dict, ordner: Path, hinweis: str = "") -> bool:
+    """Bild + Telegram-Text mit Freigabe-Knoepfen, danach der X-Text zum Lesen."""
+    import json
+    token, chat = geheim.get("telegram_token"), geheim.get("telegram_chat_id")
+    if not (token and chat):
+        return False
+    bild = ordner / "post.png"
+    tg = (ordner / "post_telegram.txt").read_text(encoding="utf-8")
+    x = (ordner / "post_x.txt").read_text(encoding="utf-8")
+    with open(bild, "rb") as fh:
+        r = requests.post(API.format(token=token, methode="sendPhoto"),
+                          data={"chat_id": chat, "caption": tg[:1024], "parse_mode": "HTML",
+                                "reply_markup": json.dumps(knoepfe(ordner.name))},
+                          files={"photo": (bild.name, fh, "image/png")}, timeout=60)
+    text_senden(geheim, (hinweis + "\n\n" if hinweis else "") + f"X-Text ({len(x)} Zeichen):\n\n" + x)
     return r.ok

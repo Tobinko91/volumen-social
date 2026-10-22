@@ -163,3 +163,37 @@ def anteil(img: Image.Image, t: Thema, box, plus: int):
     fs = font("Medium", int(r * 0.17))
     d.text((cx - d.textlength("im Plus", font=fs) / 2, cy + r * 0.2), "im Plus", font=fs, fill=t.neben)
     _ = math
+
+
+def mover_linien(img: Image.Image, t: Thema, box, mover: list[dict], titel: str | None = None):
+    """Je Coin eine Zeile: Name, Kursverlauf (Linie), Veraenderung 24 Std. mover: [{base, chg24, verlauf, text}]"""
+    x0, y0, x1, y1 = box
+    karte(img, t, box)
+    d = ImageDraw.Draw(img)
+    y = y0 + 28
+    if titel:
+        d.text((x0 + 36, y), titel, font=font("Medium", 26), fill=t.neben)
+        y += 50
+    hoehe = (y1 - 24 - y) / max(1, len(mover))
+    fn, fw = font("Bold", 38), font("Bold", 36)
+    for i, m in enumerate(mover):
+        top = y + i * hoehe
+        farbe = t.plus if m["chg24"] >= 0 else t.minus
+        d.text((x0 + 36, top + hoehe / 2 - 24), m["base"], font=fn, fill=t.text)
+        tw = d.textlength(m["text"], font=fw)
+        d.text((x1 - 36 - tw, top + hoehe / 2 - 22), m["text"], font=fw, fill=farbe)
+        lx0, lx1 = x0 + 220, x1 - 72 - tw
+        ly0, ly1 = top + 14, top + hoehe - 14
+        werte = [v for _, v in m.get("verlauf") or []]
+        if len(werte) >= 2:
+            lo, hi = min(werte), max(werte)
+            pts = [(lx0 + (lx1 - lx0) * k / (len(werte) - 1), ly1 - (ly1 - ly0) * (v - lo) / ((hi - lo) or 1))
+                   for k, v in enumerate(werte)]
+            ebene = Image.new("RGBA", img.size, (0, 0, 0, 0))
+            ImageDraw.Draw(ebene).polygon(pts + [(lx1, ly1), (lx0, ly1)], fill=rgb(farbe, 36))
+            img.alpha_composite(ebene)
+            d = ImageDraw.Draw(img)
+            d.line(pts, fill=farbe, width=4, joint="curve")
+            d.ellipse([pts[-1][0] - 7, pts[-1][1] - 7, pts[-1][0] + 7, pts[-1][1] + 7], fill=farbe)
+        if i < len(mover) - 1:
+            d.line([(x0 + 36, top + hoehe), (x1 - 36, top + hoehe)], fill=t.linie, width=1)
