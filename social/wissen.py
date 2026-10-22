@@ -34,7 +34,7 @@ def merken(stand_datei: Path, thema_id: str, ts: float) -> None:
 def texte(t: dict, cfg: dict) -> dict:
     tg = [f"📚 <b>{t['titel']}</b>", ""]
     tg += [f"• {p}" for p in t["punkte"]]
-    tg += ["", f"<i>{cfg['hinweise']['fusszeile']}. {cfg['hinweise']['konflikt']}</i>"]
+    tg += ["", f"<i>{cfg['hinweise']['post_text']}</i>"]
     return {"x": t["x"], "telegram": "\n".join(tg)}
 
 

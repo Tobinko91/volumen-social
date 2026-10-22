@@ -37,7 +37,8 @@ stimme:
   voice_id: null                  # optional: feste ID statt Name
   modell: eleven_multilingual_v2
 
-hinweise:                    # wird in JEDES Video eingeblendet
+hinweise:                    # fusszeile/konflikt: Bilder und Videos
+  post_text: "Keine Anlageberatung."   # unter Telegram-Texten (Wunsch Tobias 22.10.2026: nur dieser Satz)
   fusszeile: "Keine Anlageberatung · KI-erstellt · Totalverlust möglich"
   konflikt: "Der Betreiber kann Kryptowerte halten. Coins, die er hält, kommen in keinem Beitrag vor."
 
