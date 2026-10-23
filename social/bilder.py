@@ -57,7 +57,7 @@ class Leinwand:
         self.img.paste(design.logo(g), (int(x), int(y)), design.logo(g))
 
     def kopf(self, d):
-        """Marke + feste Fusszeile (Risiko- und KI-Hinweis) oben in der sicheren Zone."""
+        """Marke + feste Fusszeile („Keine Anlageberatung“) oben in der sicheren Zone."""
         rgba = self.img.convert("RGBA")
         design.marke(rgba, self.th, 90, 205, 70)
         self.img.paste(rgba.convert("RGB"))
@@ -144,7 +144,7 @@ class Leinwand:
         self.logo(d, (self.W - 32 * 7) / 2, 420, 7)
         self.mitte(d, 690, "whalesqueeze.com", _font("Black", 92), self.f["amber"])
         self.mitte(d, 820, self.t["b_outro"], _font("SemiBold", 46), self.f["text"])
-        konflikt = textwrap.wrap(self.cfg["hinweise"]["konflikt"], width=48)
+        konflikt = textwrap.wrap(self.cfg["hinweise"].get("konflikt") or "", width=48)
         for i, z in enumerate(konflikt):
             self.mitte(d, 930 + i * 44, z, _font("Medium", 34), self.f["neben"])
         self.untertitel(d, text)

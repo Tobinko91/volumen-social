@@ -25,6 +25,7 @@ einfache Schritte, ein Befehl pro Block, zu jeder Bitte kurz warum. Niemals Pass
 ## Schutzregeln (nie abschwächen)
 - Jede Zahl im Sprechtext muss in den Bot-Daten stehen (`social/pruefung.py`).
 - Keine Einstiegskurse, Stops, Kursziele, keine Kauf-/Verkaufsaufforderung, keine Gewinnversprechen.
-- Unter Telegram-/X-Texten nur „Keine Anlageberatung.“ (Wunsch Tobias 22.10.2026, nicht wieder verlängern).
+- Überall (Texte, Bilder, Videos) nur „Keine Anlageberatung“ – kein KI-, Totalverlust- oder Betreiber-Hinweis
+  (Wunsch Tobias 22.10.2026, nicht wieder verlängern).
   Keine Coins von der Sperrliste.
 - Nur lizenzfreie Musik und eigene Grafiken. Öffentlich posten erst nach Freigabe durch Tobias.

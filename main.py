@@ -15,7 +15,7 @@ from pathlib import Path
 
 import yaml
 
-from social import (bilder, daten, formate, kurse, news, news_post, news_text, post, pruefung, stimme, telegram,
+from social import (bilder, coincheck, daten, formate, kurse, news, news_post, news_text, post, pruefung, stimme, telegram,
                     texte, video, wissen)
 
 HIER = Path(__file__).resolve().parent
@@ -41,9 +41,10 @@ def lade_sperrliste() -> set[str]:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("format", choices=sorted(formate.FORMATE) + ["wissen", "news"])
+    ap.add_argument("format", choices=sorted(formate.FORMATE) + ["wissen", "news", "coincheck"])
     ap.add_argument("--thema", help="nur bei wissen: bestimmtes Thema (id aus inhalte/wissen.yaml)")
     ap.add_argument("--eil", action="store_true", help="nur bei news: nur senden, wenn es eine Eilmeldung gibt")
+    ap.add_argument("--coin", help="nur bei coincheck: bestimmter Coin, z. B. AKE")
     ap.add_argument("--daten", help="Datenordner (Standard: config.yaml daten.dir)")
     ap.add_argument("--out", default=os.environ.get("SOCIAL_AUSGABE", str(HIER / "ausgabe")))
     ap.add_argument("--senden", action="store_true", help="Video per Telegram an Tobias schicken")
@@ -57,6 +58,8 @@ def main() -> int:
         return wissen_beitrag(args, cfg, geheim, sperr)
     if args.format == "news":
         return news_beitrag(args, cfg, geheim, sperr)
+    if args.format == "coincheck":
+        return coincheck_beitrag(args, cfg, geheim, sperr)
     probe = bool(args.daten)
     d = daten.laden(args.daten or cfg["daten"]["dir"],
                     None if probe else cfg["daten"]["max_alter_min"])
@@ -93,8 +96,8 @@ def main() -> int:
 
     meta = {
         "titel": beitrag["titel"],
-        "beschreibung": " ".join(zeilen) + "\n\n" + cfg["hinweise"]["fusszeile"] + "\n"
-                        + cfg["hinweise"]["konflikt"] + "\n" + " ".join(beitrag["hashtags"]),
+        "beschreibung": " ".join(zeilen) + "\n\n" + cfg["hinweise"]["post_text"] + "\n"
+                        + " ".join(beitrag["hashtags"]),
         "zeilen": zeilen, "text": textquelle, "stimme": tonquelle,
         "dauer_s": round(sum(dauern), 1), "pruefung": fehler or "bestanden",
         "fakten": beitrag["fakten"], "video": str(ziel),
@@ -179,6 +182,68 @@ def news_beitrag(args, cfg, geheim, sperr, laden=None, schreiber=None) -> int:
         return 1 if fehler else 0
     print("Keine geeignete Nachricht gefunden.")
     return 0
+
+
+def _test_kerzen(n: int = 168) -> list[dict]:
+    """Kuenstliche Kerzen nur fuer Proben ohne Netz (--daten)."""
+    import math
+    out, p = [], 1.0
+    for i in range(n):
+        q = 1 + 0.25 * math.sin(i / 20) + 0.08 * math.sin(i / 3) + (0.3 if i > 140 else 0)
+        out.append({"t": i * 3600000, "o": p, "h": max(p, q) * 1.01, "l": min(p, q) * 0.99, "c": q,
+                    "v": 1e5 * (1 + 2 * (abs(math.sin(i / 7)) > 0.9))})
+        p = q
+    return out
+
+
+def coincheck_beitrag(args, cfg, geheim, sperr, kerzen_holen=None) -> int:
+    """Coin-Check: ein Coin mit Kurs, Volumenprofil, Open Interest, Funding und Walen (Bild + Text)."""
+    probe = bool(args.daten)
+    d = daten.laden(args.daten or cfg["daten"]["dir"], None if probe else cfg["daten"]["max_alter_min"])
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    stand_p = out / "coincheck_stand.json"
+    stand = json.loads(stand_p.read_text()) if stand_p.exists() else {}
+    base = (args.coin or "").upper().strip("$") or coincheck.auswahl(d.coins, sperr, stand)
+    if not base:
+        print("Kein passender Coin.")
+        return 0
+    if base in sperr:
+        telegram.text_senden(geheim, f"{base} steht auf deiner Sperrliste – kein Coin-Check.") if args.senden else None
+        print("Sperrliste:", base)
+        return 1
+    kerzen_holen = kerzen_holen or (_test_kerzen if probe else (lambda b: kurse.kerzen(b)))
+    k = kerzen_holen(base) if not probe else _test_kerzen()
+    c = dict(d.coins.get(base) or {"base": base})
+    if k and c.get("price") is None:
+        c["price"] = k[-1]["c"]
+        c["chg24"] = round((k[-1]["c"] / k[-25]["c"] - 1) * 100, 1) if len(k) > 25 else None
+    if not k and c.get("price") is None:
+        if args.senden:
+            telegram.text_senden(geheim, f"Für {base} habe ich weder Bot-Daten noch Kurse gefunden.")
+        return 1
+    z = kurse.zonen(k) if k else {"oben": [], "unten": [], "grenzen": [0, 1], "vol": [0]}
+    f = coincheck.fakten(c, k, z)
+    text = coincheck.schreiben(f, cfg, geheim.get("anthropic_api_key"))
+    txt = coincheck.texte(text, cfg)
+    fehler = pruefung.pruefen([txt["x"], " ".join(text["punkte"]), text["schlagzeile"]],
+                              {"fakten": f, "szenen": [0] * 3}, cfg, sperr, erlaubt_fusszeile=True)
+    if fehler and text is not None:   # Claude-Text faellt durch -> sichere Vorlage
+        text = coincheck.vorlage(f)
+        txt = coincheck.texte(text, cfg)
+        fehler = pruefung.pruefen([txt["x"], " ".join(text["punkte"]), text["schlagzeile"]],
+                                  {"fakten": f, "szenen": [0] * 3}, cfg, sperr, erlaubt_fusszeile=True)
+    ordner = out / f"{time.strftime('%Y%m%d-%H%M')}_coincheck_{base}"
+    coincheck.bild(c, k, z, text, cfg, ordner / "post.png")
+    (ordner / "post_x.txt").write_text(txt["x"], encoding="utf-8")
+    (ordner / "post_telegram.txt").write_text(txt["telegram"], encoding="utf-8")
+    (ordner / "fakten.json").write_text(json.dumps(f, ensure_ascii=False, indent=1), encoding="utf-8")
+    print(f"Coin-Check {base}: Pruefung", fehler or "bestanden")
+    if args.senden:
+        telegram.vorschlag_senden(geheim, ordner, "⚠️ " + "; ".join(fehler) if fehler else "")
+    stand[base] = time.time()
+    stand_p.write_text(json.dumps(stand))
+    return 1 if fehler else 0
 
 
 if __name__ == "__main__":

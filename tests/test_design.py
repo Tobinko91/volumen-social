@@ -25,5 +25,14 @@ class DesignTest(unittest.TestCase):
         self.assertFalse(any(x.startswith("%") for x in z))
 
 
+    def test_ueberall_nur_keine_anlageberatung(self):
+        import yaml
+        from pathlib import Path
+        cfg = yaml.safe_load((Path(__file__).resolve().parent.parent / "config.yaml").read_text())
+        alles = " ".join(str(v) for v in cfg["hinweise"].values())
+        for weg in ("KI-erstellt", "Totalverlust", "Betreiber"):
+            self.assertNotIn(weg, alles)
+
+
 if __name__ == "__main__":
     unittest.main()

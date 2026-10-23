@@ -29,11 +29,12 @@ python main.py markt --daten beispieldaten
 | `social/video.py` | ffmpeg-Zusammenbau |
 | `social/post.py` | Bild (4:5) + Text fuer Telegram und X (dort Hauptformat) |
 | `social/wissen.py`, `inhalte/wissen.yaml` | Lern-Beitraege: 10 Themen, jede Zahl nachgerechnet |
+| `social/coincheck.py` | Coin-Check: Kurs 7 Tage + Volumenprofil, OI, Funding, Wale (taeglich 11 Uhr, im Bot: /check AKE) |
 | `secrets.example.yaml` | Vorlage fuer Schluessel (echte Datei nur auf dem Server) |
 | `sperrliste.example.txt` | Vorlage: Coins mit eigener Position |
 
 ## Schutzregeln (fest eingebaut)
-Risiko- und KI-Hinweis in jedem Bild, Interessenkonflikt-Hinweis im Abspann, keine Einstiegskurse,
+Ueberall nur „Keine Anlageberatung“ (kein KI-, Totalverlust- oder Betreiber-Hinweis), keine Einstiegskurse,
 keine Kauf-/Verkaufsaufforderung, keine Zahl ohne Datenquelle, keine Coins von der Sperrliste.
 
 ## Server

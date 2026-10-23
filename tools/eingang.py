@@ -38,7 +38,7 @@ def pruefen(ordner: Path, cfg: dict, sperr: set[str]) -> list[str]:
     if "Keine Anlageberatung" not in x + tg:
         fehler.append("Risiko-Hinweis fehlt")
     text = (x + " " + tg)
-    for h in cfg["hinweise"].values():
+    for h in (h for h in cfg["hinweise"].values() if h):   # leere Hinweise ueberspringen
         text = text.replace(h, " ")
     klein = text.replace("Keine Anlageberatung", " ").lower()
     fehler += [f"verbotene Wendung: '{w}'" for w in cfg["pruefung"]["verboten"] if w in klein]
