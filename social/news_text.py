@@ -12,7 +12,8 @@ Regeln:
 - Nur Fakten aus den Quellen. Keine Vermutung, keine Kursprognose, kein Kursziel, keine Empfehlung,
   keine Aufforderung zu kaufen oder zu verkaufen, keine Hype-Wörter, keine Emojis.
 - Eigene Worte, nichts wörtlich übernehmen (höchstens ein Zitat bis 8 Wörter in Anführungszeichen mit Urheber).
-- Berichtet nur eine Quelle, schreib "laut <Quelle>". Widersprechen sich Quellen, sag das.
+- Nenne keine Medien oder Quellen namentlich (kein "laut CoinDesk"). Berichtet nur eine Quelle, schreib
+  "Berichten zufolge". Widersprechen sich Quellen, sag das ohne Namen.
 - Zahlen exakt wie in den Quellen (deutsche Schreibweise mit Komma ist erlaubt). Keine eigenen Rechnungen.
 - Ruhig, verständlich, Du-Form nur wenn nötig. Fachbegriffe kurz erklären.
 - Ist die Meldung kein Krypto-Thema oder zu unklar, setze "geeignet": false.

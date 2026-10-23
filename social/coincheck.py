@@ -205,7 +205,7 @@ def bild(c: dict, k: list[dict], z: dict, d: dict, cfg: dict, ziel: Path) -> Pat
         y = absatz(dr, th, 80, y, "Termin: " + termin["text"], W - 160, groesse=26, farbe=th.akzent2,
                    gewicht="SemiBold") + 6
     punkte(dr, th, 80, y, d["punkte"], W - 160, groesse=27, bis_y=H - 110)
-    fuss(img, th, cfg["hinweise"]["fusszeile"] + " · Daten: Börsen, Bot")
+    fuss(img, th, cfg["hinweise"]["fusszeile"])
     ziel.parent.mkdir(parents=True, exist_ok=True)
     img.convert("RGB").save(ziel)
     return ziel
