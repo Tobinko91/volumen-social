@@ -57,7 +57,9 @@ class NewsTest(unittest.TestCase):
                 self.assertEqual(main.news_beitrag(args, CFG, {}, set(), laden=laden, schreiber=schreiber), 0)
                 x = next(Path(d).glob("*_news/post_x.txt")).read_text()
                 self.assertLessEqual(len(x), 280)
-                self.assertIn("Quelle:", x)
+                self.assertNotIn("Quelle", x)
+                tg = next(Path(d).glob("*_news/post_telegram.txt")).read_text()
+                self.assertNotIn("Quelle", tg)
                 # zweiter Lauf: dieselbe Nachricht nicht noch einmal
                 for p in Path(d).glob("*_news"):
                     p.rename(p.with_name("alt_" + p.name))
@@ -99,3 +101,36 @@ class NewsTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class NewsLayoutTest(unittest.TestCase):
+    D = {"geeignet": True, "rubrik": "ETF", "schlagzeile": "SEC genehmigt ersten Solana-ETF",
+         "kernsatz": "Die Gebühr liegt bei 0,25 % und die Zuflüsse bei 1,2 Mrd. $.",
+         "punkte": ["Mehrere Medien berichten übereinstimmend.", "Weitere Anträge sind offen."],
+         "x": "Die SEC hat den ersten Solana Spot-ETF genehmigt.", "coins": ["SOL"]}
+    G = {"quellen": ["CoinDesk", "The Block"], "meldungen": []}
+
+    def test_alle_layouts_ohne_quelle(self):
+        from social import news_post
+        kurs = [(i * 14400000, 100 + i * 0.5) for i in range(42)]
+        with tempfile.TemporaryDirectory() as d:
+            for lay in news_post.LAYOUTS:
+                z = Path(d) / lay / "post.png"
+                news_post.bild(self.D, self.G, CFG, z, kurs=kurs, layout=lay, jetzt=JETZT)
+                self.assertEqual((z.parent / "layout.txt").read_text(), lay)
+            # Chart ohne Kurs faellt auf klassisch zurueck
+            z = Path(d) / "ohne" / "post.png"
+            news_post.bild(self.D, self.G, CFG, z, kurs=None, layout="chart", jetzt=JETZT)
+            self.assertEqual((z.parent / "layout.txt").read_text(), "klassisch")
+
+    def test_kennzahl_und_hinweis(self):
+        from social import news_post
+        self.assertEqual(news_post.kennzahl(self.D), "0,25 %")
+        self.assertIn("nur für dich", news_post.quellen_hinweis(self.G))
+        self.assertNotIn("Quelle", news_post.texte(self.D, self.G, CFG)["x"])
+
+    def test_layouts_wechseln(self):
+        from social import news_post
+        kurs = [(i, 1.0 + i) for i in range(42)]
+        gesehen = {news_post.layout_waehlen(dict(self.D, schlagzeile=f"Meldung {i}"), kurs) for i in range(40)}
+        self.assertEqual(gesehen, set(news_post.LAYOUTS))

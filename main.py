@@ -133,8 +133,10 @@ def wissen_beitrag(args, cfg, geheim, sperr) -> int:
     return 1 if fehler else 0
 
 
-def news_beitrag(args, cfg, geheim, sperr, laden=None, schreiber=None) -> int:
+def news_beitrag(args, cfg, geheim, sperr, laden=None, schreiber=None, kurs_holen="auto") -> int:
     """Wichtigste noch nicht gezeigte Krypto-Nachricht als Bild + Text (Telegram und X)."""
+    if kurs_holen == "auto":   # echte Laeufe holen den Kurs; Tests mit eigenem 'laden' nicht
+        kurs_holen = kurse.verlauf if laden is None else None
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     stand_p = out / "news_stand.json"
@@ -169,14 +171,23 @@ def news_beitrag(args, cfg, geheim, sperr, laden=None, schreiber=None) -> int:
         fehler += [f"Coin auf der Sperrliste: {c}" for c in d.get("coins", []) if str(c).upper() in sperr]
         fehler = list(dict.fromkeys(fehler))
         ordner = out / f"{time.strftime('%Y%m%d-%H%M')}_news"
-        b = news_post.bild(d, g, cfg, ordner / "post.png", eil=args.eil)
+        kurs = None
+        coins = [str(c).upper() for c in d.get("coins", []) if str(c).upper() not in sperr]
+        if coins and kurs_holen:
+            try:
+                kurs = kurs_holen(coins[0], "4h", 42)
+            except Exception:
+                kurs = None
+        b = news_post.bild(d, g, cfg, ordner / "post.png", eil=args.eil, kurs=kurs)
         (ordner / "post_x.txt").write_text(txt["x"], encoding="utf-8")
         (ordner / "post_telegram.txt").write_text(txt["telegram"], encoding="utf-8")
         (ordner / "quellen.json").write_text(json.dumps(g["meldungen"], ensure_ascii=False, indent=1), encoding="utf-8")
         print(f"News: {d['schlagzeile']} | Quellen {g['quellen']} | Punkte {g['punkte']} | Pruefung:",
               fehler or "bestanden")
         if args.senden:
-            hinweis = "" if not fehler else "⚠️ Automatische Prüfung: " + "; ".join(fehler)
+            hinweis = news_post.quellen_hinweis(g)
+            if fehler:
+                hinweis = "⚠️ Automatische Prüfung: " + "; ".join(fehler) + "\n" + hinweis
             telegram.vorschlag_senden(geheim, ordner, hinweis)
         news.stand_merken(stand_p, g, eil=args.eil)
         return 1 if fehler else 0
