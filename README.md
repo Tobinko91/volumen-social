@@ -34,7 +34,7 @@ python main.py markt --daten beispieldaten
 | `sperrliste.example.txt` | Vorlage: Coins mit eigener Position |
 
 ## Schutzregeln (fest eingebaut)
-Risiko- und KI-Hinweis in jedem Bild, Interessenkonflikt-Hinweis im Abspann, keine Einstiegskurse,
+Ueberall nur „Keine Anlageberatung“ (kein KI-, Totalverlust- oder Betreiber-Hinweis), keine Einstiegskurse,
 keine Kauf-/Verkaufsaufforderung, keine Zahl ohne Datenquelle, keine Coins von der Sperrliste.
 
 ## Server

@@ -57,7 +57,7 @@ class Leinwand:
         self.img.paste(design.logo(g), (int(x), int(y)), design.logo(g))
 
     def kopf(self, d):
-        """Marke + feste Fusszeile (Risiko- und KI-Hinweis) oben in der sicheren Zone."""
+        """Marke + feste Fusszeile („Keine Anlageberatung“) oben in der sicheren Zone."""
         rgba = self.img.convert("RGBA")
         design.marke(rgba, self.th, 90, 205, 70)
         self.img.paste(rgba.convert("RGB"))
