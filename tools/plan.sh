@@ -18,6 +18,11 @@ if git fetch -q origin warteschlange 2>/dev/null; then
   chmod -R a+rX /opt/volumen-social/eingang
   sudo -u redaktion env $UMGEBUNG python3 tools/eingang.py
 fi
+# Oeffentlicher Bild-Ordner fuer Instagram (Website liefert ihn unter /medien/ aus, nur fuer Minuten befuellt)
+mkdir -p /opt/volumen-social/oeffentlich && chown redaktion:redaktion /opt/volumen-social/oeffentlich && \
+  chmod 755 /opt/volumen-social/oeffentlich
+# Instagram-Token taeglich verlaengern (gilt sonst nur 60 Tage)
+[ "$SLOT" = "04:00" ] && sudo -u redaktion env $UMGEBUNG python3 tools/instagram_token.py
 # Pause: im Redaktions-Bot /pause schreiben (oder Datei anlegen), weiter mit /weiter
 [ -f /opt/volumen-social/pause ] || [ -f /opt/volumen-social/ausgabe/.pause ] && exit 0
 lauf() { sudo -u redaktion env $UMGEBUNG python3 main.py "$@" --senden; }

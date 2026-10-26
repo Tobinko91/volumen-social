@@ -20,6 +20,7 @@ FELDER = [
     ("x_api_secret", "X: API Key Secret (Consumer Secret)"),
     ("x_access_token", "X: Access Token"),
     ("x_access_secret", "X: Access Token Secret"),
+    ("instagram_token", "Instagram: Access Token (Meta-App -> API-Einrichtung mit Instagram-Login -> Generate token)"),
 ]
 OFFEN = {"telegram_kanal"}   # kein Geheimnis: Eingabe sichtbar
 

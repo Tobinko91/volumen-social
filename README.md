@@ -52,7 +52,9 @@ stuendlich Eilmeldungen, Ruhe 22–7 Uhr. Pause: `touch /opt/volumen-social/paus
 - `tools/freigabe.py` laeuft dauerhaft (`deploy/volumen-social-freigabe.service`, wird per Update eingespielt).
   Jeder Vorschlag kommt im Redaktions-Bot mit Knoepfen: Telegram-Kanal, X, beide, verwerfen.
   Befehle im Bot: /status, /sperre BTC, /entsperre BTC, /pause, /weiter.
-- `social/kanaele.py`: Telegram-Kanal (Bot ist Admin) und X (API v2, OAuth 1.0a). Instagram/TikTok folgen.
+- `social/kanaele.py`: Telegram-Kanal (Bot ist Admin), X (API v2, OAuth 1.0a) und Instagram (Instagram-Login-API).
+  Instagram holt das Bild als JPEG aus `/opt/volumen-social/oeffentlich` = `https://whalesqueeze.com/medien/` (Caddy der Website),
+  danach wird es sofort geloescht. Token: `schluessel.py` Punkt 9, Verlaengerung taeglich 04:00 (`tools/instagram_token.py`). TikTok folgt.
 - Beitraege aus dem Redaktions-Chat: Ordner `warteschlange/<name>/` mit `post.png`, `post_x.txt`,
   `post_telegram.txt` auf den Branch `warteschlange`. `plan.sh` holt ihn alle 30 Minuten, `tools/eingang.py`
   prueft und schickt den Vorschlag. Gepostet wird nur per Knopf.
