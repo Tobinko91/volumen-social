@@ -4,6 +4,7 @@
 #   07:30 Markt-Beitrag (Bild + Text)
 #   08:00 13:00 19:00 News (wichtigste neue Nachricht)
 #   11:00 Coin-Check (auffaelligster Coin)
+#   11:30 Wal des Tages (groesste Wal-Veraenderung in 7 Tagen)
 #   17:00 Lern-Beitrag
 #   sonst jede volle Stunde 7-21 Uhr: Eilmeldung, falls es eine gibt (hoechstens 2 am Tag)
 export TZ=Europe/Berlin
@@ -30,6 +31,7 @@ case "$SLOT" in
   07:30) lauf markt --art post ;;
   08:00|13:00|19:00) lauf news ;;
   11:00) lauf coincheck ;;
+  11:30) lauf wal ;;
   17:00) lauf wissen ;;
   0[7-9]:00|1[0-9]:00|2[01]:00) lauf news --eil ;;
 esac
