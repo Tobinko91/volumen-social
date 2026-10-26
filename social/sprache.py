@@ -31,6 +31,7 @@ T = {
         "s_titel": "Krypto-Markt in 30 Sekunden. {datum}.",
         "s_breite": "Die Hälfte der {anzahl} kleinen Coins lag in 24 Stunden über {median_gesprochen} Prozent, "
                     "die andere Hälfte darunter. {plus} Prozent stehen im Plus.",
+        "s_btc": " Bitcoin: {btc} Prozent.",
         "gestiegen": "gestiegen", "gefallen": "gefallen",
         "s_mover": "{base} liegt {wert} Prozent {richtung}. {grund}",
         "hoeher": "höher", "tiefer": "tiefer",
@@ -52,6 +53,7 @@ T = {
         "s_titel": "Crypto market in 30 seconds. {datum}.",
         "s_breite": "Half of {anzahl} small caps did better than {median_gesprochen} percent in 24 hours, "
                     "half did worse. {plus} percent are green.",
+        "s_btc": " Bitcoin: {btc} percent.",
         "gestiegen": "up", "gefallen": "down",
         "s_mover": "{base} is {richtung} {wert} percent. {grund}",
         "hoeher": "up", "tiefer": "down",

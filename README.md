@@ -18,7 +18,8 @@ python main.py markt --daten beispieldaten
 | Datei | Zweck |
 |---|---|
 | `config.yaml` | Farben, Laenge, Hinweise, verbotene Woerter |
-| `social/daten.py` | liest die Bot-Dateien, Altcoin-Breite |
+| `social/daten.py` | liest die Bot-Dateien; Marktlage aus `markt.json` (sonst Ersatzrechnung aus `coins/`), Auswahl „Wal des Tages“ |
+| `social/wal.py` | Wal des Tages: groesste Wal-Veraenderung 7 Tage (`wale_7d`, `holder`, `wale_verlauf`), Bild + Text; `python main.py wal` |
 | `social/formate.py` | Formate (bisher: Krypto-Markt in 30 Sekunden) |
 | `social/sprache.py` | alle Texte je Sprache (Start: Deutsch, Englisch vorbereitet) |
 | `social/texte.py` | Sprechtext ueber Claude-API, nur aus Fakten |
