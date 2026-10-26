@@ -15,9 +15,9 @@ from pathlib import Path
 
 import yaml
 
-from social import wal
 from social import (bilder, coincheck, daten, formate, kurse, news, news_post, news_text, post, pruefung, stimme, telegram,
                     texte, video, wissen)
+from social import wal  # noqa: E402  (Wal des Tages)
 
 HIER = Path(__file__).resolve().parent
 # Auf dem Server liegen Schluessel und Sperrliste ausserhalb des Codes (/opt/volumen-social),
