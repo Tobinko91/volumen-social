@@ -75,8 +75,8 @@ def knoepfe(beitrag_id: str) -> dict:
     """Inline-Knoepfe fuer die Freigabe. callback_data hoechstens 64 Zeichen."""
     def k(text, ziel):
         return {"text": text, "callback_data": f"p|{ziel}|{beitrag_id}"[:64]}
-    return {"inline_keyboard": [[k("📢 Telegram-Kanal", "tg"), k("𝕏 X", "x")],
-                                [k("✅ Beide posten", "alle"), k("🗑 Verwerfen", "nein")]]}
+    return {"inline_keyboard": [[k("📢 Telegram-Kanal", "tg"), k("𝕏 X", "x"), k("📸 Instagram", "ig")],
+                                [k("✅ Alle Kanäle", "alle"), k("🗑 Verwerfen", "nein")]]}
 
 
 def vorschlag_senden(geheim: dict, ordner: Path, hinweis: str = "") -> bool:

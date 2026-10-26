@@ -1,2 +1,4 @@
 # Fertige Beitraege nach 3 Tagen loeschen (nur Ordner; Merkdateien und Pause bleiben)
 30 3 * * * root find /opt/volumen-social/ausgabe -mindepth 1 -maxdepth 1 -type d -mtime +3 -exec rm -rf {} +
+# Instagram-Bilder im oeffentlichen Ordner: hoechstens 1 Stunde (normal sofort nach dem Posten geloescht)
+*/15 * * * * root find /opt/volumen-social/oeffentlich -mindepth 1 -maxdepth 1 -type f -mmin +60 -delete 2>/dev/null

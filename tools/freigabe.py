@@ -1,7 +1,7 @@
 """Freigabe-Dienst: wartet auf Knopfdruecke von Tobias im Redaktions-Bot und postet dann.
 
 Laeuft dauerhaft als systemd-Dienst (deploy/volumen-social-freigabe.service), Benutzer "redaktion".
-Knoepfe: Telegram-Kanal, X, beide, verwerfen. Befehle: /check AKE, /status, /sperre BTC, /entsperre BTC, /pause, /weiter.
+Knoepfe: Telegram-Kanal, X, Instagram, alle eingerichteten Kanaele, verwerfen. Befehle: /check AKE, /status, /sperre BTC, /entsperre BTC, /pause, /weiter.
 Nur Nachrichten aus Tobias' Chat werden beachtet.
 """
 from __future__ import annotations
@@ -44,8 +44,12 @@ def posten(g: dict, beitrag_id: str, ziel: str) -> str:
         status["verworfen"] = time.time()
         status_p.write_text(json.dumps(status))
         return "🗑 Verworfen."
-    ziele = ["telegram", "x"] if ziel == "alle" else [{"tg": "telegram", "x": "x"}[ziel]]
-    texte = {"telegram": (ordner / "post_telegram.txt").read_text(encoding="utf-8"),
+    if ziel == "alle":   # Telegram und X immer (Fehlermeldung, falls nicht eingerichtet), Instagram nur wenn eingerichtet
+        ziele = ["telegram", "x"] + (["instagram"] if kanaele.verfuegbar(g)["instagram"] else [])
+    else:
+        ziele = [{"tg": "telegram", "x": "x", "ig": "instagram"}[ziel]]
+    tg_text = (ordner / "post_telegram.txt").read_text(encoding="utf-8")
+    texte = {"telegram": tg_text, "instagram": tg_text,   # Instagram wandelt den Telegram-Text selbst um
              "x": (ordner / "post_x.txt").read_text(encoding="utf-8")}
     zeilen = []
     for z in ziele:
@@ -71,7 +75,8 @@ def befehl(g: dict, text: str) -> str:
     if cmd == "/status":
         k = kanaele.verfuegbar(g)
         offen = sum(1 for o in AUSGABE.glob("*/post.png") if not (o.parent / "gepostet.json").exists())
-        return (f"Kanäle: Telegram {'✅' if k['telegram'] else '–'}, X {'✅' if k['x'] else '–'}\n"
+        return (f"Kanäle: Telegram {'✅' if k['telegram'] else '–'}, X {'✅' if k['x'] else '–'}, "
+                f"Instagram {'✅' if k['instagram'] else '–'}\n"
                 f"Offene Vorschläge: {offen}\nPause: {'ja' if PAUSE.exists() else 'nein'}")
     if cmd in ("/sperre", "/entsperre") and len(teile) > 1:
         coin = teile[1].upper().strip("$#")

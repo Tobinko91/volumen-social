@@ -4,6 +4,11 @@ Social Media zum Volumen-Bot (YouTube, TikTok, Instagram, X), gesichtslos und au
 Besitzer: Tobias (Deutsch, technischer Laie, Windows/PowerShell, iPhone). Antworten auf Deutsch,
 einfache Schritte, ein Befehl pro Block, zu jeder Bitte kurz warum. Niemals Passwörter oder Schlüssel im Chat.
 
+## Zu Beginn jeder Sitzung (Wunsch Tobias 26.10.2026)
+- Projekt-Dokumente `ideen-backlog` (Entscheidungen von Tobias, Abschnitt „Social Media“) und `auftraege`
+  (Abschnitt „Redaktion“) lesen. Freigegebene Punkte (✅) der Redaktion selbstständig umsetzen, Status dort pflegen.
+- Eigene neue Ideen mit Nutzen und Aufwand in `ideen-backlog` eintragen (🆕), Tobias entscheidet.
+
 ## Zuständigkeit
 - Dieses Repository gehört dem Redaktions-Chat. `volumen-bot` und `volumen-web` nur lesen, keine PRs.
 - Neue Daten vom Bot: als Wunsch ins Projekt-Dokument `website-briefing` („Wünsche der Redaktion“).
@@ -24,6 +29,8 @@ einfache Schritte, ein Befehl pro Block, zu jeder Bitte kurz warum. Niemals Pass
 
 ## Schutzregeln (nie abschwächen)
 - Jede Zahl im Sprechtext muss in den Bot-Daten stehen (`social/pruefung.py`).
+- News direkt formulieren (kein „Berichten zufolge“), mit Datum, Uhrzeit (deutsche Zeit), wer spricht, was danach kommt.
+  Keine Quellenangaben im Beitrag (nur im Freigabe-Hinweis an Tobias).
 - Keine Einstiegskurse, Stops, Kursziele, keine Kauf-/Verkaufsaufforderung, keine Gewinnversprechen.
 - Überall (Texte, Bilder, Videos) nur „Keine Anlageberatung“ – kein KI-, Totalverlust- oder Betreiber-Hinweis
   (Wunsch Tobias 22.10.2026, nicht wieder verlängern).

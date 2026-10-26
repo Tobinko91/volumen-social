@@ -2,13 +2,19 @@
 
 Telegram-Kanal: der Redaktions-Bot ist Admin im Kanal und postet dort.
 X: API v2 mit OAuth 1.0a (Konto-Schluessel aus dem X-Entwicklerportal).
-Instagram und TikTok folgen (brauchen Meta-App bzw. TikTok-Pruefung).
+Instagram: Instagram API mit Instagram-Login (Meta-App "WhaleSqueeze Redaktion", Entwicklungsmodus).
+  Instagram holt das Bild selbst ab, darum liegt es kurz als JPEG in einem oeffentlichen Ordner
+  (/opt/volumen-social/oeffentlich -> https://whalesqueeze.com/medien/, Caddy der Website) und wird danach geloescht.
+TikTok folgt (braucht die TikTok-Pruefung).
 """
 from __future__ import annotations
 
 import base64
 import hashlib
 import hmac
+import html
+import os
+import re
 import secrets as _zufall
 import time
 import urllib.parse
@@ -19,6 +25,11 @@ import requests
 TG = "https://api.telegram.org/bot{token}/{methode}"
 X_MEDIA = "https://api.x.com/2/media/upload"
 X_TWEET = "https://api.x.com/2/tweets"
+IG = "https://graph.instagram.com/v26.0"
+IG_ORDNER = Path(os.environ.get("SOCIAL_OEFFENTLICH", "/opt/volumen-social/oeffentlich"))
+IG_URL = os.environ.get("SOCIAL_MEDIEN_URL", "https://whalesqueeze.com/medien/")
+IG_MAX = 2200   # Zeichen in der Bildunterschrift
+IG_TAGS = "#krypto #bitcoin #altcoins #kryptowährung #whalesqueeze"
 
 
 class NichtEingerichtet(Exception):
@@ -29,6 +40,7 @@ def verfuegbar(geheim: dict) -> dict[str, bool]:
     return {
         "telegram": bool(geheim.get("telegram_token") and geheim.get("telegram_kanal")),
         "x": all(geheim.get(k) for k in ("x_api_key", "x_api_secret", "x_access_token", "x_access_secret")),
+        "instagram": bool(geheim.get("instagram_token")),
     }
 
 
@@ -100,4 +112,75 @@ def x_posten(geheim: dict, bild: Path, text: str) -> str:
     return f"https://x.com/i/web/status/{r.json()['data']['id']}"
 
 
-POSTER = {"telegram": telegram_kanal, "x": x_posten}
+# ---------------------------------------------------------------- Instagram
+
+def instagram_text(tg_text: str) -> str:
+    """Bildunterschrift aus dem Telegram-Text: ohne HTML, Links sind auf Instagram nicht klickbar -> Hinweis aufs Profil."""
+    zeilen = []
+    for z in tg_text.splitlines():
+        if "whalesqueeze.com/?" in z or z.startswith("🔗"):
+            zeilen.append("🔗 Mehr Daten: Link im Profil")
+            continue
+        zeilen.append(html.unescape(re.sub(r"<[^>]+>", "", z)))
+    text = "\n".join(zeilen).strip()
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return (text[:IG_MAX - len(IG_TAGS) - 2].rstrip() + "\n\n" + IG_TAGS)
+
+
+def _ig(methode: str, pfad: str, token: str, **params) -> dict:
+    params["access_token"] = token
+    r = requests.request(methode, f"{IG}/{pfad}", params=params if methode == "GET" else None,
+                         data=params if methode != "GET" else None, timeout=60)
+    j = r.json() if r.content else {}
+    if r.status_code >= 300 or "error" in j:
+        msg = (j.get("error") or {}).get("message") or r.text[:200]
+        raise RuntimeError(f"Instagram {pfad.split('/')[-1]}: {r.status_code} {msg}")
+    return j
+
+
+def instagram_posten(geheim: dict, bild: Path, text: str, warten=time.sleep, pruefen_url=None) -> str:
+    """Bild + Unterschrift auf Instagram veroeffentlichen. text = Telegram-Text (wird umgewandelt)."""
+    if not verfuegbar(geheim)["instagram"]:
+        raise NichtEingerichtet("Instagram-Token fehlt (schluessel.py, Punkt 9)")
+    from PIL import Image
+    token = geheim["instagram_token"]
+    IG_ORDNER.mkdir(parents=True, exist_ok=True)
+    name = _zufall.token_hex(16) + ".jpg"            # nicht erratbar, nur fuer Minuten oeffentlich
+    datei = IG_ORDNER / name
+    Image.open(bild).convert("RGB").save(datei, "JPEG", quality=92)   # Instagram nimmt nur JPEG
+    os.chmod(datei, 0o644)
+    url = IG_URL + name
+    try:
+        r = (pruefen_url or (lambda u: requests.head(u, timeout=20).status_code))(url)
+        if r != 200:
+            raise NichtEingerichtet(f"Bild-Ordner {IG_URL} ist noch nicht öffentlich erreichbar ({r}). "
+                                    "Das richtet der Website-Chat ein (Wunsch Nr. 13).")
+        uid = geheim.get("instagram_user_id") or _ig("GET", "me", token, fields="user_id,username")["user_id"]
+        c = _ig("POST", f"{uid}/media", token, image_url=url, caption=instagram_text(text))["id"]
+        for _ in range(10):   # Bilder sind meist sofort fertig
+            s = _ig("GET", c, token, fields="status_code").get("status_code")
+            if s == "FINISHED":
+                break
+            if s in ("ERROR", "EXPIRED"):
+                raise RuntimeError(f"Instagram: Bild nicht verarbeitet ({s})")
+            warten(3)
+        mid = _ig("POST", f"{uid}/media_publish", token, creation_id=c)["id"]
+        try:
+            return _ig("GET", mid, token, fields="permalink").get("permalink") or f"Instagram-Beitrag {mid}"
+        except Exception:
+            return f"Instagram-Beitrag {mid}"
+    finally:
+        datei.unlink(missing_ok=True)
+
+
+def instagram_token_erneuern(token: str) -> tuple[str, int]:
+    """Langzeit-Token verlaengern (wieder 60 Tage gueltig). Rueckgabe (neuer Token, Sekunden gueltig)."""
+    r = requests.get("https://graph.instagram.com/refresh_access_token",
+                     params={"grant_type": "ig_refresh_token", "access_token": token}, timeout=30)
+    j = r.json()
+    if r.status_code >= 300 or "access_token" not in j:
+        raise RuntimeError((j.get("error") or {}).get("message") or r.text[:200])
+    return j["access_token"], int(j.get("expires_in", 0))
+
+
+POSTER = {"telegram": telegram_kanal, "x": x_posten, "instagram": instagram_posten}
