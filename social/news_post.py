@@ -8,12 +8,15 @@ import html
 import re
 from pathlib import Path
 
-from .sprache import MONATE_DE
+from . import design
+from .sprache import hinweis, stempel as datum_stempel
 
 X_MAX = 280
 LAYOUTS = ("klassisch", "gross", "kennzahl", "chart")
 KENNZAHL = re.compile(r"[-+−]?\d[\d.]*(?:,\d+)?\s?(?:%|Mrd\.?\s?(?:\$|€|US-Dollar|Dollar|Euro)?|Mio\.?\s?(?:\$|€|US-Dollar|Dollar|Euro)?"
                       r"|Milliarden\s?(?:\$|€|US-Dollar|Dollar|Euro)?|Millionen\s?(?:\$|€|US-Dollar|Dollar|Euro)?|\$|€|BTC|ETH)")
+KENNZAHL_EN = re.compile(r"\$\d[\d,]*(?:\.\d+)?(?:\s?(?:trillion|billion|million|bn|[BMK]\b))?"
+                         r"|[-+−]?\d[\d,]*(?:\.\d+)?\s?(?:%|trillion|billion|million|bps|basis points|BTC|ETH)")
 
 
 def quellen_hinweis(gruppe: dict) -> str:
@@ -22,10 +25,12 @@ def quellen_hinweis(gruppe: dict) -> str:
 
 
 def texte(d: dict, gruppe: dict, cfg: dict, eil: bool = False) -> dict:
-    kopf = "🚨 EILMELDUNG: " if eil else ""
-    x = f"{kopf}{d['x']}\nKeine Anlageberatung."
+    lang = cfg.get("sprache", "de")
+    hw = hinweis(cfg, lang)
+    kopf = (("🚨 BREAKING: " if lang == "en" else "🚨 EILMELDUNG: ") if eil else "")
+    x = f"{kopf}{d['x']}\n{hw}"
     if len(x) > X_MAX:
-        x = f"{kopf}{d['x'][:X_MAX - len(kopf) - 25].rstrip()}…\nKeine Anlageberatung."
+        x = f"{kopf}{d['x'][:X_MAX - len(kopf) - len(hw) - 3].rstrip()}…\n{hw}"
     e = html.escape
     tg = [f"{'🚨 ' if eil else '📰 '}<b>{e(d['schlagzeile'])}</b>", "", e(d["kernsatz"]), ""]
     tg += [f"• {e(p)}" for p in d["punkte"]]
@@ -36,7 +41,7 @@ def texte(d: dict, gruppe: dict, cfg: dict, eil: bool = False) -> dict:
 def kennzahl(d: dict) -> str | None:
     """Erste Zahl mit Einheit aus Kernsatz/Punkten (Text ist vorher gegen die Quellen geprueft)."""
     for text in [d["kernsatz"], *d["punkte"]]:
-        m = KENNZAHL.search(text)
+        m = (KENNZAHL_EN if design.SPRACHE == "en" else KENNZAHL).search(text)
         if m and any(c.isdigit() for c in m.group()):
             return m.group().strip()
     return None
@@ -60,7 +65,8 @@ def bild(d: dict, gruppe: dict, cfg: dict, ziel: Path, eil: bool = False, jetzt:
         MINUS, font
     from . import grafik
     t = dt.datetime.fromtimestamp(jetzt or dt.datetime.now().timestamp())
-    stempel = f"{t.day}. {MONATE_DE[t.month - 1]} {t.year}"
+    en = design.SPRACHE == "en"
+    stempel = datum_stempel(t, design.SPRACHE)
     th = thema_waehlen("eil" if eil else "news", f"{t.isoformat()}:{d['schlagzeile']}")
     layout = layout or layout_waehlen(d, kurs)
     if layout == "chart" and not (kurs and len(kurs) >= 10):
@@ -71,7 +77,7 @@ def bild(d: dict, gruppe: dict, cfg: dict, ziel: Path, eil: bool = False, jetzt:
     img = hintergrund(th, W, H, saat=len(d["schlagzeile"]))
     marke(img, th, 80, 64, 64, untertitel=stempel)
     dr = ImageDraw.Draw(img)
-    etikett(dr, th, 80, 170, ("EILMELDUNG · " if eil else "NEWS · ") + d["rubrik"].upper(),
+    etikett(dr, th, 80, 170, (("BREAKING · " if en else "EILMELDUNG · ") if eil else "NEWS · ") + d["rubrik"].upper(),
             farbe=MINUS if eil else None)
     unten = H - 130
 
@@ -90,7 +96,7 @@ def bild(d: dict, gruppe: dict, cfg: dict, ziel: Path, eil: bool = False, jetzt:
         gr = 150
         while dr.textlength(z, font=font("Bold", gr)) > W - 220 and gr > 70:
             gr -= 8
-        dr.text((100, y + 34), "DIE ZAHL DES TAGES", font=font("Bold", 26), fill=th.neben)
+        dr.text((100, y + 34), "NUMBER OF THE DAY" if en else "DIE ZAHL DES TAGES", font=font("Bold", 26), fill=th.neben)
         dr.text((100, y + 165 - gr * 0.55), z, font=font("Bold", gr), fill=th.akzent)
         y += 340
         y = absatz(dr, th, 80, y, d["kernsatz"], W - 160, groesse=38, gewicht="Medium") + 30
@@ -103,11 +109,11 @@ def bild(d: dict, gruppe: dict, cfg: dict, ziel: Path, eil: bool = False, jetzt:
         chg = (werte[-1] / werte[0] - 1) * 100 if werte[0] else 0
         farbe = th.akzent if chg >= 0 else th.minus
         tage = ["" for _ in werte]
-        tage[0], tage[-1] = "vor 7 Tagen", "jetzt"
+        tage[0], tage[-1] = ("7 days ago", "now") if en else ("vor 7 Tagen", "jetzt")
         grafik.linien(img, th, (60, y, W - 60, unten - 10),
                       [{"name": coin, "werte": werte, "farbe": farbe,
-                        "endtext": ("+" if chg >= 0 else "−") + de(abs(chg)) + " %"}],
-                      tage, titel=f"{coin}-Kurs, 7 Tage")
+                        "endtext": ("+" if chg >= 0 else "−") + de(abs(chg)) + ("%" if en else " %")}],
+                      tage, titel=f"{coin} price, 7 days" if en else f"{coin}-Kurs, 7 Tage")
     else:   # klassisch
         y = ueberschrift(dr, th, 80, 256, d["schlagzeile"], W - 160, groesse=84, max_zeilen=3) + 30
         dr.rounded_rectangle([80, y, 240, y + 8], radius=4, fill=th.akzent)

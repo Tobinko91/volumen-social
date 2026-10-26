@@ -10,8 +10,9 @@ WURZEL = pathlib.Path(__file__).resolve().parents[1]
 class HinweisTest(unittest.TestCase):
     def test_nur_keine_anlageberatung(self):
         h = yaml.safe_load((WURZEL / "config.yaml").read_text(encoding="utf-8"))["hinweise"]
-        self.assertEqual(h["fusszeile"], "Keine Anlageberatung")
-        self.assertEqual(h["post_text"], "Keine Anlageberatung.")
+        # seit 26.10.2026 Englisch: nur dieser eine Satz (gleiche Regel wie 22.10. auf Deutsch)
+        self.assertEqual(h["fusszeile"], "Not financial advice")
+        self.assertEqual(h["post_text"], "Not financial advice.")
         self.assertFalse(h.get("konflikt"))
 
     def test_kein_ki_hinweis_im_code(self):

@@ -1,123 +1,123 @@
-# Lern-Beitraege fuer Telegram und X (Text + Bild). Jede Zahl im Text muss unter "fakten" stehen.
-# Gerechnet am 20.10.2026 (Claude, nachpruefbar in tests/test_wissen.py).
-# Renditen sind Annahmen fuer die Rechnung, keine Prognose.
+# Learning posts for Telegram, X and Instagram (text + image). English since 26.10.2026.
+# Every number in the text must appear under "fakten". Calculated 20.10.2026 (see tests/test_wissen.py).
+# Returns are assumptions for the math, not a forecast. German originals: wissen_de.yaml.
 
 - id: risiko-1-prozent
-  saeule: Trading lernen
-  titel: Warum 1 % Risiko pro Trade dein Konto schützt
-  gross: "90,4 %"
-  gross_text: bleiben nach 10 Verlusten in Folge
+  saeule: Learn trading
+  titel: Why risking 1% per trade protects your account
+  gross: "90.4%"
+  gross_text: left after 10 losses in a row
   fakten: {risiko_klein: 1, risiko_gross: 5, verluste: 10, rest_1: 90.4, rest_5: 59.9}
   punkte:
-    - Wer pro Trade 1 % riskiert, hat nach 10 Verlusten in Folge noch 90,4 % seines Kontos.
-    - Bei 5 % Risiko pro Trade sind es nur noch 59,9 %.
-    - Verlustserien gehören auch zu guten Strategien. Die Größe pro Trade entscheidet, ob du sie überstehst.
-  x: "10 Verluste in Folge.\nMit 1 % Risiko pro Trade bleiben 90,4 % deines Kontos.\nMit 5 % Risiko nur 59,9 %.\nDie Positionsgröße ist wichtiger als der perfekte Trade.\nKeine Anlageberatung."
+    - Risk 1% per trade and after 10 losses in a row you still have 90.4% of your account.
+    - Risk 5% per trade and you are down to 59.9%.
+    - Losing streaks happen to good strategies too. Your position size decides whether you survive them.
+  x: "10 losses in a row.\nRisking 1% per trade: 90.4% of your account is left.\nRisking 5%: only 59.9%.\nPosition size matters more than the perfect trade.\nNot financial advice."
 
 - id: verlust-falle
-  saeule: Trading lernen
-  titel: "Die Verlust-Falle: Warum −50 % ganze +100 % brauchen"
-  gross: "+100 %"
-  gross_text: braucht es nach einem Verlust von 50 %
+  saeule: Learn trading
+  titel: "The loss trap: why −50% needs +100%"
+  gross: "+100%"
+  gross_text: needed to recover from a 50% loss
   fakten: {v20: 20, g20: 25, v50: 50, g50: 100, v90: 90, g90: 900}
   punkte:
-    - Nach 20 % Verlust brauchst du 25 % Gewinn, um wieder bei null zu sein.
-    - Nach 50 % Verlust brauchst du 100 %.
-    - Nach 90 % Verlust brauchst du 900 %. Große Verluste zu vermeiden ist wichtiger als große Gewinne zu jagen.
-  x: "Verlust und Erholung sind nicht gleich groß:\n−20 % brauchen +25 %\n−50 % brauchen +100 %\n−90 % brauchen +900 %\nDarum zählt zuerst: große Verluste vermeiden.\nKeine Anlageberatung."
+    - After a 20% loss you need a 25% gain to get back to even.
+    - After a 50% loss you need 100%.
+    - After a 90% loss you need 900%. Avoiding big losses matters more than chasing big wins.
+  x: "Losses and recoveries are not the same size:\n−20% needs +25%\n−50% needs +100%\n−90% needs +900%\nRule one: avoid big losses.\nNot financial advice."
 
 - id: hebel
-  saeule: Trading lernen
-  titel: Was Hebel wirklich bedeutet
-  gross: "10 %"
-  gross_text: Gegenbewegung reichen bei 10-fachem Hebel für den Totalverlust
+  saeule: Learn trading
+  titel: What leverage really means
+  gross: "10%"
+  gross_text: move against you wipes out a 10x position
   fakten: {hebel_10: 10, bewegung_10: 10, hebel_20: 20, bewegung_20: 5}
   punkte:
-    - Mit 10-fachem Hebel reicht eine Gegenbewegung von 10 %, und der Einsatz ist weg (vereinfacht, ohne Gebühren).
-    - Mit 20-fachem Hebel reichen schon 5 %.
-    - Bei kleinen Coins sind 10 % an einem Tag normal. Hebel vergrößert nicht nur Gewinne, sondern vor allem Fehler.
-  x: "Hebel kurz erklärt:\n10-fach: 10 % Gegenbewegung = Einsatz weg\n20-fach: schon 5 %\nBei Small Caps sind 10 % an einem Tag normal.\nKeine Anlageberatung."
+    - With 10x leverage a 10% move against you wipes out your stake (simplified, before fees).
+    - With 20x leverage 5% is enough.
+    - Small caps move 10% in a day all the time. Leverage doesn't just magnify wins, it magnifies mistakes.
+  x: "Leverage in one line:\n10x: a 10% move against you = stake gone\n20x: just 5%\nSmall caps move 10% in a day all the time.\nNot financial advice."
 
 - id: unterstuetzung
-  saeule: Kaufzonen verstehen
-  titel: Unterstützung und Widerstand einfach erklärt
-  gross: Unterstützung
-  gross_text: ein Bereich, an dem früher oft gekauft wurde
+  saeule: Understanding buy zones
+  titel: Support and resistance, simply explained
+  gross: Support
+  gross_text: an area where buyers often stepped in before
   fakten: {}
   punkte:
-    - "Unterstützung: ein Kursbereich, an dem in der Vergangenheit oft Käufer aktiv wurden und der Kurs drehte."
-    - "Widerstand: ein Bereich, an dem oft verkauft wurde. Je häufiger ein Bereich hielt und je höher das Volumen dort war, desto mehr beachten ihn Trader."
-    - Wird eine Unterstützung klar unterschritten, wird sie oft zum Widerstand. Eine Garantie ist kein Bereich.
-  x: "Warum Kurse oft an denselben Stellen drehen:\nUnterstützung = dort wurde früher oft gekauft.\nWiderstand = dort wurde früher oft verkauft.\nBricht eine Unterstützung, wird sie oft zum Widerstand.\nKeine Anlageberatung."
+    - "Support: a price area where buyers repeatedly stepped in and the price turned."
+    - "Resistance: an area where sellers repeatedly stepped in. The more often an area held and the more volume traded there, the more traders watch it."
+    - When support breaks clearly, it often turns into resistance. No level is a guarantee.
+  x: "Why price often turns at the same levels:\nSupport = buyers stepped in there before.\nResistance = sellers stepped in there before.\nWhen support breaks, it often becomes resistance.\nNot financial advice."
 
 - id: liquiditaetszone
-  saeule: Kaufzonen verstehen
-  titel: "Liquiditätszonen: Wo viele Orders warten"
-  gross: Liquidität
-  gross_text: sammelt sich dort, wo viele Orders liegen
+  saeule: Understanding buy zones
+  titel: "Liquidity zones: where the orders are waiting"
+  gross: Liquidity
+  gross_text: builds up where many orders sit
   fakten: {}
   punkte:
-    - Viele Trader setzen ihre Stops knapp unter offensichtliche Tiefs oder über offensichtliche Hochs.
-    - Dort sammeln sich viele Orders, also Liquidität. Große Marktteilnehmer brauchen genau diese Liquidität, um große Mengen zu handeln.
-    - Darum laufen Kurse oft kurz unter ein Tief und drehen dann. Wer das kennt, setzt seinen Stop weniger offensichtlich.
-  x: "Warum der Kurs oft kurz unter das Tief fällt und dann dreht:\nDort liegen viele Stops = viel Liquidität.\nGroße Spieler brauchen genau diese Orders.\nOffensichtliche Stops werden oft zuerst geholt.\nKeine Anlageberatung."
+    - Many traders put their stops just below obvious lows or just above obvious highs.
+    - That's where orders pile up, which means liquidity. Large players need exactly that liquidity to move size.
+    - That's why price often dips just below a low and then turns. Knowing this, you can place your stop less obviously.
+  x: "Why price often dips below the low and then reverses:\nThat's where the stops are = lots of liquidity.\nBig players need exactly those orders.\nObvious stops tend to get taken first.\nNot financial advice."
 
 - id: weg-100k-200
-  saeule: Weg zu 100.000 €
-  titel: "100.000 € mit 200 € im Monat: Wie lange dauert das?"
-  gross: "19,6 Jahre"
-  gross_text: bei angenommenen 7 % Rendite im Jahr
-  fakten: {ziel: "100.000", sparrate: 200, jahre_0: 41.7, rendite_5: 5, jahre_5: 22.6, rendite_7: 7, jahre_7: 19.6}
+  saeule: Road to $100k
+  titel: "$100,000 with $200 a month: how long does it take?"
+  gross: "19.6 years"
+  gross_text: at an assumed 7% return per year
+  fakten: {ziel: "100,000", sparrate: 200, jahre_0: 41.7, rendite_5: 5, jahre_5: 22.6, rendite_7: 7, jahre_7: 19.6}
   punkte:
-    - Ohne Rendite dauert es mit 200 € im Monat 41,7 Jahre bis 100.000 €.
-    - Mit angenommenen 5 % Rendite im Jahr 22,6 Jahre, mit 7 % 19,6 Jahre.
-    - Die Renditen sind Annahmen für die Rechnung, keine Prognose. Wer schneller will, erhöht meist die Sparrate, nicht das Risiko.
-  x: "100.000 € mit 200 € im Monat:\nohne Rendite: 41,7 Jahre\nmit 5 % im Jahr: 22,6 Jahre\nmit 7 % im Jahr: 19,6 Jahre\nRenditen sind Annahmen, keine Prognose.\nKeine Anlageberatung."
+    - With no return, saving $200 a month takes 41.7 years to reach $100,000.
+    - At an assumed 5% a year it takes 22.6 years, at 7% it takes 19.6 years.
+    - The returns are assumptions for the math, not a forecast. Most people get there faster by saving more, not by taking more risk.
+  x: "$100,000 with $200 a month:\nno return: 41.7 years\n5% a year: 22.6 years\n7% a year: 19.6 years\nReturns are assumptions, not a forecast.\nNot financial advice."
 
 - id: erste-10k
-  saeule: Weg zu 100.000 €
-  titel: Warum die ersten 10.000 € die schwersten sind
-  gross: "45 Monate"
-  gross_text: für die ersten 10.000 € (200 € im Monat, 7 % angenommen)
-  fakten: {betrag: "10.000", sparrate: 200, rendite: 7, monate_erste: 45, monate_zweite: 35}
+  saeule: Road to $100k
+  titel: Why the first $10,000 is the hardest
+  gross: "45 months"
+  gross_text: for the first $10,000 ($200 a month, 7% assumed)
+  fakten: {betrag: "10,000", sparrate: 200, rendite: 7, monate_erste: 45, monate_zweite: 35}
   punkte:
-    - Mit 200 € im Monat und angenommenen 7 % Rendite dauern die ersten 10.000 € 45 Monate.
-    - Die zweiten 10.000 € dauern nur noch 35 Monate, weil das vorhandene Geld mitarbeitet.
-    - Am Anfang zählt fast nur die Sparrate. Der Zinseszins wird erst später spürbar.
-  x: "Die ersten 10.000 € sind die schwersten:\n200 € im Monat, 7 % angenommen\nerste 10.000 €: 45 Monate\nzweite 10.000 €: 35 Monate\nDanach arbeitet das Geld mit.\nKeine Anlageberatung."
+    - Saving $200 a month at an assumed 7% return, the first $10,000 takes 45 months.
+    - The second $10,000 takes only 35 months, because the money you already have is working too.
+    - At the start, almost everything comes from saving. Compounding only kicks in later.
+  x: "The first $10,000 is the hardest:\n$200 a month, 7% assumed\nfirst $10,000: 45 months\nsecond $10,000: 35 months\nAfter that, your money starts working.\nNot financial advice."
 
 - id: zinseszins
-  saeule: Weg zu 100.000 €
-  titel: Der Zinseszins in einem Bild
-  gross: "1.006 €"
-  gross_text: aus 100 € nach 30 Jahren bei 8 % im Jahr
-  fakten: {start: 100, rendite: 8, jahre: 30, ende: "1.006"}
+  saeule: Road to $100k
+  titel: Compound interest in one picture
+  gross: "$1,006"
+  gross_text: from $100 after 30 years at 8% a year
+  fakten: {start: 100, rendite: 8, jahre: 30, ende: "1,006"}
   punkte:
-    - 100 € wachsen bei 8 % im Jahr in 30 Jahren auf 1.006 €.
-    - Der größte Teil des Zuwachses entsteht in den letzten Jahren, nicht am Anfang.
-    - Die Rendite ist eine Annahme für die Rechnung. Zeit ist der Hebel, den jeder hat.
-  x: "Zinseszins:\n100 € bei 8 % im Jahr\nnach 30 Jahren: 1.006 €\nDer größte Zuwachs kommt am Ende.\nRendite angenommen, keine Prognose.\nKeine Anlageberatung."
+    - $100 grows to $1,006 in 30 years at 8% a year.
+    - Most of the growth happens in the last years, not at the start.
+    - The return is an assumption for the math. Time is the lever everyone has.
+  x: "Compound interest:\n$100 at 8% a year\nafter 30 years: $1,006\nMost of the growth comes at the end.\nReturn assumed, not a forecast.\nNot financial advice."
 
 - id: pump-and-dump
-  saeule: Betrug und Fallen
-  titel: So funktioniert ein Pump-and-Dump
-  gross: 3 Phasen
-  gross_text: Sammeln, Bewerben, Verkaufen
+  saeule: Scams and traps
+  titel: How a pump-and-dump works
+  gross: 3 phases
+  gross_text: accumulate, promote, sell
   fakten: {phasen: 3}
   punkte:
-    - "Sammeln: Eine Gruppe kauft einen kleinen Coin leise ein, solange er billig ist."
-    - "Bewerben: In Gruppen und Posts wird Druck gemacht: neue Partnerschaft, letzte Chance, gleich explodiert er."
-    - "Verkaufen: Wenn neue Käufer kommen, verkauft die Gruppe an sie. Der Kurs bricht ein, die Letzten tragen den Verlust."
-  x: "Pump-and-Dump in 3 Phasen:\n1. leise einsammeln\n2. laut bewerben\n3. an die neuen Käufer verkaufen\nWenn dich jemand drängt, frag: Wer verkauft mir gerade?\nKeine Anlageberatung."
+    - "Accumulate: a group quietly buys a small coin while it's cheap."
+    - "Promote: groups and posts build pressure: new partnership, last chance, it's about to explode."
+    - "Sell: when new buyers arrive, the group sells to them. Price collapses and the last ones in take the loss."
+  x: "Pump-and-dump in 3 phases:\n1. quietly accumulate\n2. loudly promote\n3. sell to the new buyers\nIf someone is rushing you, ask: who is selling to me right now?\nNot financial advice."
 
 - id: fake-guru
-  saeule: Betrug und Fallen
-  titel: 5 Zeichen für einen Fake-Krypto-Guru
-  gross: 5 Zeichen
-  gross_text: an denen du unseriöse Gurus erkennst
+  saeule: Scams and traps
+  titel: 5 signs of a fake crypto guru
+  gross: 5 signs
+  gross_text: that give away a shady guru
   fakten: {zeichen: 5}
   punkte:
-    - Er zeigt nur Gewinne, nie Verluste. Er verspricht feste Renditen oder sagt „sicher“.
-    - Er drängt zur Eile („nur heute“) und verkauft teure Gruppen oder Kurse.
-    - Er empfiehlt Coins, ohne offenzulegen, dass er sie selbst hält.
-  x: "5 Zeichen für einen Fake-Krypto-Guru:\n1. zeigt nie Verluste\n2. verspricht feste Renditen\n3. drängt zur Eile\n4. verkauft teure Gruppen\n5. verschweigt eigene Positionen\nKeine Anlageberatung."
+    - They only show wins, never losses. They promise fixed returns or call anything "safe".
+    - They rush you ("today only") and sell expensive groups or courses.
+    - They recommend coins without disclosing that they hold them.
+  x: "5 signs of a fake crypto guru:\n1. never shows losses\n2. promises fixed returns\n3. rushes you\n4. sells expensive groups\n5. hides their own positions\nNot financial advice."

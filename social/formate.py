@@ -8,8 +8,10 @@ from .daten import Daten, marktlage
 from .sprache import TAG, T, datum, zahl, zahl_gesprochen
 
 
-def markt_30s(d: Daten, sperrliste: set[str], lang: str = "de", anzahl_mover: int = 3) -> dict:
+def markt_30s(d: Daten, sperrliste: set[str], lang: str | None = None, anzahl_mover: int = 3) -> dict:
     """'Krypto-Markt in 30 Sekunden': Altcoin-Breite + staerkste Bewegungen mit Ausloeser."""
+    from .design import SPRACHE
+    lang = lang or SPRACHE
     t = T[lang]
     breite = marktlage(d)   # markt.json vom Bot, sonst Ersatzrechnung aus coins/
     mover = []

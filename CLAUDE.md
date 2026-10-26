@@ -19,7 +19,9 @@ einfache Schritte, ein Befehl pro Block, zu jeder Bitte kurz warum. Niemals Pass
 - Python 3 + ffmpeg + Pillow + PyYAML + requests. Keine weiteren Pakete ohne Grund.
 - Tests: `python3 -m unittest discover tests` – jede Änderung braucht grüne Tests.
 - Schlüssel nur in `secrets.yaml` auf dem Server (gitignored). Sperrliste nur in `sperrliste.txt` (gitignored).
-- Social-Media-Inhalte auf Deutsch (Start, entschieden 20.10.2026), Englisch später als eigene Kanäle.
+- Social-Media-Inhalte **nur auf Englisch** (Entscheidung Tobias 26.10.2026, `config.yaml` sprache: en) für ein weltweites
+  Publikum. Deutsch bleibt im Code abschaltbar (`sprache: de`, `inhalte/wissen_de.yaml`). Nachrichten an Tobias im
+  Redaktions-Bot (Freigabe, Hinweise, Fehler) bleiben Deutsch.
 
 ## Design
 - Corporate Design „Nachtleuchten“ (Design 06) aus `volumen-web`: Mitternacht #140F2E, Leuchtminze #3CF2C0,
@@ -29,10 +31,11 @@ einfache Schritte, ein Befehl pro Block, zu jeder Bitte kurz warum. Niemals Pass
 
 ## Schutzregeln (nie abschwächen)
 - Jede Zahl im Sprechtext muss in den Bot-Daten stehen (`social/pruefung.py`).
-- News direkt formulieren (kein „Berichten zufolge“), mit Datum, Uhrzeit (deutsche Zeit), wer spricht, was danach kommt.
+- News direkt formulieren (kein „Berichten zufolge“ / "reportedly"), mit Datum, Uhrzeit (ET und UTC), wer spricht,
+  was danach kommt.
   Keine Quellenangaben im Beitrag (nur im Freigabe-Hinweis an Tobias).
 - Keine Einstiegskurse, Stops, Kursziele, keine Kauf-/Verkaufsaufforderung, keine Gewinnversprechen.
-- Überall (Texte, Bilder, Videos) nur „Keine Anlageberatung“ – kein KI-, Totalverlust- oder Betreiber-Hinweis
-  (Wunsch Tobias 22.10.2026, nicht wieder verlängern).
+- Überall (Texte, Bilder, Videos) nur „Not financial advice.“ (früher „Keine Anlageberatung“) – kein KI-, Totalverlust-
+  oder Betreiber-Hinweis (Wunsch Tobias 22.10.2026, nicht wieder verlängern).
   Keine Coins von der Sperrliste.
 - Nur lizenzfreie Musik und eigene Grafiken. Öffentlich posten erst nach Freigabe durch Tobias.

@@ -6,6 +6,9 @@ import datetime as dt
 MONATE_DE = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August",
              "September", "Oktober", "November", "Dezember"]
 
+MONATE_EN = ["January", "February", "March", "April", "May", "June", "July", "August",
+             "September", "October", "November", "December"]
+
 # Hashtags des Bots -> Beschreibung des Ausloesers
 TAG = {
     "de": {
@@ -74,7 +77,7 @@ T = {
         "b_mover": "TOP MOVER {nr}/{von}", "b_24h": "24h",
         "b_ausloeser": "TRIGGER: {a}", "b_keine": "NO CLEAR NEWS",
         "b_outro": "Market data. Explained. Honest.",
-        "hashtags": ["#crypto", "#altcoins", "#cryptonews", "#bitcoin"],
+        "hashtags": ["#crypto", "#bitcoin", "#altcoins", "#cryptonews", "#whalesqueeze"],
         "hinweis": "Not financial advice.",
         "p_kopf": "Crypto market, {datum}",
         "p_breite_x": "{anzahl} small caps, 24h: half above {median}%, {plus}% green.",
@@ -108,6 +111,13 @@ def zahl_gesprochen(x: float, lang: str) -> str:
 SPRACHEN = tuple(T)
 
 
+def stempel(d: dt.datetime | dt.date, lang: str, jahr: bool = True) -> str:
+    """Datum fuer Bilder: '26 October 2026' / '26. Oktober 2026'."""
+    if lang == "de":
+        return f"{d.day}. {MONATE_DE[d.month - 1]}" + (f" {d.year}" if jahr else "")
+    return f"{MONATE_EN[d.month - 1]} {d.day}" + (f", {d.year}" if jahr else "")
+
+
 def hinweis(cfg: dict, lang: str) -> str:
-    """Pflicht-Hinweis unter Posts: Deutsch aus config.yaml (Wunsch Tobias 22.10.), sonst aus T."""
-    return cfg["hinweise"]["post_text"] if lang == "de" else T[lang]["hinweis"]
+    """Pflicht-Hinweis unter Posts: in der Kanal-Sprache aus config.yaml (Wunsch Tobias 22.10.), sonst aus T."""
+    return cfg["hinweise"]["post_text"] if lang == cfg.get("sprache", "de") else T[lang]["hinweis"]

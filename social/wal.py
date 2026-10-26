@@ -92,7 +92,7 @@ def bild(w: dict, cfg: dict, ziel: Path, lang: str = "de", jetzt: float | None =
     y = 370
     if w.get("wal_7d") is not None:
         v = w["wal_7d"]
-        d.text((80, y), f"{zahl(v, lang, True)} PP", font=font("Bold", 120), fill=th.plus if v >= 0 else th.minus)
+        d.text((80, y), f"{zahl(v, lang, True)} {'pp' if lang == 'en' else 'PP'}", font=font("Bold", 120), fill=th.plus if v >= 0 else th.minus)
         y = absatz(d, th, 80, y + 150, t["pp"].format(v=zahl(v, lang, True)), Wd - 160, groesse=30, farbe=th.neben)
     elif w.get("wal") is not None:
         d.text((80, y), f"{zahl(w['wal'], lang)} %", font=font("Bold", 120), fill=th.akzent)
@@ -106,7 +106,7 @@ def bild(w: dict, cfg: dict, ziel: Path, lang: str = "de", jetzt: float | None =
         reihen = [{"name": t["kurve_w"], "werte": [p[1] for p in v], "farbe": th.akzent}]
         if all(p[2] is not None for p in v):
             reihen.append({"name": t["kurve_b"], "werte": [p[2] for p in v], "farbe": th.akzent2})
-        grafik.linien(img, th, (80, y, Wd - 80, y + 460), reihen, labels, titel=t["chart"], einheit=" %",
+        grafik.linien(img, th, (80, y, Wd - 80, y + 460), reihen, labels, titel=t["chart"], einheit="%" if lang == "en" else " %",
                       flaeche=False)
         y += 500
     rest = zeilen(w, lang)[2:]   # Boerse und Holder unter der Grafik, auf einer Karte (lesbar vor jedem Hintergrund)

@@ -6,7 +6,7 @@ daten:
   dir: /opt/volumen-bot/web
   max_alter_min: 30          # aeltere Daten -> kein Video, Warnung
 
-sprache: de                  # Start auf Deutsch (entschieden 20.10.2026), Englisch spaeter als eigene Kanaele
+sprache: en                  # seit 26.10.2026 nur Englisch (Entscheidung Tobias); vorher Deutsch
 
 video:
   breite: 1080
@@ -33,13 +33,13 @@ text:
 
 stimme:
   anbieter: elevenlabs
-  voice_name: "WhaleSqueeze DE"   # eigene Stimme aus Voice Design (20.10.2026); ID wird per Name gesucht
+  voice_name: "Brian"             # englische Stimme (seit 26.10.2026); eigene Stimme spaeter z. B. "WhaleSqueeze EN"; ID wird per Name gesucht
   voice_id: null                  # optional: feste ID statt Name
   modell: eleven_multilingual_v2
 
 hinweise:                    # fusszeile/konflikt: Bilder und Videos
-  post_text: "Keine Anlageberatung."   # unter Telegram-Texten (Wunsch Tobias 22.10.2026: nur dieser Satz)
-  fusszeile: "Keine Anlageberatung"   # in Bildern und Videos (Wunsch Tobias 22.10.2026: nur das)
+  post_text: "Not financial advice."   # unter allen Texten (Wunsch Tobias 22.10.2026: nur dieser Satz; Englisch seit 26.10.)
+  fusszeile: "Not financial advice"    # in Bildern und Videos
   konflikt: ""                         # entfernt (Wunsch Tobias 22.10.2026)
 
 pruefung:

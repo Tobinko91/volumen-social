@@ -13,7 +13,7 @@ CFG = yaml.safe_load((HIER / "config.yaml").read_text())
 class LinkTest(unittest.TestCase):
     def test_alle_kennungen(self):
         u = urlparse(links.link("tiktok", "markt_30s", "20261024-0730_markt"))
-        self.assertEqual((u.scheme, u.netloc, u.path), ("https", "whalesqueeze.com", "/"))
+        self.assertEqual((u.scheme, u.netloc, u.path), ("https", "whalesqueeze.com", "/en/"))   # Kanal-Sprache en
         self.assertEqual(parse_qs(u.query), {"utm_source": ["tiktok"], "utm_medium": ["social"],
                                              "utm_campaign": ["markt_30s"], "utm_content": ["20261024-0730_markt"]})
 
@@ -25,22 +25,25 @@ class LinkTest(unittest.TestCase):
 
     def test_pfad_sprache_und_sonderzeichen(self):
         self.assertTrue(links.link("x", "Coin Check!", "ä b", pfad="coin/ake/").startswith(
+            "https://whalesqueeze.com/en/coin/ake/?"))
+        self.assertTrue(links.link("x", "news", "a", pfad="coin/ake/", lang="de").startswith(
             "https://whalesqueeze.com/coin/ake/?"))
         self.assertIn("utm_campaign=coin-check", links.link("x", "Coin Check!", "x"))
         self.assertTrue(links.link("x", "bio", "profil", lang="en").startswith("https://whalesqueeze.com/en/?"))
 
     def test_bio_links(self):
         b = links.bio_links()
-        self.assertEqual(b["instagram"], "https://whalesqueeze.com/?utm_source=instagram&utm_medium=social"
+        self.assertEqual(b["instagram"], "https://whalesqueeze.com/en/?utm_source=instagram&utm_medium=social"
                                          "&utm_campaign=bio&utm_content=profil")
         self.assertEqual(len(b), 5)
 
     def test_telegram_link_vor_hinweis_und_pruefung_bestanden(self):
         d = daten.laden(HIER / "beispieldaten")
-        b = formate.markt_30s(d, set())
+        b = formate.markt_30s(d, set(), "en")
         t = post.markt_texte(b, CFG)
         tg = links.mit_telegram_link(t["telegram"], b["format"], "20261024-0730_markt")
-        self.assertIn('href="https://whalesqueeze.com/?utm_source=telegram&amp;utm_medium=social', tg)
+        self.assertIn('href="https://whalesqueeze.com/en/?utm_source=telegram&amp;utm_medium=social', tg)
+        self.assertIn("More data", tg)
         self.assertTrue(tg.rstrip().endswith("</i>"))   # Hinweis bleibt letzte Zeile
         f = pruefung.pruefen([t["x"], tg], dict(b, szenen=[0, 0]), CFG, set(), erlaubt_fusszeile=True)
         self.assertEqual(f, [])

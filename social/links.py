@@ -22,7 +22,7 @@ def _slug(text: str) -> str:
     return s[:60] or "unbekannt"
 
 
-def link(kanal: str, format: str, beitrag_id: str, pfad: str = "/", lang: str = "de") -> str:
+def link(kanal: str, format: str, beitrag_id: str, pfad: str = "/", lang: str | None = None) -> str:
     """Link zu whalesqueeze.com mit Kanal-, Format- und Beitrags-Kennung.
 
     kanal: tiktok | instagram | youtube | x | telegram
@@ -31,6 +31,7 @@ def link(kanal: str, format: str, beitrag_id: str, pfad: str = "/", lang: str = 
     pfad: Seite auf der Website, z. B. "/coin/ake/"
     lang: "en" setzt den Pfad unter /en/ (Website PR #8), Deutsch bleibt ohne Vorsilbe.
     """
+    lang = lang or _sprache()
     k = str(kanal).strip().lower()
     if k not in KANAELE:
         raise ValueError(f"Unbekannter Kanal: {kanal!r} (erlaubt: {', '.join(KANAELE)})")
@@ -42,19 +43,24 @@ def link(kanal: str, format: str, beitrag_id: str, pfad: str = "/", lang: str = 
     return f"{DOMAIN}{p}?{q}"
 
 
-def bio_links(lang: str = "de") -> dict[str, str]:
+def _sprache() -> str:
+    from . import design
+    return design.SPRACHE
+
+
+def bio_links(lang: str | None = None) -> dict[str, str]:
     """Fertige Profil-Links (Bio) je Kanal."""
     return {k: link(k, "bio", "profil", lang=lang) for k in KANAELE}
 
 
-def telegram_zeile(format: str, beitrag_id: str, pfad: str = "/", lang: str = "de") -> str:
+def telegram_zeile(format: str, beitrag_id: str, pfad: str = "/", lang: str | None = None) -> str:
     """Link-Zeile fuer Telegram-Texte (HTML-Modus)."""
     url = link("telegram", format, beitrag_id, pfad, lang)
-    text = "Mehr Daten" if lang == "de" else "More data"
+    text = "Mehr Daten" if (lang or _sprache()) == "de" else "More data"
     return f'🔗 <a href="{html.escape(url)}">{text}: whalesqueeze.com</a>'   # & -> &amp; (Telegram-HTML)
 
 
-def mit_telegram_link(tg_text: str, format: str, beitrag_id: str, pfad: str = "/", lang: str = "de") -> str:
+def mit_telegram_link(tg_text: str, format: str, beitrag_id: str, pfad: str = "/", lang: str | None = None) -> str:
     """Haengt die Link-Zeile vor den Hinweis 'Keine Anlageberatung' (letzte Zeile) bzw. ans Ende."""
     zeile = telegram_zeile(format, beitrag_id, pfad, lang)
     if len(tg_text) + len(zeile) + 2 > TG_MAX:   # Telegram schneidet Bildtexte bei 1024 Zeichen ab -> kein halber Link
@@ -65,7 +71,7 @@ def mit_telegram_link(tg_text: str, format: str, beitrag_id: str, pfad: str = "/
     return "\n".join(teile + ["", zeile])
 
 
-def beschreibungen(text: str, format: str, beitrag_id: str, pfad: str = "/", lang: str = "de") -> dict[str, str]:
+def beschreibungen(text: str, format: str, beitrag_id: str, pfad: str = "/", lang: str | None = None) -> dict[str, str]:
     """Video-Beschreibung je Kanal, jeweils mit eigenem Link (YouTube, TikTok, Instagram)."""
     return {k: f"{text.rstrip()}\n\n{link(k, format, beitrag_id, pfad, lang)}"
             for k in ("youtube", "tiktok", "instagram")}

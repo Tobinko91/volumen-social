@@ -70,8 +70,8 @@ class InstagramTest(unittest.TestCase):
         self.assertTrue(media["image_url"].endswith(".jpg"))
         self.assertNotIn("<b>", media["caption"])
         self.assertNotIn("utm_source", media["caption"])
-        self.assertIn("Link im Profil", media["caption"])
-        self.assertIn("Keine Anlageberatung.", media["caption"])
+        self.assertIn("link in bio", media["caption"])
+        self.assertIn("Keine Anlageberatung.", media["caption"])   # Text des Beitrags bleibt, wie er ist
         self.assertEqual(len(gesehen["datei"]), 1)
         self.assertEqual(list(self.d.iterdir()), [])     # danach geloescht
 
@@ -92,7 +92,7 @@ class InstagramTest(unittest.TestCase):
     def test_unterschrift_laenge(self):
         t = kanaele.instagram_text("a" * 5000)
         self.assertLessEqual(len(t), kanaele.IG_MAX)
-        self.assertTrue(t.endswith(kanaele.IG_TAGS))
+        self.assertTrue(t.endswith(kanaele.IG_TAGS["en"]))
 
     def test_knopf(self):
         alle = [k["callback_data"] for z in telegram.knoepfe("b1")["inline_keyboard"] for k in z]

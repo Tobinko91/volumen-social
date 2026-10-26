@@ -17,6 +17,17 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 HIER = Path(__file__).resolve().parent.parent
 ASSETS = HIER / "assets"
 
+
+def _sprache() -> str:
+    try:
+        import yaml
+        return (yaml.safe_load((HIER / "config.yaml").read_text(encoding="utf-8")) or {}).get("sprache", "en")
+    except Exception:
+        return "en"
+
+
+SPRACHE = _sprache()   # Zahlenformat in Bildern: en = 1,234.5 / de = 1.234,5
+
 MITTERNACHT = "#140F2E"
 FLAECHE = "#1C1640"
 TEXT = "#F2F0FF"
@@ -247,6 +258,9 @@ def karte(img: Image.Image, t: Thema, box, radius=28):
     img.alpha_composite(ebene)
 
 
-def de(x: float, stellen: int = 1) -> str:
-    s = f"{x:,.{stellen}f}".replace(",", "X").replace(".", ",").replace("X", ".")
+def de(x: float, stellen: int = 1, lang: str | None = None) -> str:
+    """Zahl mit Tausendertrennung in der Sprache der Kanaele (Name aus der deutschen Zeit)."""
+    s = f"{x:,.{stellen}f}"
+    if (lang or SPRACHE) == "de":
+        s = s.replace(",", "X").replace(".", ",").replace("X", ".")
     return s
