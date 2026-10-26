@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import re
 
+from .links import ohne_eigene_links
+
 ZAHL = re.compile(r"(?<![\w.])[-+]?\d+(?:[.,]\d+)?")
 
 
@@ -27,7 +29,7 @@ def pruefen(zeilen: list[str], beitrag: dict, cfg: dict, sperrliste: set[str],
             erlaubt_fusszeile: bool = False) -> list[str]:
     """Liste der Fehler; leer = bestanden."""
     fehler = []
-    text = " ".join(zeilen)
+    text = ohne_eigene_links(" ".join(zeilen))   # Kennungen in eigenen Links sind keine Datenzahlen
     p = cfg["pruefung"]
     if erlaubt_fusszeile:  # feste Hinweise duerfen in Posts stehen, sie werden nicht mitgeprueft
         for h in (h for h in cfg["hinweise"].values() if h):   # leere Hinweise ueberspringen
