@@ -15,6 +15,7 @@ from pathlib import Path
 
 import yaml
 
+from social import links
 from social import (bilder, coincheck, daten, formate, kurse, news, news_post, news_text, post, pruefung, stimme, telegram,
                     texte, video, wissen)
 
@@ -78,6 +79,8 @@ def main() -> int:
 
     if args.art in ("post", "beides"):
         txt = post.markt_texte(beitrag, cfg)
+        txt["telegram"] = links.mit_telegram_link(txt["telegram"], beitrag["format"], ordner.name,
+                                                  lang=beitrag.get("sprache", "de"))
         pfehler = pruefung.pruefen([txt["x"], txt["telegram"]], dict(beitrag, szenen=[0, 0]), cfg, sperr,
                                    erlaubt_fusszeile=True)
         holen = None if probe else (lambda coins: {c: kurse.verlauf(c) for c in coins})
@@ -94,10 +97,14 @@ def main() -> int:
     toene, dauern, tonquelle = stimme.sprechen(zeilen, ordner / "ton", cfg, geheim.get("elevenlabs_api_key"))
     ziel = video.bauen(bild_dateien, toene, dauern, ordner / f"{beitrag['format']}.mp4", cfg)
 
+    beschreibung = (" ".join(zeilen) + "\n\n" + cfg["hinweise"]["post_text"] + "\n"
+                    + " ".join(beitrag["hashtags"]))
     meta = {
         "titel": beitrag["titel"],
-        "beschreibung": " ".join(zeilen) + "\n\n" + cfg["hinweise"]["post_text"] + "\n"
-                        + " ".join(beitrag["hashtags"]),
+        "beschreibung": beschreibung,
+        # S7: je Kanal eigene Beschreibung mit Link-Kennung (utm_source = Kanal, utm_content = Beitrag)
+        "beschreibungen": links.beschreibungen(beschreibung, beitrag["format"], ordner.name,
+                                               lang=beitrag.get("sprache", "de")),
         "zeilen": zeilen, "text": textquelle, "stimme": tonquelle,
         "dauer_s": round(sum(dauern), 1), "pruefung": fehler or "bestanden",
         "fakten": beitrag["fakten"], "video": str(ziel),
@@ -118,10 +125,11 @@ def wissen_beitrag(args, cfg, geheim, sperr) -> int:
     out.mkdir(parents=True, exist_ok=True)
     stand = out / "wissen_stand.json"   # im Ausgabe-Ordner, dort darf der Benutzer "redaktion" schreiben
     t = wissen.naechstes(stand, args.thema)
+    ordner = out / f"{time.strftime('%Y%m%d-%H%M')}_wissen_{t['id']}"
     txt = wissen.texte(t, cfg)
+    txt["telegram"] = links.mit_telegram_link(txt["telegram"], "wissen", ordner.name)
     pseudo = {"fakten": t["fakten"], "szenen": [0, 0]}
     fehler = pruefung.pruefen([txt["x"], txt["telegram"]], pseudo, cfg, sperr, erlaubt_fusszeile=True)
-    ordner = out / f"{time.strftime('%Y%m%d-%H%M')}_wissen_{t['id']}"
     b = wissen.bild(t, cfg, ordner / "post.png")
     (ordner / "post_x.txt").write_text(txt["x"], encoding="utf-8")
     (ordner / "post_telegram.txt").write_text(txt["telegram"], encoding="utf-8")
@@ -179,6 +187,7 @@ def news_beitrag(args, cfg, geheim, sperr, laden=None, schreiber=None, kurs_hole
             except Exception:
                 kurs = None
         b = news_post.bild(d, g, cfg, ordner / "post.png", eil=args.eil, kurs=kurs)
+        txt["telegram"] = links.mit_telegram_link(txt["telegram"], "news", ordner.name)
         (ordner / "post_x.txt").write_text(txt["x"], encoding="utf-8")
         (ordner / "post_telegram.txt").write_text(txt["telegram"], encoding="utf-8")
         (ordner / "quellen.json").write_text(json.dumps(g["meldungen"], ensure_ascii=False, indent=1), encoding="utf-8")
@@ -246,6 +255,7 @@ def coincheck_beitrag(args, cfg, geheim, sperr, kerzen_holen=None) -> int:
                                   {"fakten": f, "szenen": [0] * 3}, cfg, sperr, erlaubt_fusszeile=True)
     ordner = out / f"{time.strftime('%Y%m%d-%H%M')}_coincheck_{base}"
     coincheck.bild(c, k, z, text, cfg, ordner / "post.png")
+    txt["telegram"] = links.mit_telegram_link(txt["telegram"], "coincheck", ordner.name, pfad=f"/coin/{base.lower()}/")
     (ordner / "post_x.txt").write_text(txt["x"], encoding="utf-8")
     (ordner / "post_telegram.txt").write_text(txt["telegram"], encoding="utf-8")
     (ordner / "fakten.json").write_text(json.dumps(f, ensure_ascii=False, indent=1), encoding="utf-8")
