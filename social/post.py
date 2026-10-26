@@ -26,6 +26,8 @@ def markt_texte(beitrag: dict, cfg: dict) -> dict:
     if b:
         zeilen_x.append(f"{b['anzahl']} Small Caps in 24 Std.: Hälfte über {zahl(b['median_24h'], lang, True)} %, "
                         f"{b['anteil_plus']} % im Plus.")
+    if b and b.get("btc_24h") is not None:
+        zeilen_x.append(f"Bitcoin: {zahl(b['btc_24h'], lang, True)} %")
     zeilen_x.append("Größte Bewegungen: " + ", ".join(_kurz(m["base"], m["chg24"], lang) for m in f["mover"]))
     zeilen_x.append("Keine Anlageberatung.")
     x = "\n".join(zeilen_x)
@@ -38,6 +40,8 @@ def markt_texte(beitrag: dict, cfg: dict) -> dict:
         tg.append(f"Die Hälfte der {b['anzahl']} Small Caps lag in 24 Stunden über "
                   f"{zahl(b['median_24h'], lang, True)} %, die andere Hälfte darunter. "
                   f"{b['anteil_plus']} % stehen im Plus.")
+        if b.get("btc_24h") is not None:
+            tg.append(f"Bitcoin: {zahl(b['btc_24h'], lang, True)} % in 24 Stunden.")
         tg.append("")
     tg.append("<b>Größte Bewegungen</b>")
     for m in f["mover"]:

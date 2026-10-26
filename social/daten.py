@@ -21,6 +21,7 @@ class Daten:
     divergenzen: list
     bilanz: dict
     coins: dict = field(default_factory=dict)
+    markt: dict | None = None   # markt.json (Bot 9.10), None = Datei fehlt -> Ersatzrechnung aus coins/
 
     @property
     def ts(self) -> int:
@@ -63,6 +64,7 @@ def laden(ordner: str | Path, max_alter_min: float | None = None, jetzt: float |
         divergenzen=_lies(o / "divergenzen.json", []),
         bilanz=_lies(o / "bilanz.json", {"trades": []}),
         coins=coins,
+        markt=_lies(o / "markt.json", None),
     )
 
 
@@ -75,4 +77,65 @@ def marktbreite(d: Daten) -> dict | None:
         "median_24h": round(statistics.median(werte), 1),
         "anteil_plus": round(100 * sum(1 for w in werte if w > 0) / len(werte)),
         "anzahl": len(werte),
+    }
+
+
+def _zahl(x) -> bool:
+    return isinstance(x, (int, float)) and not isinstance(x, bool)
+
+
+def marktlage(d: Daten) -> dict | None:
+    """Altcoin-Breite und BTC/ETH. Bevorzugt markt.json vom Bot, sonst Ersatzrechnung aus coins/*.json.
+
+    Rueckgabe wie marktbreite() plus 'quelle' ("bot" oder "ersatz") und, wenn vorhanden, 'btc_24h', 'eth_24h'.
+    """
+    ersatz = marktbreite(d)
+    m = d.markt or {}
+    if _zahl(m.get("alt_median_24h")) and _zahl(m.get("alt_anteil_plus")):
+        anzahl = ersatz["anzahl"] if ersatz else sum(1 for c in d.coins.values() if _zahl(c.get("chg24")))
+        out = {"median_24h": round(m["alt_median_24h"], 1), "anteil_plus": round(m["alt_anteil_plus"]),
+               "anzahl": anzahl, "quelle": "bot"}
+    elif ersatz:
+        out = dict(ersatz, quelle="ersatz")
+    else:
+        return None
+    for k, key in (("btc", "btc_24h"), ("eth", "eth_24h")):
+        v = (m.get(k) or {}).get("chg24")
+        if _zahl(v):
+            out[key] = round(v, 1)
+    return out
+
+
+def wal_des_tages(d: Daten, sperrliste: set[str], min_mcap: float = 20e6) -> dict | None:
+    """Coin mit der groessten Wal-Veraenderung in 7 Tagen (Prozentpunkte der Gesamtmenge, Bot 9.10).
+
+    Rueckfall, solange wale_7d fehlt (aelterer Bot oder < 7 Tage Daten): hoechster aktueller Wal-Anteil.
+    """
+    neu, alt = [], []
+    for b, c in d.coins.items():
+        if b.upper() in sperrliste or (c.get("mcap") or 0) < min_mcap:
+            continue
+        w7 = (c.get("wale_7d") or {}).get("wal")
+        w = (c.get("wale") or {}).get("wal")
+        if _zahl(w7) and w7 != 0:
+            neu.append((abs(w7), b))
+        elif _zahl(w):
+            alt.append((w, b))
+    if neu:
+        base, quelle = max(neu)[1], "7d"
+    elif alt:
+        base, quelle = max(alt)[1], "anteil"
+    else:
+        return None
+    c = d.coins[base]
+    w7 = c.get("wale_7d") or {}
+    verlauf = [p for p in (c.get("wale_verlauf") or []) if len(p) >= 3 and _zahl(p[1])]
+    return {
+        "base": base, "quelle": quelle,
+        "wal": (c.get("wale") or {}).get("wal"), "boerse": (c.get("wale") or {}).get("boerse"),
+        "wal_7d": w7.get("wal") if quelle == "7d" else None,
+        "boerse_7d": w7.get("boerse") if quelle == "7d" else None,
+        "holder": c.get("holder"), "holder_7d": c.get("holder_7d"),
+        "chg24": c.get("chg24"),
+        "verlauf": verlauf,
     }

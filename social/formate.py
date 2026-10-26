@@ -4,14 +4,14 @@ Jede Szene = ein Bild + ein gesprochener Satz. Der Text darf nur Fakten aus `fak
 """
 from __future__ import annotations
 
-from .daten import Daten, marktbreite
+from .daten import Daten, marktlage
 from .sprache import TAG, T, datum, zahl, zahl_gesprochen
 
 
 def markt_30s(d: Daten, sperrliste: set[str], lang: str = "de", anzahl_mover: int = 3) -> dict:
     """'Krypto-Markt in 30 Sekunden': Altcoin-Breite + staerkste Bewegungen mit Ausloeser."""
     t = T[lang]
-    breite = marktbreite(d)
+    breite = marktlage(d)   # markt.json vom Bot, sonst Ersatzrechnung aus coins/
     mover = []
     for n in sorted(d.news, key=lambda n: abs(n.get("chg24") or 0), reverse=True):
         base = n.get("base")
@@ -31,7 +31,8 @@ def markt_30s(d: Daten, sperrliste: set[str], lang: str = "de", anzahl_mover: in
     if breite:
         szenen.append({"typ": "breite", "daten": breite, "vorlage": t["s_breite"].format(
             anzahl=breite["anzahl"], median_gesprochen=zahl_gesprochen(breite["median_24h"], lang),
-            plus=breite["anteil_plus"])})
+            plus=breite["anteil_plus"])
+            + (t["s_btc"].format(btc=zahl_gesprochen(breite["btc_24h"], lang)) if "btc_24h" in breite else "")})
     for m in mover:
         grund = t["grund_ja"].format(ausloeser=m["ausloeser"]) if m["ausloeser"] else t["grund_nein"]
         szenen.append({"typ": "mover", "daten": m, "vorlage": t["s_mover"].format(

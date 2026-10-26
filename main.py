@@ -18,6 +18,7 @@ import yaml
 from social import links
 from social import (bilder, coincheck, daten, formate, kurse, news, news_post, news_text, post, pruefung, stimme, telegram,
                     texte, video, wissen)
+from social import wal  # noqa: E402  (Wal des Tages)
 
 HIER = Path(__file__).resolve().parent
 # Auf dem Server liegen Schluessel und Sperrliste ausserhalb des Codes (/opt/volumen-social),
@@ -42,7 +43,7 @@ def lade_sperrliste() -> set[str]:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("format", choices=sorted(formate.FORMATE) + ["wissen", "news", "coincheck"])
+    ap.add_argument("format", choices=sorted(formate.FORMATE) + ["wissen", "news", "coincheck", "wal"])
     ap.add_argument("--thema", help="nur bei wissen: bestimmtes Thema (id aus inhalte/wissen.yaml)")
     ap.add_argument("--eil", action="store_true", help="nur bei news: nur senden, wenn es eine Eilmeldung gibt")
     ap.add_argument("--coin", help="nur bei coincheck: bestimmter Coin, z. B. AKE")
@@ -61,6 +62,8 @@ def main() -> int:
         return news_beitrag(args, cfg, geheim, sperr)
     if args.format == "coincheck":
         return coincheck_beitrag(args, cfg, geheim, sperr)
+    if args.format == "wal":
+        return wal_beitrag(args, cfg, geheim, sperr)
     probe = bool(args.daten)
     d = daten.laden(args.daten or cfg["daten"]["dir"],
                     None if probe else cfg["daten"]["max_alter_min"])
@@ -203,6 +206,30 @@ def news_beitrag(args, cfg, geheim, sperr, laden=None, schreiber=None, kurs_hole
         return 1 if fehler else 0
     print("Keine geeignete Nachricht gefunden.")
     return 0
+
+
+def wal_beitrag(args, cfg, geheim, sperr) -> int:
+    """'Wal des Tages' als Bild + Text (Telegram und X) aus wale_7d / wale_verlauf des Bots."""
+    probe = bool(args.daten)
+    d = daten.laden(args.daten or cfg["daten"]["dir"], None if probe else cfg["daten"]["max_alter_min"])
+    w = daten.wal_des_tages(d, sperr)
+    if not w:
+        print("Keine Wal-Daten.")
+        return 0
+    lang = cfg.get("sprache", "de")
+    txt = wal.texte(w, cfg, lang)
+    f = wal.fakten(w)
+    fehler = pruefung.pruefen([txt["x"], txt["telegram"]], {"fakten": f, "szenen": [0, 0]}, cfg, sperr,
+                              erlaubt_fusszeile=True)
+    ordner = Path(args.out) / f"{time.strftime('%Y%m%d-%H%M')}_wal_{w['base']}"
+    wal.bild(w, cfg, ordner / "post.png", lang)
+    (ordner / "post_x.txt").write_text(txt["x"], encoding="utf-8")
+    (ordner / "post_telegram.txt").write_text(txt["telegram"], encoding="utf-8")
+    (ordner / "fakten.json").write_text(json.dumps(f, ensure_ascii=False, indent=1), encoding="utf-8")
+    print(f"Wal des Tages {w['base']} ({w['quelle']}): Pruefung", fehler or "bestanden")
+    if args.senden:
+        telegram.vorschlag_senden(geheim, ordner, "⚠️ " + "; ".join(fehler) if fehler else "")
+    return 1 if fehler else 0
 
 
 def _test_kerzen(n: int = 168) -> list[dict]:
