@@ -60,6 +60,8 @@ pruefung:
     - "einstieg"
     - "kaufzone"            # nur in Bildungs-Formaten mit historischen Beispielen (eigene Pruefung)
     - "kursziel"
+    - "berichten zufolge"   # Fakten direkt nennen (Wunsch Tobias 26.10.2026)
+    - "angeblich"
     - "take profit"
     - "stop-loss bei"
     - "du solltest"

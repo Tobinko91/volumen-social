@@ -7,6 +7,25 @@ from pathlib import Path
 import requests
 
 API = "https://api.telegram.org/bot{token}/{methode}"
+BILDTEXT_MAX = 1024   # Telegram: Text unter einem Bild (sichtbare Zeichen)
+
+
+def sichtbar(text: str) -> int:
+    """Laenge so, wie Telegram sie zaehlt (ohne HTML-Tags, &amp; = 1 Zeichen)."""
+    import html
+    import re
+    return len(html.unescape(re.sub(r"<[^>]+>", "", text)))
+
+
+def teilen(text: str) -> tuple[str, str | None]:
+    """Langer Beitrag: Bildtext = erster Absatz (Schlagzeile), Rest als eigene Nachricht direkt danach.
+    Kurzer Beitrag: alles unter das Bild."""
+    if sichtbar(text) <= BILDTEXT_MAX:
+        return text, None
+    kopf, _, rest = text.partition("\n\n")
+    if not rest or sichtbar(kopf) > BILDTEXT_MAX:
+        return "", text
+    return kopf, rest
 
 
 def video_senden(geheim: dict, datei: Path, text: str) -> bool:
@@ -69,10 +88,21 @@ def vorschlag_senden(geheim: dict, ordner: Path, hinweis: str = "") -> bool:
     bild = ordner / "post.png"
     tg = (ordner / "post_telegram.txt").read_text(encoding="utf-8")
     x = (ordner / "post_x.txt").read_text(encoding="utf-8")
-    with open(bild, "rb") as fh:
-        r = requests.post(API.format(token=token, methode="sendPhoto"),
-                          data={"chat_id": chat, "caption": tg[:1024], "parse_mode": "HTML",
-                                "reply_markup": json.dumps(knoepfe(ordner.name))},
+    kopf, rest = teilen(tg)
+    if rest:   # langer Beitrag: so, wie er spaeter im Kanal erscheint (Bild + Text darunter), Knoepfe am Ende
+        with open(bild, "rb") as fh:
+            requests.post(API.format(token=token, methode="sendPhoto"),
+                          data={"chat_id": chat, "caption": kopf, "parse_mode": "HTML"},
                           files={"photo": (bild.name, fh, "image/png")}, timeout=60)
+        r = requests.post(API.format(token=token, methode="sendMessage"),
+                          data={"chat_id": chat, "text": rest[:4096], "parse_mode": "HTML",
+                                "disable_web_page_preview": "true",
+                                "reply_markup": json.dumps(knoepfe(ordner.name))}, timeout=30)
+    else:
+        with open(bild, "rb") as fh:
+            r = requests.post(API.format(token=token, methode="sendPhoto"),
+                              data={"chat_id": chat, "caption": tg, "parse_mode": "HTML",
+                                    "reply_markup": json.dumps(knoepfe(ordner.name))},
+                              files={"photo": (bild.name, fh, "image/png")}, timeout=60)
     text_senden(geheim, (hinweis + "\n\n" if hinweis else "") + f"X-Text ({len(x)} Zeichen):\n\n" + x)
     return r.ok

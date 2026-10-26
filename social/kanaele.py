@@ -37,14 +37,22 @@ def verfuegbar(geheim: dict) -> dict[str, bool]:
 def telegram_kanal(geheim: dict, bild: Path, text: str) -> str:
     if not verfuegbar(geheim)["telegram"]:
         raise NichtEingerichtet("Telegram-Kanal fehlt (schluessel.py, Punkt 4)")
+    from .telegram import teilen
+    kopf, rest = teilen(text)   # ueber 1024 Zeichen: Bild mit Schlagzeile, ganzer Text direkt darunter
     with open(bild, "rb") as fh:
         r = requests.post(TG.format(token=geheim["telegram_token"], methode="sendPhoto"),
-                          data={"chat_id": geheim["telegram_kanal"], "caption": text[:1024], "parse_mode": "HTML"},
+                          data={"chat_id": geheim["telegram_kanal"], "caption": kopf, "parse_mode": "HTML"},
                           files={"photo": (bild.name, fh, "image/png")}, timeout=60)
     j = r.json()
     if not j.get("ok"):
         raise RuntimeError(j.get("description", "Telegram-Fehler"))
     m = j["result"]
+    if rest:
+        r2 = requests.post(TG.format(token=geheim["telegram_token"], methode="sendMessage"),
+                           data={"chat_id": geheim["telegram_kanal"], "text": rest[:4096], "parse_mode": "HTML",
+                                 "disable_web_page_preview": "true"}, timeout=30).json()
+        if not r2.get("ok"):
+            raise RuntimeError(r2.get("description", "Telegram-Fehler"))
     kanal = str(geheim["telegram_kanal"]).lstrip("@")
     return f"https://t.me/{kanal}/{m['message_id']}"
 
