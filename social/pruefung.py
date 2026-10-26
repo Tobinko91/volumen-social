@@ -4,6 +4,7 @@ from __future__ import annotations
 import re
 
 from .links import ohne_eigene_links
+from .sprache import T
 
 ZAHL = re.compile(r"(?<![\w.])[-+]?\d+(?:[.,]\d+)?")
 
@@ -35,6 +36,8 @@ def pruefen(zeilen: list[str], beitrag: dict, cfg: dict, sperrliste: set[str],
         for h in (h for h in cfg["hinweise"].values() if h):   # leere Hinweise ueberspringen
             text = text.replace(h, " ")
         text = text.replace("Keine Anlageberatung", " ")
+        for lang in T:   # Pflicht-Hinweis anderer Sprachen ("Not financial advice.") ist erlaubt
+            text = text.replace(T[lang]["hinweis"], " ")
     klein = text.lower()
 
     for w in p["verboten"]:

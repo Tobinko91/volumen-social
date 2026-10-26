@@ -34,6 +34,12 @@ python main.py markt --daten beispieldaten
 | `secrets.example.yaml` | Vorlage fuer Schluessel (echte Datei nur auf dem Server) |
 | `sperrliste.example.txt` | Vorlage: Coins mit eigener Position |
 
+## Sprache (S1, vorbereitet)
+`python main.py markt --sprache en --daten beispieldaten` erzeugt den Markt-Beitrag auf Englisch (Text, Post, Video-Sprechtext),
+`python main.py wal --sprache en` den Wal des Tages. Englisch wird **nie gesendet** (`--senden` wird bei `--sprache en`
+abgeschaltet), bis Tobias den Start freigibt. Noch Deutsch: Bild-Beschriftungen in `post.markt_bild`, Fusszeile im Video,
+Lern-/News-/Coin-Check-Texte, Stimme (englische ElevenLabs-Stimme fehlt). Startkriterium: `plan-englisch` (Projekt-Dokument).
+
 ## Schutzregeln (fest eingebaut)
 Ueberall nur „Keine Anlageberatung“ (kein KI-, Totalverlust- oder Betreiber-Hinweis), keine Einstiegskurse,
 keine Kauf-/Verkaufsaufforderung, keine Zahl ohne Datenquelle, keine Coins von der Sperrliste.

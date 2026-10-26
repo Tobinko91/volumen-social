@@ -19,6 +19,7 @@ from social import links
 from social import (bilder, coincheck, daten, formate, kurse, news, news_post, news_text, post, pruefung, stimme, telegram,
                     texte, video, wissen)
 from social import wal  # noqa: E402  (Wal des Tages)
+from social import sprache  # noqa: E402
 
 HIER = Path(__file__).resolve().parent
 # Auf dem Server liegen Schluessel und Sperrliste ausserhalb des Codes (/opt/volumen-social),
@@ -47,6 +48,8 @@ def main() -> int:
     ap.add_argument("--thema", help="nur bei wissen: bestimmtes Thema (id aus inhalte/wissen.yaml)")
     ap.add_argument("--eil", action="store_true", help="nur bei news: nur senden, wenn es eine Eilmeldung gibt")
     ap.add_argument("--coin", help="nur bei coincheck: bestimmter Coin, z. B. AKE")
+    ap.add_argument("--sprache", choices=["de", "en"], default=None,
+                    help="Sprache (Standard: config.yaml). Englisch nur Probe/Schattenlauf: wird nie gesendet.")
     ap.add_argument("--daten", help="Datenordner (Standard: config.yaml daten.dir)")
     ap.add_argument("--out", default=os.environ.get("SOCIAL_AUSGABE", str(HIER / "ausgabe")))
     ap.add_argument("--senden", action="store_true", help="Video per Telegram an Tobias schicken")
@@ -56,6 +59,12 @@ def main() -> int:
 
     cfg, geheim = lade_cfg()
     sperr = lade_sperrliste()
+    lang = args.sprache or cfg.get("sprache", "de")
+    if lang != "de" and args.senden:
+        # S1: Englisch erst nach Freigabe durch Tobias. Bis dahin nie an den Freigabe-Bot (dessen Knoepfe
+        # posten in die deutschen Kanaele).
+        print("Englisch ist noch nicht freigegeben – nur Dateien erzeugt, nichts gesendet.")
+        args.senden = False
     if args.format == "wissen":
         return wissen_beitrag(args, cfg, geheim, sperr)
     if args.format == "news":
@@ -68,7 +77,7 @@ def main() -> int:
     d = daten.laden(args.daten or cfg["daten"]["dir"],
                     None if probe else cfg["daten"]["max_alter_min"])
 
-    beitrag = formate.FORMATE[args.format](d, sperr, cfg.get("sprache", "de"))
+    beitrag = formate.FORMATE[args.format](d, sperr, lang)
     zeilen, textquelle = texte.schreiben(beitrag, cfg, geheim.get("anthropic_api_key"))
     fehler = pruefung.pruefen(zeilen, beitrag, cfg, sperr)
     if fehler and textquelle == "claude":
@@ -100,7 +109,7 @@ def main() -> int:
     toene, dauern, tonquelle = stimme.sprechen(zeilen, ordner / "ton", cfg, geheim.get("elevenlabs_api_key"))
     ziel = video.bauen(bild_dateien, toene, dauern, ordner / f"{beitrag['format']}.mp4", cfg)
 
-    beschreibung = (" ".join(zeilen) + "\n\n" + cfg["hinweise"]["post_text"] + "\n"
+    beschreibung = (" ".join(zeilen) + "\n\n" + sprache.hinweis(cfg, lang) + "\n"
                     + " ".join(beitrag["hashtags"]))
     meta = {
         "titel": beitrag["titel"],
@@ -216,12 +225,14 @@ def wal_beitrag(args, cfg, geheim, sperr) -> int:
     if not w:
         print("Keine Wal-Daten.")
         return 0
-    lang = cfg.get("sprache", "de")
+    lang = getattr(args, "sprache", None) or cfg.get("sprache", "de")
+    ordner = Path(args.out) / f"{time.strftime('%Y%m%d-%H%M')}_wal_{w['base']}"
     txt = wal.texte(w, cfg, lang)
+    txt["telegram"] = links.mit_telegram_link(txt["telegram"], "wal", ordner.name, pfad=f"/coin/{w['base'].lower()}/",
+                                              lang=lang)
     f = wal.fakten(w)
     fehler = pruefung.pruefen([txt["x"], txt["telegram"]], {"fakten": f, "szenen": [0, 0]}, cfg, sperr,
                               erlaubt_fusszeile=True)
-    ordner = Path(args.out) / f"{time.strftime('%Y%m%d-%H%M')}_wal_{w['base']}"
     wal.bild(w, cfg, ordner / "post.png", lang)
     (ordner / "post_x.txt").write_text(txt["x"], encoding="utf-8")
     (ordner / "post_telegram.txt").write_text(txt["telegram"], encoding="utf-8")

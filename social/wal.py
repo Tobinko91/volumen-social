@@ -64,7 +64,8 @@ def zeilen(w: dict, lang: str = "de") -> list[str]:
 
 def texte(w: dict, cfg: dict, lang: str = "de") -> dict:
     t, z = W[lang], zeilen(w, lang)
-    hinweis = cfg["hinweise"]["post_text"]
+    from .sprache import hinweis as _hinweis
+    hinweis = _hinweis(cfg, lang)
     x = "\n".join([t["x_kopf"].format(b=w["base"]), *z, hinweis])
     while len(x) > X_MAX and len(z) > 1:
         z = z[:-1]
