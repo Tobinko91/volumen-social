@@ -25,6 +25,10 @@ class ServerTest(unittest.TestCase):
         for stunde in ["22", "23", "00", "01", "02", "03", "04", "05", "06"]:
             self.assertNotIn(f"{stunde}:00)", plan)
 
+    def test_wal_des_tages_im_plan(self):
+        plan = (HIER / "tools" / "plan.sh").read_text()
+        self.assertIn("11:30) lauf wal", plan)
+
 
 if __name__ == "__main__":
     unittest.main()
