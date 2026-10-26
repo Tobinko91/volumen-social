@@ -60,7 +60,7 @@ def mit_telegram_link(tg_text: str, format: str, beitrag_id: str, pfad: str = "/
     if len(tg_text) + len(zeile) + 2 > TG_MAX:   # Telegram schneidet Bildtexte bei 1024 Zeichen ab -> kein halber Link
         return tg_text
     teile = tg_text.rstrip("\n").split("\n")
-    if teile and "Anlageberatung" in teile[-1]:
+    if teile and ("Anlageberatung" in teile[-1] or "financial advice" in teile[-1]):   # Hinweis bleibt unten
         return "\n".join(teile[:-1] + [zeile, teile[-1]])
     return "\n".join(teile + ["", zeile])
 

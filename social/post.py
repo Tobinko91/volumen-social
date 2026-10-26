@@ -9,45 +9,45 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
-from .sprache import zahl
+from .sprache import T, hinweis, zahl
 
 X_MAX = 280
 
 
 def _kurz(base: str, chg: float, lang: str) -> str:
-    return f"{base} {zahl(chg, lang, True)} %"
+    return f"{base} {zahl(chg, lang, True)}" + (" %" if lang == "de" else "%")
 
 
 def markt_texte(beitrag: dict, cfg: dict) -> dict:
     """Texte fuer X (kurz) und Telegram (ausfuehrlicher), nur aus den Fakten."""
     f, lang = beitrag["fakten"], beitrag.get("sprache", "de")
+    t, pz = T[lang], (" %" if lang == "de" else "%")
     b = f.get("breite")
-    zeilen_x = [f"Krypto-Markt am {f['datum']}"]
+    zeilen_x = [t["p_kopf"].format(datum=f["datum"])]
     if b:
-        zeilen_x.append(f"{b['anzahl']} Small Caps in 24 Std.: Hälfte über {zahl(b['median_24h'], lang, True)} %, "
-                        f"{b['anteil_plus']} % im Plus.")
+        zeilen_x.append(t["p_breite_x"].format(anzahl=b["anzahl"], median=zahl(b["median_24h"], lang, True),
+                                               plus=b["anteil_plus"]))
     if b and b.get("btc_24h") is not None:
-        zeilen_x.append(f"Bitcoin: {zahl(b['btc_24h'], lang, True)} %")
-    zeilen_x.append("Größte Bewegungen: " + ", ".join(_kurz(m["base"], m["chg24"], lang) for m in f["mover"]))
-    zeilen_x.append("Keine Anlageberatung.")
+        zeilen_x.append(f"Bitcoin: {zahl(b['btc_24h'], lang, True)}{pz}")
+    zeilen_x.append(f"{t['p_bewegungen']}: " + ", ".join(_kurz(m["base"], m["chg24"], lang) for m in f["mover"]))
+    zeilen_x.append(hinweis(cfg, lang))
     x = "\n".join(zeilen_x)
     if len(x) > X_MAX:  # zur Not ohne dritten Mover
-        zeilen_x[-2] = "Größte Bewegungen: " + ", ".join(_kurz(m["base"], m["chg24"], lang) for m in f["mover"][:2])
+        zeilen_x[-2] = f"{t['p_bewegungen']}: " + ", ".join(_kurz(m["base"], m["chg24"], lang) for m in f["mover"][:2])
         x = "\n".join(zeilen_x)
 
-    tg = [f"📊 <b>Krypto-Markt am {f['datum']}</b>", ""]
+    tg = [f"📊 <b>{t['p_kopf'].format(datum=f['datum'])}</b>", ""]
     if b:
-        tg.append(f"Die Hälfte der {b['anzahl']} Small Caps lag in 24 Stunden über "
-                  f"{zahl(b['median_24h'], lang, True)} %, die andere Hälfte darunter. "
-                  f"{b['anteil_plus']} % stehen im Plus.")
+        tg.append(t["p_breite_tg"].format(anzahl=b["anzahl"], median=zahl(b["median_24h"], lang, True),
+                                          plus=b["anteil_plus"]))
         if b.get("btc_24h") is not None:
-            tg.append(f"Bitcoin: {zahl(b['btc_24h'], lang, True)} % in 24 Stunden.")
+            tg.append(t["p_btc_tg"].format(btc=zahl(b["btc_24h"], lang, True)))
         tg.append("")
-    tg.append("<b>Größte Bewegungen</b>")
+    tg.append(f"<b>{t['p_bewegungen']}</b>")
     for m in f["mover"]:
-        zusatz = f" – Auslöser: {m['ausloeser']}" if m["ausloeser"] else ""
-        tg.append(f"• {m['base']}: {zahl(m['chg24'], lang, True)} %{zusatz}")
-    tg += ["", f"<i>{cfg['hinweise']['post_text']}</i>"]
+        zusatz = f" – {t['p_ausloeser']}: {m['ausloeser']}" if m["ausloeser"] else ""
+        tg.append(f"• {m['base']}: {zahl(m['chg24'], lang, True)}{pz}{zusatz}")
+    tg += ["", f"<i>{hinweis(cfg, lang)}</i>"]
     return {"x": x, "telegram": "\n".join(tg)}
 
 

@@ -46,6 +46,13 @@ T = {
         "b_ausloeser": "AUSLÖSER: {a}", "b_keine": "KEINE KLARE NACHRICHT",
         "b_outro": "Marktdaten. Erklärt. Ehrlich.",
         "hashtags": ["#krypto", "#bitcoin", "#altcoins", "#kryptonews", "#börse"],
+        "hinweis": "Keine Anlageberatung.",
+        "p_kopf": "Krypto-Markt am {datum}",
+        "p_breite_x": "{anzahl} Small Caps in 24 Std.: Hälfte über {median} %, {plus} % im Plus.",
+        "p_breite_tg": "Die Hälfte der {anzahl} Small Caps lag in 24 Stunden über {median} %, "
+                       "die andere Hälfte darunter. {plus} % stehen im Plus.",
+        "p_btc_tg": "Bitcoin: {btc} % in 24 Stunden.",
+        "p_bewegungen": "Größte Bewegungen", "p_ausloeser": "Auslöser",
     },
     "en": {
         "titel": "Crypto market in 30 seconds",
@@ -68,6 +75,13 @@ T = {
         "b_ausloeser": "TRIGGER: {a}", "b_keine": "NO CLEAR NEWS",
         "b_outro": "Market data. Explained. Honest.",
         "hashtags": ["#crypto", "#altcoins", "#cryptonews", "#bitcoin"],
+        "hinweis": "Not financial advice.",
+        "p_kopf": "Crypto market, {datum}",
+        "p_breite_x": "{anzahl} small caps, 24h: half above {median}%, {plus}% green.",
+        "p_breite_tg": "Half of {anzahl} small caps did better than {median}% in 24 hours, "
+                       "half did worse. {plus}% are green.",
+        "p_btc_tg": "Bitcoin: {btc}% in 24 hours.",
+        "p_bewegungen": "Biggest moves", "p_ausloeser": "Trigger",
     },
 }
 
@@ -89,3 +103,11 @@ def zahl_gesprochen(x: float, lang: str) -> str:
     """+7,3 -> 'plus 7,3' (Vorzeichen als Wort, damit die Stimme es richtig liest)."""
     w = {"de": ("plus", "minus"), "en": ("plus", "minus")}[lang]
     return f"{w[0] if x >= 0 else w[1]} {zahl(abs(x), lang)}"
+
+
+SPRACHEN = tuple(T)
+
+
+def hinweis(cfg: dict, lang: str) -> str:
+    """Pflicht-Hinweis unter Posts: Deutsch aus config.yaml (Wunsch Tobias 22.10.), sonst aus T."""
+    return cfg["hinweise"]["post_text"] if lang == "de" else T[lang]["hinweis"]
