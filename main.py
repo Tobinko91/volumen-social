@@ -174,6 +174,7 @@ def news_beitrag(args, cfg, geheim, sperr, laden=None, schreiber=None, kurs_hole
             continue
         txt = news_post.texte(d, g, cfg, eil=args.eil)
         quelltext = " ".join(m["titel"] + " " + m["kurz"] for m in g["meldungen"])
+        quelltext += " " + " ".join(news_text.deutsche_zeiten(quelltext)) + " " + news_text.heute_text()
         fehler = pruefung.pruefen([txt["x"], d["kernsatz"], " ".join(d["punkte"]), d["schlagzeile"]],
                                   {"fakten": quelltext, "szenen": [0] * 4}, cfg, sperr, erlaubt_fusszeile=True)
         fehler += [f"Coin auf der Sperrliste: {c}" for c in d.get("coins", []) if str(c).upper() in sperr]
