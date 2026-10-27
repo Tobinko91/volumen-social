@@ -5,7 +5,7 @@ X: API v2 mit OAuth 1.0a (Konto-Schluessel aus dem X-Entwicklerportal).
 Instagram: Instagram API mit Instagram-Login (Meta-App "WhaleSqueeze Redaktion", Entwicklungsmodus).
   Instagram holt das Bild selbst ab, darum liegt es kurz als JPEG in einem oeffentlichen Ordner
   (/opt/volumen-social/oeffentlich -> https://whalesqueeze.com/medien/, Caddy der Website) und wird danach geloescht.
-TikTok folgt (braucht die TikTok-Pruefung).
+TikTok: Foto-Beitrag ueber die Content Posting API (social/tiktok.py), Bild ebenfalls ueber /medien/.
 """
 from __future__ import annotations
 
@@ -42,6 +42,7 @@ def verfuegbar(geheim: dict) -> dict[str, bool]:
         "telegram": bool(geheim.get("telegram_token") and geheim.get("telegram_kanal")),
         "x": all(geheim.get(k) for k in ("x_api_key", "x_api_secret", "x_access_token", "x_access_secret")),
         "instagram": bool(geheim.get("instagram_token")),
+        "tiktok": all(geheim.get(k) for k in ("tiktok_client_key", "tiktok_client_secret", "tiktok_refresh_token")),
     }
 
 
@@ -187,4 +188,33 @@ def instagram_token_erneuern(token: str) -> tuple[str, int]:
     return j["access_token"], int(j.get("expires_in", 0))
 
 
-POSTER = {"telegram": telegram_kanal, "x": x_posten, "instagram": instagram_posten}
+# ---------------------------------------------------------------- TikTok
+
+def _cfg() -> dict:
+    import yaml
+    return yaml.safe_load((Path(__file__).resolve().parent.parent / "config.yaml").read_text(encoding="utf-8"))
+
+
+def tiktok_posten(geheim: dict, bild: Path, text: str, pruefen_url=None, **kw) -> str:
+    """Bild als TikTok-Foto-Beitrag (Entwurf in der App oder direkt, je nach config tiktok.modus)."""
+    if not verfuegbar(geheim)["tiktok"]:
+        raise NichtEingerichtet("TikTok ist noch nicht verbunden (schluessel.py 10+11, dann tiktok_verbinden.py)")
+    from PIL import Image
+    from . import tiktok
+    cfg = _cfg()
+    IG_ORDNER.mkdir(parents=True, exist_ok=True)
+    datei = IG_ORDNER / (_zufall.token_hex(16) + ".jpg")
+    Image.open(bild).convert("RGB").save(datei, "JPEG", quality=92)
+    os.chmod(datei, 0o644)
+    url = IG_URL + datei.name
+    try:
+        r = (pruefen_url or (lambda u: requests.head(u, timeout=20).status_code))(url)
+        if r != 200:
+            raise NichtEingerichtet(f"Bild-Ordner {IG_URL} ist nicht öffentlich erreichbar ({r}).")
+        return tiktok.foto_posten(geheim, url, text, (cfg.get("tiktok") or {}).get("modus", "inbox"),
+                                  cfg.get("sprache", "en"), **kw)
+    finally:
+        datei.unlink(missing_ok=True)
+
+
+POSTER = {"telegram": telegram_kanal, "x": x_posten, "instagram": instagram_posten, "tiktok": tiktok_posten}

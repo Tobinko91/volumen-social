@@ -24,6 +24,8 @@ mkdir -p /opt/volumen-social/oeffentlich && chown redaktion:redaktion /opt/volum
   chmod 755 /opt/volumen-social/oeffentlich
 # Instagram-Token taeglich verlaengern (gilt sonst nur 60 Tage)
 [ "$SLOT" = "04:00" ] && sudo -u redaktion env $UMGEBUNG python3 tools/instagram_token.py
+# TikTok-Zugang taeglich erneuern (Access-Token 24 Std., Refresh-Token laeuft sonst nach 365 Tagen ab)
+[ "$SLOT" = "04:00" ] && sudo -u redaktion env $UMGEBUNG python3 tools/tiktok_verbinden.py --erneuern
 # Pause: im Redaktions-Bot /pause schreiben (oder Datei anlegen), weiter mit /weiter
 [ -f /opt/volumen-social/pause ] || [ -f /opt/volumen-social/ausgabe/.pause ] && exit 0
 lauf() { sudo -u redaktion env $UMGEBUNG python3 main.py "$@" --senden; }

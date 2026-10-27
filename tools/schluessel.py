@@ -21,8 +21,10 @@ FELDER = [
     ("x_access_token", "X: Access Token"),
     ("x_access_secret", "X: Access Token Secret"),
     ("instagram_token", "Instagram: Access Token (Meta-App -> API-Einrichtung mit Instagram-Login -> Generate token)"),
+    ("tiktok_client_key", "TikTok: Client key (developers.tiktok.com -> App -> Credentials)"),
+    ("tiktok_client_secret", "TikTok: Client secret"),
 ]
-OFFEN = {"telegram_kanal"}   # kein Geheimnis: Eingabe sichtbar
+OFFEN = {"telegram_kanal", "tiktok_client_key"}   # kein Geheimnis: Eingabe sichtbar
 
 
 def main():

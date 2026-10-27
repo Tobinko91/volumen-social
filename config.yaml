@@ -37,6 +37,9 @@ stimme:
   voice_id: null                  # optional: feste ID statt Name
   modell: eleven_multilingual_v2
 
+tiktok:
+  modus: inbox               # inbox = Entwurf in der TikTok-App (geht ohne Pruefung); direkt = sofort posten (nach Pruefung)
+
 hinweise:                    # fusszeile/konflikt: Bilder und Videos
   post_text: "Not financial advice."   # unter allen Texten (Wunsch Tobias 22.10.2026: nur dieser Satz; Englisch seit 26.10.)
   fusszeile: "Not financial advice"    # in Bildern und Videos
