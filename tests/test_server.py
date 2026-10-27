@@ -27,7 +27,14 @@ class ServerTest(unittest.TestCase):
 
     def test_wal_des_tages_im_plan(self):
         plan = (HIER / "tools" / "plan.sh").read_text()
-        self.assertIn("11:30) lauf wal", plan)
+        self.assertIn("18:00) lauf wal", plan)
+
+    def test_us_zeiten(self):
+        # Entscheidung Tobias 27.10.2026: Postingzeiten fuer das US-Publikum
+        plan = (HIER / "tools" / "plan.sh").read_text()
+        for zeile in ("13:30) lauf markt", "14:00|19:00|21:00) lauf news", "15:00) lauf coincheck",
+                      "21:30) lauf wissen"):
+            self.assertIn(zeile, plan)
 
 
 if __name__ == "__main__":
