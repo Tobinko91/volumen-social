@@ -38,6 +38,7 @@ class Leinwand:
             "amber": th.akzent2, "plus": th.plus, "minus": th.minus}.items()}
         self.lang = cfg.get("sprache", "de")
         self.t = T[self.lang]
+        self.pz = "%" if self.lang == "en" else " %"
         self._grund = None
 
     def neu(self) -> tuple[Image.Image, ImageDraw.ImageDraw]:
@@ -98,7 +99,7 @@ class Leinwand:
         self.kopf(d)
         m = daten["median_24h"]
         self.mitte(d, 440, self.t["b_breite"], _font("Bold", 44), self.f["neben"])
-        self.mitte(d, 520, f"{zahl(m, self.lang, True)} %", _font("Black", 200), self.farbe_wert(m))
+        self.mitte(d, 520, f"{zahl(m, self.lang, True)}{self.pz}", _font("Black", 200), self.farbe_wert(m))
         self.mitte(d, 780, self.t["b_median"].format(anzahl=daten["anzahl"]), _font("Medium", 44), self.f["neben"])
         # Balken gruen/rot
         x0, x1, y0 = 120, self.W - 120, 900
@@ -120,7 +121,7 @@ class Leinwand:
             self.mitte(d, 430, self.t["b_mover"].format(nr=nr, von=von), _font("Bold", 44), self.f["neben"])
         self.mitte(d, 500, daten["base"], _font("Black", 180), self.f["text"])
         c = daten["chg24"]
-        self.mitte(d, 710, f"{zahl(c, self.lang, True)} %  {self.t['b_24h']}", _font("Black", 100), self.farbe_wert(c))
+        self.mitte(d, 710, f"{zahl(c, self.lang, True)}{self.pz}  {self.t['b_24h']}", _font("Black", 100), self.farbe_wert(c))
         if not daten.get("ausloeser"):   # ohne bekannte Nachricht: gar keinen Hinweis zeigen
             self.untertitel(d, text)
             return img

@@ -7,9 +7,14 @@ from .links import ohne_eigene_links
 from .sprache import T
 
 ZAHL = re.compile(r"(?<![\w.])[-+]?\d+(?:[.,]\d+)?")
+TAUSENDER_EN = re.compile(r"(?<=\d),(?=\d{3}(?!\d))")   # 100,000 -> 100000 (nur Englisch)
 
 
-def _zahlen_aus(obj) -> list[float]:
+def _norm(text: str, lang: str) -> str:
+    return TAUSENDER_EN.sub("", text) if lang == "en" else text
+
+
+def _zahlen_aus(obj, lang: str = "de") -> list[float]:
     out: list[float] = []
     if isinstance(obj, bool):
         return out
@@ -17,12 +22,12 @@ def _zahlen_aus(obj) -> list[float]:
         out.append(abs(float(obj)))
     elif isinstance(obj, dict):
         for v in obj.values():
-            out += _zahlen_aus(v)
+            out += _zahlen_aus(v, lang)
     elif isinstance(obj, list):
         for v in obj:
-            out += _zahlen_aus(v)
+            out += _zahlen_aus(v, lang)
     elif isinstance(obj, str):
-        out += [abs(float(z.replace(",", "."))) for z in ZAHL.findall(obj)]
+        out += [abs(float(z.replace(",", "."))) for z in ZAHL.findall(_norm(obj, lang))]
     return out
 
 
@@ -48,8 +53,9 @@ def pruefen(zeilen: list[str], beitrag: dict, cfg: dict, sperrliste: set[str],
         if re.search(rf"\b{re.escape(coin)}\b", text, re.IGNORECASE):
             fehler.append(f"Coin auf der Sperrliste: {coin}")
 
-    erlaubt = _zahlen_aus(beitrag["fakten"])
-    ohne_aufzaehlung = re.sub(r"(?m)^\s*\d+\.\s", " ", text)   # "1. ", "2. " am Zeilenanfang sind keine Daten
+    lang = cfg.get("sprache", "de")
+    erlaubt = _zahlen_aus(beitrag["fakten"], lang)
+    ohne_aufzaehlung = re.sub(r"(?m)^\s*\d+\.\s", " ", _norm(text, lang))   # "1. ", "2. " am Zeilenanfang sind keine Daten
     for z in ZAHL.findall(ohne_aufzaehlung):
         wert = abs(float(z.replace(",", ".")))
         if not any(abs(wert - e) <= p["zahlen_toleranz"] for e in erlaubt):

@@ -29,7 +29,8 @@ IG = "https://graph.instagram.com/v26.0"
 IG_ORDNER = Path(os.environ.get("SOCIAL_OEFFENTLICH", "/opt/volumen-social/oeffentlich"))
 IG_URL = os.environ.get("SOCIAL_MEDIEN_URL", "https://whalesqueeze.com/medien/")
 IG_MAX = 2200   # Zeichen in der Bildunterschrift
-IG_TAGS = "#krypto #bitcoin #altcoins #kryptowährung #whalesqueeze"
+IG_TAGS = {"de": "#krypto #bitcoin #altcoins #kryptowährung #whalesqueeze",
+           "en": "#crypto #bitcoin #altcoins #cryptonews #whalesqueeze"}
 
 
 class NichtEingerichtet(Exception):
@@ -116,15 +117,18 @@ def x_posten(geheim: dict, bild: Path, text: str) -> str:
 
 def instagram_text(tg_text: str) -> str:
     """Bildunterschrift aus dem Telegram-Text: ohne HTML, Links sind auf Instagram nicht klickbar -> Hinweis aufs Profil."""
+    from . import design
+    lang = design.SPRACHE
+    tags = IG_TAGS.get(lang, IG_TAGS["en"])
     zeilen = []
     for z in tg_text.splitlines():
-        if "whalesqueeze.com/?" in z or z.startswith("🔗"):
-            zeilen.append("🔗 Mehr Daten: Link im Profil")
+        if "whalesqueeze.com/" in z and "utm_" in z or z.startswith("🔗"):
+            zeilen.append("🔗 Mehr Daten: Link im Profil" if lang == "de" else "🔗 More data: link in bio")
             continue
         zeilen.append(html.unescape(re.sub(r"<[^>]+>", "", z)))
     text = "\n".join(zeilen).strip()
     text = re.sub(r"\n{3,}", "\n\n", text)
-    return (text[:IG_MAX - len(IG_TAGS) - 2].rstrip() + "\n\n" + IG_TAGS)
+    return (text[:IG_MAX - len(tags) - 2].rstrip() + "\n\n" + tags)
 
 
 def _ig(methode: str, pfad: str, token: str, **params) -> dict:

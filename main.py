@@ -60,10 +60,10 @@ def main() -> int:
     cfg, geheim = lade_cfg()
     sperr = lade_sperrliste()
     lang = args.sprache or cfg.get("sprache", "de")
-    if lang != "de" and args.senden:
+    if lang != cfg.get("sprache", "de") and args.senden:
         # S1: Englisch erst nach Freigabe durch Tobias. Bis dahin nie an den Freigabe-Bot (dessen Knoepfe
         # posten in die deutschen Kanaele).
-        print("Englisch ist noch nicht freigegeben – nur Dateien erzeugt, nichts gesendet.")
+        print("Diese Sprache ist nicht die Kanal-Sprache – nur Dateien erzeugt, nichts gesendet.")
         args.senden = False
     if args.format == "wissen":
         return wissen_beitrag(args, cfg, geheim, sperr)
@@ -186,7 +186,8 @@ def news_beitrag(args, cfg, geheim, sperr, laden=None, schreiber=None, kurs_hole
             continue
         txt = news_post.texte(d, g, cfg, eil=args.eil)
         quelltext = " ".join(m["titel"] + " " + m["kurz"] for m in g["meldungen"])
-        quelltext += " " + " ".join(news_text.deutsche_zeiten(quelltext)) + " " + news_text.heute_text()
+        sp = cfg.get("sprache", "de")
+        quelltext += " " + " ".join(news_text.zeiten(quelltext, sp)) + " " + news_text.heute_text(lang=sp)
         fehler = pruefung.pruefen([txt["x"], d["kernsatz"], " ".join(d["punkte"]), d["schlagzeile"]],
                                   {"fakten": quelltext, "szenen": [0] * 4}, cfg, sperr, erlaubt_fusszeile=True)
         fehler += [f"Coin auf der Sperrliste: {c}" for c in d.get("coins", []) if str(c).upper() in sperr]

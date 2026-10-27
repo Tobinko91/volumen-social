@@ -41,26 +41,41 @@ class SpracheTest(unittest.TestCase):
                              erlaubt_fusszeile=True)
         self.assertEqual(f, [])
 
-    def test_deutsch_unveraendert(self):
+    def test_kanal_sprache_englisch(self):
+        # Entscheidung Tobias 26.10.2026: nur noch Englisch
+        self.assertEqual(CFG["sprache"], "en")
+        t = post.markt_texte(formate.markt_30s(D, set(), "en"), CFG)
+        self.assertTrue(t["x"].endswith("Not financial advice."))
+        self.assertEqual(wal.texte(daten.wal_des_tages(D, set()), CFG, "en")["x"].splitlines()[-1],
+                         "Not financial advice.")
+
+    def test_deutsch_bleibt_moeglich(self):
         t = post.markt_texte(formate.markt_30s(D, set(), "de"), CFG)
         self.assertTrue(t["x"].startswith("Krypto-Markt am"))
-        self.assertTrue(t["x"].endswith(CFG["hinweise"]["post_text"]))
-        self.assertEqual(wal.texte(daten.wal_des_tages(D, set()), CFG)["x"].splitlines()[-1], "Keine Anlageberatung.")
+        self.assertTrue(t["x"].endswith("Keine Anlageberatung."))
 
-    def test_englisch_wird_nie_gesendet(self):
+    def test_fremde_sprache_wird_nie_gesendet(self):
+        # Kanal-Sprache ist Englisch; eine Probe auf Deutsch darf nie an den Freigabe-Bot
+        with tempfile.TemporaryDirectory() as tmp:
+            env = dict(os.environ, SOCIAL_GEHEIM=tmp)
+            r = subprocess.run([sys.executable, "main.py", "markt", "--daten", "beispieldaten", "--sprache", "de",
+                                "--senden", "--out", tmp, "--art", "post"], cwd=HIER, capture_output=True, text=True,
+                               env=env)
+            self.assertIn("nichts gesendet", r.stdout, r.stderr)
+
+    def test_englische_beitraege(self):
         with tempfile.TemporaryDirectory() as tmp:
             env = dict(os.environ, SOCIAL_GEHEIM=tmp)
             for fmt in ("markt", "wal"):
                 extra = ["--art", "post"] if fmt == "markt" else []
-                r = subprocess.run([sys.executable, "main.py", fmt, "--daten", "beispieldaten", "--sprache", "en",
-                                    "--senden", "--out", tmp, *extra], cwd=HIER, capture_output=True, text=True,
-                                   env=env)
-                self.assertIn("nichts gesendet", r.stdout, r.stderr)
+                subprocess.run([sys.executable, "main.py", fmt, "--daten", "beispieldaten", "--out", tmp, *extra],
+                               cwd=HIER, capture_output=True, text=True, env=env)
             xs = [p.read_text() for p in Path(tmp).glob("*/post_x.txt")]
-            self.assertTrue(any("Crypto market" in x for x in xs))
-            self.assertTrue(any("Whale of the day" in x for x in xs))
+            self.assertTrue(any("Crypto market" in x for x in xs), xs)
+            self.assertTrue(any("Whale of the day" in x for x in xs), xs)
             tg = next(Path(tmp).glob("*_wal_*/post_telegram.txt")).read_text()
             self.assertIn("whalesqueeze.com/en/coin/", tg)
+            self.assertNotIn("Anlageberatung", " ".join(xs) + tg)
 
 
 if __name__ == "__main__":

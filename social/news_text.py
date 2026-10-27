@@ -37,14 +37,46 @@ Antworte NUR mit JSON:
  "coins": ["Ticker der genannten Coins, z. B. BTC"]}"""
 
 
+SYSTEM_EN = """You are an editor at WhaleSqueeze, a factual crypto news channel for a worldwide English-speaking audience.
+You get headlines and short texts from several sources about ONE event, plus today's date and converted times.
+Write your own thorough post for the community.
+
+Rules:
+- Facts from the sources only. No speculation, no price predictions, no price targets, no advice,
+  no calls to buy or sell, no hype words, no emojis.
+- Your own words, never copy sentences (at most one quote of up to 8 words in quotation marks, with who said it).
+- State facts directly: "The Fed announces its decision on Wednesday, October 28, at 2:00 p.m. ET (18:00 UTC)",
+  not "According to reports ...". Forbidden: "according to reports", "reportedly", "allegedly", "is said to".
+  Never name media outlets. If something is genuinely unconfirmed, say concretely who says what
+  (e.g. "The SEC has not decided yet", "The company has not confirmed this").
+- Always be concrete where the sources allow: date with weekday, time in ET and UTC (use the converted times
+  provided), who decides or speaks, what happens next (next date, deadline, vote), amounts and comparisons (before/now).
+- Numbers exactly as in the sources (English format: 1.5, 1,000). No calculations of your own.
+- Calm, clear, plain English. Briefly explain technical terms.
+- If the story is not about crypto or financial markets, or is too unclear, set "geeignet": false.
+
+Reply with JSON ONLY (keep the German keys):
+{"geeignet": true,
+ "rubrik": "one of: Bitcoin, Altcoins, Regulation, Exchanges, ETF, Security, Macro, Companies",
+ "schlagzeile": "headline, at most 70 characters",
+ "kernsatz": "one sentence, at most 200 characters: what happens, when (date, time), who",
+ "punkte": ["3 to 5 sentences: schedule, starting point with numbers, why it matters, what comes next"],
+ "x": "post for X, at most 230 characters, no link, no hashtags, with date/time if available",
+ "coins": ["tickers mentioned, e.g. BTC"]}"""
+
+
 def schreiben(gruppe: dict, cfg: dict, api_key: str) -> dict | None:
     meldungen = [{"quelle": m["quelle"], "titel": m["titel"], "kurztext": m["kurz"]} for m in gruppe["meldungen"][:6]]
     quelltext = " ".join(m["titel"] + " " + m["kurz"] for m in gruppe["meldungen"])
-    eingabe = {"heute": heute_text(), "deutsche_uhrzeiten": deutsche_zeiten(quelltext), "meldungen": meldungen}
+    lang = cfg.get("sprache", "de")
+    if lang == "en":
+        eingabe = {"today": heute_text(lang=lang), "converted_times": zeiten(quelltext, lang), "items": meldungen}
+    else:
+        eingabe = {"heute": heute_text(), "deutsche_uhrzeiten": deutsche_zeiten(quelltext), "meldungen": meldungen}
     r = requests.post(
         "https://api.anthropic.com/v1/messages",
         headers={"x-api-key": api_key, "anthropic-version": "2023-06-01", "content-type": "application/json"},
-        json={"model": cfg["text"]["modell"], "max_tokens": 1400, "system": SYSTEM,
+        json={"model": cfg["text"]["modell"], "max_tokens": 1400, "system": SYSTEM_EN if lang == "en" else SYSTEM,
               "messages": [{"role": "user", "content": json.dumps(eingabe, ensure_ascii=False)}]},
         timeout=90,
     )
@@ -67,9 +99,35 @@ WOCHENTAGE = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samsta
 UHRZEIT = re.compile(r"\b(\d{1,2})(?:[:.](\d{2}))?\s*(a\.?m\.?|p\.?m\.?)?\s*\(?\b(ET|EDT|EST|UTC|GMT)\b", re.I)
 
 
-def heute_text(jetzt: dt.datetime | None = None) -> str:
+def heute_text(jetzt: dt.datetime | None = None, lang: str = "de") -> str:
     j = (jetzt or dt.datetime.now(BERLIN)).astimezone(BERLIN)
+    if lang == "en":
+        return j.strftime("%A, %B ") + f"{j.day}, {j.year}"
     return f"{WOCHENTAGE[j.weekday()]}, {j.day}.{j.month}.{j.year}"
+
+
+def zeiten(text: str, lang: str = "de", jetzt: dt.datetime | None = None) -> list[str]:
+    """Uhrzeiten umrechnen: Deutsch -> deutsche Zeit, Englisch -> ET und UTC (weltweites Publikum)."""
+    if lang != "en":
+        return deutsche_zeiten(text, jetzt)
+    j = (jetzt or dt.datetime.now(BERLIN)).astimezone(BERLIN)
+    ny, out = ZoneInfo("America/New_York"), []
+    for m in UHRZEIT.finditer(text):
+        h, mi, ampm, zone = int(m.group(1)), int(m.group(2) or 0), (m.group(3) or "").lower(), m.group(4).upper()
+        if ampm.startswith("p") and h < 12:
+            h += 12
+        if ampm.startswith("a") and h == 12:
+            h = 0
+        if h > 23 or mi > 59 or (not ampm and not m.group(2)):
+            continue
+        q = dt.datetime(j.year, j.month, j.day, h, mi, tzinfo=ZoneInfo(ZONEN[zone]))
+        u, e = q.astimezone(dt.timezone.utc), q.astimezone(ny)
+        h12 = e.hour % 12 or 12
+        z = (f"{m.group(0).strip()} = {h12}:{e.minute:02d} {'a.m.' if e.hour < 12 else 'p.m.'} ET"
+             f" = {u.hour:02d}:{u.minute:02d} UTC")
+        if z not in out:
+            out.append(z)
+    return out[:8]
 
 
 def deutsche_zeiten(text: str, jetzt: dt.datetime | None = None) -> list[str]:

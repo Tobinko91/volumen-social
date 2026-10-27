@@ -35,7 +35,8 @@ def pruefen(ordner: Path, cfg: dict, sperr: set[str]) -> list[str]:
     tg = (ordner / "post_telegram.txt").read_text(encoding="utf-8")
     if len(x) > 280:
         fehler.append(f"X-Text zu lang ({len(x)} Zeichen)")
-    if "Keine Anlageberatung" not in x + tg:
+    hw = (cfg["hinweise"].get("post_text") or "Keine Anlageberatung").rstrip(".")
+    if hw not in x + tg and "Keine Anlageberatung" not in x + tg:
         fehler.append("Risiko-Hinweis fehlt")
     text = (x + " " + tg)
     for h in (h for h in cfg["hinweise"].values() if h):   # leere Hinweise ueberspringen

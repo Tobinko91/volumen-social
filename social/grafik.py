@@ -8,6 +8,12 @@ from PIL import Image, ImageDraw
 from .design import Thema, de, font, karte, rgb
 
 
+
+def _w(de_text: str, en_text: str) -> str:
+    """Beschriftung in der Kanal-Sprache."""
+    from . import design
+    return de_text if design.SPRACHE == "de" else en_text
+
 def balken(img: Image.Image, t: Thema, box, reihen: list[dict], titel: str | None = None, einheit: str = ""):
     """Waagerechte Balken. reihen: [{label, wert, farbe?, text?}]"""
     x0, y0, x1, y1 = box
@@ -91,7 +97,7 @@ def schema(img: Image.Image, t: Thema, box, art: str):
 
     if art == "unterstuetzung":
         # Zonen
-        for fy, name, farbe in [(0.2, "Widerstand", t.minus), (0.78, "Unterstützung", t.plus)]:
+        for fy, name, farbe in [(0.2, _w("Widerstand", "Resistance"), t.minus), (0.78, _w("Unterstützung", "Support"), t.plus)]:
             a, b = P(0, fy - 0.06), P(1, fy + 0.06)
             ebene = Image.new("RGBA", img.size, (0, 0, 0, 0))
             ImageDraw.Draw(ebene).rectangle([a, b], fill=rgb(farbe, 50))
@@ -112,13 +118,13 @@ def schema(img: Image.Image, t: Thema, box, art: str):
         ImageDraw.Draw(ebene).rectangle([a, b], fill=rgb(t.akzent2, 60))
         img.alpha_composite(ebene)
         d = ImageDraw.Draw(img)
-        d.text((a[0] + 10, b[1] + 6), "viele Stops = Liquidität", font=fl, fill=t.akzent2)
+        d.text((a[0] + 10, b[1] + 6), _w("viele Stops = Liquidität", "many stops = liquidity"), font=fl, fill=t.akzent2)
         kurs = [0.3, 0.45, 0.6, 0.48, 0.35, 0.5, 0.61, 0.47, 0.4, 0.55, 0.78, 0.5, 0.3, 0.18]
         pts = [P(i / (len(kurs) - 1), v) for i, v in enumerate(kurs)]
         d.line(pts, fill=t.text, width=5, joint="curve")
         sx, sy = pts[10]
         d.ellipse([sx - 11, sy - 11, sx + 11, sy + 11], fill=t.akzent)
-        txt = "Stops geholt, dann Wende"
+        txt = _w("Stops geholt, dann Wende", "stops taken, then reversal")
         tx = sx + 20 if sx + 20 + d.textlength(txt, font=fl) < x1 - 30 else sx - 20 - d.textlength(txt, font=fl)
         d.text((tx, sy + 14), txt, font=fl, fill=t.akzent)
     elif art == "pump":
@@ -129,7 +135,8 @@ def schema(img: Image.Image, t: Thema, box, art: str):
             d.line(pts[i0:i1 + 1], fill=farbe, width=6, joint="curve")
             mx = (pts[i0][0] + pts[i1][0]) / 2
             d.text((mx - d.textlength(name, font=fl) / 2, y1 - 52), name, font=fl, fill=farbe)
-    d.text((x1 - 40 - d.textlength("Schema", font=font("Medium", 22)), y0 + 22), "Schema",
+    sch = _w("Schema", "Illustration")
+    d.text((x1 - 40 - d.textlength(sch, font=font("Medium", 22)), y0 + 22), sch,
            font=font("Medium", 22), fill=t.neben)
 
 
@@ -158,10 +165,11 @@ def anteil(img: Image.Image, t: Thema, box, plus: int):
     d.arc(bb, 0, 360, fill=t.minus, width=int(r * 0.22))
     d.arc(bb, -90, -90 + 360 * plus / 100, fill=t.plus, width=int(r * 0.22))
     f = font("Bold", int(r * 0.5))
-    s = f"{plus} %"
+    s = f"{plus}" + _w(" %", "%")
     d.text((cx - d.textlength(s, font=f) / 2, cy - r * 0.36), s, font=f, fill=t.text)
     fs = font("Medium", int(r * 0.17))
-    d.text((cx - d.textlength("im Plus", font=fs) / 2, cy + r * 0.2), "im Plus", font=fs, fill=t.neben)
+    lab = _w("im Plus", "green")
+    d.text((cx - d.textlength(lab, font=fs) / 2, cy + r * 0.2), lab, font=fs, fill=t.neben)
     _ = math
 
 

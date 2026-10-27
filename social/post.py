@@ -64,7 +64,9 @@ def markt_bild(beitrag: dict, cfg: dict, ziel: Path, verlauf_holen=None) -> Path
     img = hintergrund(th, W, H, saat=sum(map(ord, tag)))
     marke(img, th, 80, 64, 64, untertitel=f["datum"])
     d = ImageDraw.Draw(img)
-    etikett(d, th, 80, 170, "KRYPTO-MARKT · 24 STD.")
+    en = lang == "en"
+    pz = "%" if en else " %"
+    etikett(d, th, 80, 170, "CRYPTO MARKET · 24H" if en else "KRYPTO-MARKT · 24 STD.")
     y = 260
     b = f.get("breite")
     if b:
@@ -72,22 +74,28 @@ def markt_bild(beitrag: dict, cfg: dict, ziel: Path, verlauf_holen=None) -> Path
         grafik.anteil(img, th, (110, y + 30, 380, y + 300), b["anteil_plus"])
         d = ImageDraw.Draw(img)
         m = b["median_24h"]
-        d.text((430, y + 40), f"Die Hälfte der {b['anzahl']} Small Caps lag über", font=font("Medium", 28),
+        d.text((430, y + 40), (f"Half of {b['anzahl']} small caps did better than" if en else
+                               f"Die Hälfte der {b['anzahl']} Small Caps lag über"), font=font("Medium", 28),
                fill=th.neben)
-        d.text((430, y + 80), f"{zahl(m, lang, True)} %", font=font("Bold", 120), fill=th.plus if m >= 0 else th.minus)
-        absatz(d, th, 430, y + 230, f"{b['anteil_plus']} % der Coins stehen im Plus, "
-               f"{100 - b['anteil_plus']} % im Minus.", W - 80 - 430 - 30, groesse=26, farbe=th.neben)
+        d.text((430, y + 80), f"{zahl(m, lang, True)}{pz}", font=font("Bold", 120), fill=th.plus if m >= 0 else th.minus)
+        absatz(d, th, 430, y + 230, (f"{b['anteil_plus']}% of coins are green, {100 - b['anteil_plus']}% red." if en
+                                     else f"{b['anteil_plus']} % der Coins stehen im Plus, "
+                                          f"{100 - b['anteil_plus']} % im Minus."),
+               W - 80 - 430 - 30, groesse=26, farbe=th.neben)
         y += 370
-    reihen = [{"label": mv["base"], "wert": mv["chg24"], "text": f"{zahl(mv['chg24'], lang, True)} %",
+    reihen = [{"label": mv["base"], "wert": mv["chg24"], "text": f"{zahl(mv['chg24'], lang, True)}{pz}",
                "farbe": th.plus if mv["chg24"] >= 0 else th.minus} for mv in f["mover"]]
     unten = y + 130 + 120 * len(reihen)
     verlaeufe = verlauf_holen([mv["base"] for mv in f["mover"]]) if verlauf_holen else {}
     if verlaeufe and all(verlaeufe.get(mv["base"]) for mv in f["mover"]):
         grafik.mover_linien(img, th, (80, y, W - 80, unten),
-                            [dict(mv, verlauf=verlaeufe[mv["base"]], text=f"{zahl(mv['chg24'], lang, True)} %")
-                             for mv in f["mover"]], titel="Größte Bewegungen · Kurs 72 Std. · Wert 24 Std.")
+                            [dict(mv, verlauf=verlaeufe[mv["base"]], text=f"{zahl(mv['chg24'], lang, True)}{pz}")
+                             for mv in f["mover"]],
+                            titel=("Biggest moves · price 72h · change 24h" if en
+                                   else "Größte Bewegungen · Kurs 72 Std. · Wert 24 Std."))
     else:   # keine Kurse erreichbar: Balken wie bisher
-        grafik.balken(img, th, (80, y, W - 80, unten), reihen, titel="Größte Bewegungen in 24 Stunden")
+        grafik.balken(img, th, (80, y, W - 80, unten), reihen,
+                      titel="Biggest moves in 24 hours" if en else "Größte Bewegungen in 24 Stunden")
     d = ImageDraw.Draw(img)
     y = unten + 30
     for mv in f["mover"]:

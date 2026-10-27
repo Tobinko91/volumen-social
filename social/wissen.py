@@ -14,7 +14,10 @@ HIER = Path(__file__).resolve().parent.parent
 
 
 def themen() -> list[dict]:
-    return yaml.safe_load((HIER / "inhalte" / "wissen.yaml").read_text(encoding="utf-8"))
+    """Themen in der Kanal-Sprache: wissen.yaml (Englisch, seit 26.10.2026) bzw. wissen_de.yaml."""
+    from . import design
+    datei = "wissen_de.yaml" if design.SPRACHE == "de" else "wissen.yaml"
+    return yaml.safe_load((HIER / "inhalte" / datei).read_text(encoding="utf-8"))
 
 
 def naechstes(stand_datei: Path, thema_id: str | None = None) -> dict:
@@ -40,6 +43,64 @@ def texte(t: dict, cfg: dict) -> dict:
 
 def _grafik(img, t, th, box):
     """Passende Grafik je Thema (Werte nachgerechnet, siehe tests/test_wissen.py)."""
+    from . import design, grafik as g
+    from .design import MINUS
+    if design.SPRACHE == "de":
+        return _grafik_de(img, t, th, box)
+    i = t["id"]
+    if i == "risiko-1-prozent":
+        g.linien(img, th, box, [
+            {"name": "1% risk", "werte": [100 * 0.99 ** n for n in range(11)], "farbe": th.akzent, "endtext": "90.4%"},
+            {"name": "5% risk", "werte": [100 * 0.95 ** n for n in range(11)], "farbe": th.minus, "endtext": "59.9%"},
+        ], ["0", "", "2", "", "4", "", "6", "", "8", "", "10"], titel="Account balance after losses in a row",
+            y_min=55, y_max=100)
+    elif i == "verlust-falle":
+        g.balken(img, th, box, [
+            {"label": "−20%", "wert": 25, "text": "+25%", "farbe": th.akzent},
+            {"label": "−50%", "wert": 100, "text": "+100%", "farbe": th.akzent2},
+            {"label": "−90%", "wert": 900, "text": "+900%", "farbe": th.minus},
+        ], titel="Loss → gain needed to get back to even")
+    elif i == "hebel":
+        g.balken(img, th, box, [
+            {"label": f"{h}x", "wert": 100 / h, "text": f"{de(100 / h, 0)}%",
+             "farbe": [th.akzent, th.akzent, th.akzent2, th.minus, th.minus][k]}
+            for k, h in enumerate([2, 5, 10, 20, 50])
+        ], titel="Move against you that wipes out the position (simplified)")
+    elif i == "weg-100k-200":
+        g.balken(img, th, box, [
+            {"label": "0% return", "wert": 41.7, "text": "41.7 years", "farbe": th.minus},
+            {"label": "5% return", "wert": 22.6, "text": "22.6 years", "farbe": th.akzent2},
+            {"label": "7% return", "wert": 19.6, "text": "19.6 years", "farbe": th.akzent},
+        ], titel="Years to $100,000 at $200 a month (return assumed)")
+    elif i == "erste-10k":
+        g.balken(img, th, box, [
+            {"label": f"{['1st', '2nd', '3rd', '4th', '5th'][k - 1]} $10k", "wert": m, "text": f"{m} months",
+             "farbe": th.minus if k == 1 else th.akzent}
+            for k, m in enumerate([45, 35, 29, 24, 22], 1)
+        ], titel="Months per $10,000 ($200 a month, 7% assumed)")
+    elif i == "zinseszins":
+        g.linien(img, th, box, [
+            {"name": "8% a year", "werte": [100 * 1.08 ** j for j in range(31)], "farbe": th.akzent,
+             "endtext": "$1,006"},
+        ], ["0"] + [""] * 9 + ["10"] + [""] * 9 + ["20"] + [""] * 9 + ["30 years"], titel="$100 turns into …",
+            y_min=0)
+    elif i == "unterstuetzung":
+        g.schema(img, th, box, "unterstuetzung")
+    elif i == "liquiditaetszone":
+        g.schema(img, th, box, "liquiditaet")
+    elif i == "pump-and-dump":
+        g.schema(img, th, box, "pump")
+    elif i == "fake-guru":
+        g.liste_x(img, th, box, ["never shows losses", "promises fixed returns", "rushes you",
+                                 "sells expensive groups", "hides own positions"])
+    else:
+        return False
+    _ = MINUS
+    return True
+
+
+def _grafik_de(img, t, th, box):
+    """Deutsche Fassung (bis 26.10.2026)."""
     from . import grafik as g
     from .design import MINUS
     i = t["id"]
