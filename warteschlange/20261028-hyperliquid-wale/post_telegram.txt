@@ -1,0 +1,10 @@
+🐋 <b>Hyperliquid whales are net short Bitcoin</b>
+
+For the first time since March, the largest Hyperliquid accounts hold more Bitcoin shorts than longs (as of Oct 27).
+
+• Shorts: about $1.33 billion, longs: about $952 million
+• Net short: roughly $377 million
+• Several addresses hold single shorts above $200 million
+• Crowded shorts can turn into a squeeze if the price rises
+
+<i>Not financial advice.</i>
