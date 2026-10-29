@@ -19,21 +19,58 @@ KENNZAHL_EN = re.compile(r"\$\d[\d,]*(?:\.\d+)?(?:\s?(?:trillion|billion|million
                          r"|[-+−]?\d[\d,]*(?:\.\d+)?\s?(?:%|trillion|billion|million|bps|basis points|BTC|ETH)")
 
 
+KRYPTO_TITEL = {"en": "What it means for crypto", "de": "Was das für Krypto heißt"}
+
+
+def ist_makro(d: dict, gruppe: dict) -> bool:
+    """S19: Makro-Meldung (Fed, Inflation, Zinsen ...), unter die unsere eigenen Krypto-Daten kommen."""
+    return str(d.get("rubrik", "")).lower() in ("macro", "makro") or bool(gruppe.get("makro") and not d.get("coins"))
+
+
+def krypto_zeile(m: dict | None, lang: str = "en") -> dict | None:
+    """Eigene Bot-Daten zur Makro-Meldung (nur Zahlen aus markt.json, keine Deutung, keine Empfehlung).
+    m = daten.marktlage(). Rueckgabe: {"lang": Satz fuer Telegram/Bild, "kurz": fuer X, "fakten": [Zahlen]}."""
+    from .sprache import zahl
+    if not m or m.get("anteil_plus") is None or m.get("median_24h") is None:
+        return None
+    a, med, n = int(round(m["anteil_plus"])), m["median_24h"], m.get("anzahl")
+    btc = m.get("btc_24h")
+    if lang == "en":
+        satz = (f"In the small caps we track{f' ({n} coins)' if n else ''}, {a}% are up over 24h, "
+                f"median {zahl(med, lang, True)}%.")
+        if btc is not None:
+            satz += f" Bitcoin: {zahl(btc, lang, True)}% in 24h."
+        kurz = f"Crypto now: {a}% of small caps up in 24h."
+    else:
+        satz = (f"Bei den Small Caps, die wir verfolgen{f' ({n} Coins)' if n else ''}, liegen {a} % im Plus (24 h), "
+                f"Median {zahl(med, lang, True)} %.")
+        if btc is not None:
+            satz += f" Bitcoin: {zahl(btc, lang, True)} % in 24 h."
+        kurz = f"Krypto jetzt: {a} % der Small Caps im Plus (24 h)."
+    return {"lang": satz, "kurz": kurz, "fakten": [a, med, n, btc, 24]}
+
+
 def quellen_hinweis(gruppe: dict) -> str:
     """Nur fuer Tobias im Freigabe-Chat, wird nicht gepostet."""
     return "Quellen (nur für dich, nicht im Post): " + ", ".join(gruppe["quellen"][:4])
 
 
 def texte(d: dict, gruppe: dict, cfg: dict, eil: bool = False) -> dict:
+    """d["krypto"] (optional, S19): Ergebnis von krypto_zeile() bei Makro-Meldungen."""
     lang = cfg.get("sprache", "de")
     hw = hinweis(cfg, lang)
     kopf = (("🚨 BREAKING: " if lang == "en" else "🚨 EILMELDUNG: ") if eil else "")
     x = f"{kopf}{d['x']}\n{hw}"
     if len(x) > X_MAX:
         x = f"{kopf}{d['x'][:X_MAX - len(kopf) - len(hw) - 3].rstrip()}…\n{hw}"
+    k = d.get("krypto")
+    if k and len(x) + len(k["kurz"]) + 1 <= X_MAX:   # X: kurze Zeile nur, wenn sie passt
+        x = x[: x.rfind("\n")] + "\n" + k["kurz"] + x[x.rfind("\n"):]
     e = html.escape
     tg = [f"{'🚨 ' if eil else '📰 '}<b>{e(d['schlagzeile'])}</b>", "", e(d["kernsatz"]), ""]
     tg += [f"• {e(p)}" for p in d["punkte"]]
+    if k:
+        tg += ["", f"📊 <b>{KRYPTO_TITEL[lang]}:</b> {e(k['lang'])}"]
     tg += ["", f"<i>{e(cfg['hinweise']['post_text'])}</i>"]
     return {"x": x, "telegram": "\n".join(tg)}
 
@@ -80,6 +117,9 @@ def bild(d: dict, gruppe: dict, cfg: dict, ziel: Path, eil: bool = False, jetzt:
     etikett(dr, th, 80, 170, (("BREAKING · " if en else "EILMELDUNG · ") if eil else "NEWS · ") + d["rubrik"].upper(),
             farbe=MINUS if eil else None)
     unten = H - 130
+    k = d.get("krypto")
+    if k:   # S19: Platz fuer die Krypto-Karte unten
+        unten -= 175
 
     if layout == "gross":   # grosse Schlagzeile, Punkte auf einer Karte
         y = ueberschrift(dr, th, 80, 270, d["schlagzeile"], W - 160, groesse=104, max_zeilen=4) + 40
@@ -119,7 +159,13 @@ def bild(d: dict, gruppe: dict, cfg: dict, ziel: Path, eil: bool = False, jetzt:
         dr.rounded_rectangle([80, y, 240, y + 8], radius=4, fill=th.akzent)
         y += 40
         y = absatz(dr, th, 80, y, d["kernsatz"], W - 160, groesse=42, gewicht="Medium") + 34
-        punkte(dr, th, 80, y, d["punkte"], W - 160, groesse=33, bis_y=H - 150)
+        punkte(dr, th, 80, y, d["punkte"], W - 160, groesse=33, bis_y=unten - 20 if k else H - 150)
+    if k:
+        karte(img, th, (60, unten + 10, W - 60, H - 118))
+        dr = ImageDraw.Draw(img)
+        dr.text((96, unten + 32), KRYPTO_TITEL[design.SPRACHE if design.SPRACHE in KRYPTO_TITEL else "en"].upper(),
+                font=font("Bold", 24), fill=th.akzent2)
+        absatz(dr, th, 96, unten + 68, k["lang"], W - 192, groesse=30, gewicht="Medium")
     fuss(img, th, cfg["hinweise"]["fusszeile"])
     ziel.parent.mkdir(parents=True, exist_ok=True)
     img.convert("RGB").save(ziel)

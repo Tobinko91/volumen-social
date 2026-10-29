@@ -9,3 +9,17 @@
 - {name: Cointelegraph Deutschland, url: "https://de.cointelegraph.com/rss", land: DE, gewicht: 0.9}
 - {name: SEC, url: "https://www.sec.gov/news/pressreleases.rss", land: US, gewicht: 1.5, offiziell: true, filter: krypto}
 - {name: EZB, url: "https://www.ecb.europa.eu/rss/press.html", land: EU, gewicht: 1.5, offiziell: true, filter: krypto}
+
+# ---- News-Radar (S18, Wunsch Tobias 28.10.2026): grosse News-Konten, nur Hinweisgeber ----
+# radar: true = allein keine Bestaetigung, ein Ereignis braucht eine zweite Quelle.
+# filter: markt = nur Krypto- oder Makro-Themen (Fed, Inflation, Zinsen, Dollar, Zoelle ...), kein Klatsch.
+# Telegram-Vorschau (t.me/s/...) ist oeffentlich und kostenlos.
+- {name: Watcher Guru, art: telegram, url: "https://t.me/s/WatcherGuru", land: US, gewicht: 0.8, radar: true, filter: markt}
+- {name: Wu Blockchain, art: telegram, url: "https://t.me/s/wublockchainenglish", land: Asien, gewicht: 0.8, radar: true, filter: krypto}
+# Whale Alert = On-Chain-Primaerdaten: ab 100 Mio. $ reicht der Transfer allein
+- {name: Whale Alert, art: telegram, url: "https://t.me/s/whale_alert_io", land: weltweit, gewicht: 0.6, radar: true, filter: krypto, primaer_ab_usd: 100000000}
+# X-Konten: nur wenn config.yaml radar.x_lesen: true (X berechnet jeden Abruf). Eine Suchanfrage fuer alle zusammen.
+- {name: The Kobeissi Letter, x: KobeissiLetter, land: US, gewicht: 0.9, radar: true, filter: markt}
+- {name: Walter Bloomberg, x: DeItaone, land: US, gewicht: 0.8, radar: true, filter: markt}
+- {name: Lookonchain, x: lookonchain, land: weltweit, gewicht: 0.8, radar: true, filter: krypto}
+- {name: Santiment, x: santimentfeed, land: weltweit, gewicht: 0.8, radar: true, filter: krypto}
