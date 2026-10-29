@@ -153,17 +153,38 @@ def wissen_beitrag(args, cfg, geheim, sperr) -> int:
     return 1 if fehler else 0
 
 
-def news_beitrag(args, cfg, geheim, sperr, laden=None, schreiber=None, kurs_holen="auto") -> int:
-    """Wichtigste noch nicht gezeigte Krypto-Nachricht als Bild + Text (Telegram und X)."""
+def _markt_fuer_news(args, cfg) -> dict | None:
+    """S19: aktuelle Marktbreite vom Bot fuer die Krypto-Zeile unter Makro-News (fehlt sie, ohne Zeile)."""
+    try:
+        return daten.marktlage(daten.laden(args.daten or cfg["daten"]["dir"], cfg["daten"]["max_alter_min"]))
+    except Exception:
+        return None
+
+
+def news_beitrag(args, cfg, geheim, sperr, laden=None, schreiber=None, kurs_holen="auto", markt="auto",
+                 x_leser="auto") -> int:
+    """Wichtigste noch nicht gezeigte Krypto-Nachricht als Bild + Text (Telegram und X).
+    S18: Radar-Konten (inhalte/quellen.yaml) zaehlen nur mit zweiter Quelle. S19: Makro-News bekommen eine
+    Zeile mit eigenen Bot-Daten."""
     if kurs_holen == "auto":   # echte Laeufe holen den Kurs; Tests mit eigenem 'laden' nicht
         kurs_holen = kurse.verlauf if laden is None else None
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     stand_p = out / "news_stand.json"
     stand = news.stand_laden(stand_p)
-    meldungen, status = news.einsammeln(laden=laden)
+    if x_leser == "auto":   # X kostet je Abruf: nur wenn eingeschaltet, Schluessel da und nicht im Stunden-Eil-Lauf
+        r = cfg.get("radar") or {}
+        x_an = r.get("x_lesen") and not args.eil and laden is None and all(
+            geheim.get(k) for k in ("x_api_key", "x_api_secret", "x_access_token", "x_access_secret"))
+        x_leser = (lambda konten: news.x_radar(konten, geheim, max_posts=int(r.get("x_max_posts", 30)))) if x_an \
+            else None
+    meldungen, status = news.einsammeln(laden=laden, x_leser=x_leser)
     print("Quellen:", ", ".join(f"{k}: {v}" for k, v in status.items()))
     gruppen = [g for g in news.buendeln(meldungen) if not news.schon_gezeigt(g, stand)]
+    ohne = [g for g in gruppen if not g.get("bestaetigt", True)]
+    if ohne:
+        print("Radar ohne zweite Quelle (nicht gepostet):", "; ".join(g["meldungen"][0]["titel"][:60] for g in ohne[:5]))
+    gruppen = [g for g in gruppen if g.get("bestaetigt", True)]
     if args.eil:
         heute = [t for t in stand.get("eil", []) if time.time() - t < 86400]
         gruppen = [g for g in gruppen if g["eil"]] if len(heute) < 2 else []
@@ -184,12 +205,19 @@ def news_beitrag(args, cfg, geheim, sperr, laden=None, schreiber=None, kurs_hole
         if not d:
             news.stand_merken(stand_p, g)
             continue
+        sp = cfg.get("sprache", "de")
+        if news_post.ist_makro(d, g):
+            if markt == "auto":
+                markt = _markt_fuer_news(args, cfg)
+            d["krypto"] = news_post.krypto_zeile(markt, sp)
         txt = news_post.texte(d, g, cfg, eil=args.eil)
         quelltext = " ".join(m["titel"] + " " + m["kurz"] for m in g["meldungen"])
-        sp = cfg.get("sprache", "de")
         quelltext += " " + " ".join(news_text.zeiten(quelltext, sp)) + " " + news_text.heute_text(lang=sp)
-        fehler = pruefung.pruefen([txt["x"], d["kernsatz"], " ".join(d["punkte"]), d["schlagzeile"]],
-                                  {"fakten": quelltext, "szenen": [0] * 4}, cfg, sperr, erlaubt_fusszeile=True)
+        if d.get("krypto"):   # Zahlen der Krypto-Zeile stammen aus den Bot-Daten
+            quelltext += " " + " ".join(str(z) for z in d["krypto"]["fakten"] if z is not None)
+        fehler = pruefung.pruefen([txt["x"], d["kernsatz"], " ".join(d["punkte"]), d["schlagzeile"],
+                                   (d.get("krypto") or {}).get("lang", "")],
+                                  {"fakten": quelltext, "szenen": [0] * 5}, cfg, sperr, erlaubt_fusszeile=True)
         fehler += [f"Coin auf der Sperrliste: {c}" for c in d.get("coins", []) if str(c).upper() in sperr]
         fehler = list(dict.fromkeys(fehler))
         ordner = out / f"{time.strftime('%Y%m%d-%H%M')}_news"

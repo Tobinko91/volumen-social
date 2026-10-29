@@ -40,6 +40,17 @@ python main.py markt --daten beispieldaten
 abgeschaltet), bis Tobias den Start freigibt. Noch Deutsch: Bild-Beschriftungen in `post.markt_bild`, Fusszeile im Video,
 Lern-/News-/Coin-Check-Texte, Stimme (englische ElevenLabs-Stimme fehlt). Startkriterium: `plan-englisch` (Projekt-Dokument).
 
+## News-Radar (S18) und Krypto-Zeile (S19), seit 29.10.2026
+- Neben den News-Seiten (CoinDesk, The Block …) liest der News-Lauf grosse News-Konten mit (`inhalte/quellen.yaml`,
+  `radar: true`): Watcher Guru, Wu Blockchain und Whale Alert ueber ihre oeffentliche Telegram-Vorschau (kostenlos).
+- X-Konten (The Kobeissi Letter, Walter Bloomberg, Lookonchain, Santiment) nur mit `radar.x_lesen: true` in
+  `config.yaml`: eine Suchanfrage je News-Slot (14/19/21 Uhr), nie im stuendlichen Eil-Lauf. X berechnet jeden Abruf.
+- Radar-Konten sind nur Hinweisgeber: gepostet wird erst mit zweiter Quelle (oder ein Whale-Alert-Transfer ab 100 Mio. $).
+  Nur Krypto- und Makro-Themen, kein Klatsch. Claude schreibt immer eigene Worte, Quellen nur im Freigabe-Hinweis.
+- Makro-News (Fed, Inflation, Zinsen …) bekommen unten die Karte „What it means for crypto“ mit unseren Bot-Daten
+  (Anteil der Small Caps im Plus, Median 24 h, Bitcoin 24 h). Fehlen frische Daten, entfaellt die Karte.
+- Pruefen auf dem Server: `python3 tools/quellen_test.py`
+
 ## Schutzregeln (fest eingebaut)
 Ueberall nur „Keine Anlageberatung“ (kein KI-, Totalverlust- oder Betreiber-Hinweis), keine Einstiegskurse,
 keine Kauf-/Verkaufsaufforderung, keine Zahl ohne Datenquelle, keine Coins von der Sperrliste.

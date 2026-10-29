@@ -6,6 +6,10 @@ daten:
   dir: /opt/volumen-bot/web
   max_alter_min: 30          # aeltere Daten -> kein Video, Warnung
 
+radar:                       # S18 News-Radar (inhalte/quellen.yaml, radar: true)
+  x_lesen: false             # X-Konten (Kobeissi, Walter Bloomberg ...) mitlesen; kostet je Abruf -> erst an, wenn Guthaben da
+  x_max_posts: 30            # hoechstens so viele Posts je Abruf (nur in den News-Slots 14/19/21 Uhr, nie stuendlich)
+
 sprache: en                  # seit 26.10.2026 nur Englisch (Entscheidung Tobias); vorher Deutsch
 
 video:
