@@ -1,0 +1,11 @@
+🚨 <b>Binance hacked: $6.3 billion, the largest crypto theft ever</b>
+
+Attackers drained Binance hot wallets on Thursday, Oct 29, starting at 4:05 p.m. ET (20:05 UTC). About $3 billion has been frozen so far.
+
+• Withdrawals are suspended, deposits work normally. Co-CEO Yi He expects withdrawals back within 48 hours.
+• Binance says it covers all losses from its SAFU fund and company funds: &quot;User funds are safe.&quot;
+• Cause so far: a compromised laptop of a DevOps engineer. Binance found no leaked private keys.
+• TRM Labs attributes the attack to North Korea&#x27;s TraderTraitor group, the unit behind the $1.5 billion Bybit hack in 2025.
+• Market: Bitcoin fell 4.8% to below $77,000, BNB 8%. Next: a technical report and new proof of reserves.
+
+<i>Not financial advice.</i>
