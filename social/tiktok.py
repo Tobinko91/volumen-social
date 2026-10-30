@@ -47,10 +47,23 @@ def speichern(geheim: dict, neu: dict, datei: Path | None = None) -> None:
     alt = (yaml.safe_load(datei.read_text()) if datei.exists() else {}) or {}
     alt.update(neu)
     geheim.update(neu)
+    schreiben(datei, alt)
+
+
+def schreiben(datei: Path, daten: dict) -> None:
+    """secrets.yaml sicher schreiben. Atomar ueber eine .tmp-Datei, wenn der Ordner das erlaubt (root).
+    Der Dienst-Benutzer 'redaktion' darf in /opt/volumen-social keine neuen Dateien anlegen (Fehler 30.10.2026:
+    TikTok-Verlaengerung um 04:00 scheiterte) -> dann direkt in die Datei, die ihm gehoert."""
+    text = yaml.safe_dump(daten, allow_unicode=True)
     tmp = datei.with_suffix(".tmp")
-    tmp.write_text(yaml.safe_dump(alt, allow_unicode=True))
-    os.chmod(tmp, 0o600)
-    tmp.replace(datei)
+    try:
+        tmp.write_text(text)
+        os.chmod(tmp, 0o600)
+        tmp.replace(datei)
+    except PermissionError:
+        with open(datei, "r+", encoding="utf-8") as f:   # bestehende Datei, Rechte bleiben (600, redaktion)
+            f.write(text)
+            f.truncate()
 
 
 # ---------------------------------------------------------------- Zugang

@@ -28,10 +28,8 @@ def main(erneuern=kanaele.instagram_token_erneuern, melden=telegram.text_senden)
         return 1
     g["instagram_token"] = neu
     g["instagram_token_bis"] = int(time.time()) + sekunden
-    tmp = DATEI.with_suffix(".tmp")
-    tmp.write_text(yaml.safe_dump(g, allow_unicode=True))
-    os.chmod(tmp, 0o600)
-    tmp.replace(DATEI)
+    from social import tiktok
+    tiktok.schreiben(DATEI, g)   # klappt auch als Benutzer 'redaktion' (siehe dort)
     print(f"Instagram-Token verlängert, gültig noch {sekunden // 86400} Tage")
     return 0
 
