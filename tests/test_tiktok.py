@@ -58,6 +58,26 @@ class TikTokTest(unittest.TestCase):
             tiktok.speichern({}, {"tiktok_access_token": "a"}, p)
             self.assertEqual(yaml.safe_load(p.read_text()), {"x_api_key": "x", "tiktok_access_token": "a"})
 
+    def test_speichern_ohne_schreibrecht_im_ordner(self):
+        # Fehler 30.10.2026: als Benutzer 'redaktion' darf keine secrets.tmp angelegt werden
+        import os
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "secrets.yaml"
+            p.write_text(yaml.safe_dump({"x_api_key": "x", "tiktok_refresh_token": "alt" * 20}))
+            os.chmod(p, 0o600)
+            echt = Path.write_text
+
+            def verboten(self, *a, **k):
+                if self.suffix == ".tmp":
+                    raise PermissionError(13, "Permission denied", str(self))
+                return echt(self, *a, **k)
+            with mock.patch.object(Path, "write_text", verboten):
+                tiktok.speichern({}, {"tiktok_refresh_token": "neu"}, p)
+            self.assertEqual(yaml.safe_load(p.read_text()), {"x_api_key": "x", "tiktok_refresh_token": "neu"})
+            self.assertEqual(oct(p.stat().st_mode & 0o777), "0o600")
+            self.assertFalse((Path(d) / "secrets.tmp").exists())
+
     def test_titel_und_text(self):
         tg = "📊 <b>Crypto market, Oct 26</b>\n\n• BTC +1.2%\n🔗 <a href=\"https://whalesqueeze.com/en/?utm_source=telegram\">x</a>\n\n<i>Not financial advice.</i>"
         titel, text = tiktok.titel_und_text(tg)
