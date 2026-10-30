@@ -51,6 +51,13 @@ Lern-/News-/Coin-Check-Texte, Stimme (englische ElevenLabs-Stimme fehlt). Startk
   (Anteil der Small Caps im Plus, Median 24 h, Bitcoin 24 h). Fehlen frische Daten, entfaellt die Karte.
 - Pruefen auf dem Server: `python3 tools/quellen_test.py`
 
+## Live-Eilmeldungen (seit 30.10.2026)
+- `tools/live.sh` laeuft alle 10 Minuten rund um die Uhr (`deploy/plan.cron`, :05/:15/…), auch nachts.
+- Eilmeldung = Eil-Thema (Hack, Exploit, Auszahlungsstopp, Depeg, ETF-Zulassung, Verbot …) mit mindestens
+  2 Quellen; Radar-Konten (Watcher Guru, Wu Blockchain, Whale Alert) zaehlen mit. Hoechstens 5 am Tag (`eil.max_pro_tag`).
+- Der Vorschlag kommt mit „🚨 EILMELDUNG – bitte schnell freigeben“. Gepostet wird erst nach Knopfdruck. `/pause` stoppt auch das.
+- Anlass: Binance-Hack 29.10. um 21:05 deutscher Zeit; der alte Stunden-Check (7–21 Uhr, 3 Quellen) hat ihn verpasst.
+
 ## Schutzregeln (fest eingebaut)
 Ueberall nur „Keine Anlageberatung“ (kein KI-, Totalverlust- oder Betreiber-Hinweis), keine Einstiegskurse,
 keine Kauf-/Verkaufsaufforderung, keine Zahl ohne Datenquelle, keine Coins von der Sperrliste.

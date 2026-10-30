@@ -7,7 +7,7 @@
 #   15:00 Coin-Check (10:00 ET)
 #   18:00 Wal des Tages (12:00 ET)
 #   21:30 Lern-Beitrag (16:30 ET; 0:00 deutscher Zeit waere besser, liegt aber in der Ruhezeit fuer die Freigabe)
-#   sonst jede volle Stunde 7-21 Uhr: Eilmeldung, falls es eine gibt (hoechstens 2 am Tag)
+#   Eilmeldungen: eigener Lauf tools/live.sh alle 10 Minuten rund um die Uhr (seit 30.10.2026)
 export TZ=Europe/Berlin
 H=$(date +%H); M=$(date +%M)
 SLOT="$H:$([ "$M" -lt 30 ] && echo 00 || echo 30)"
@@ -36,6 +36,5 @@ case "$SLOT" in
   15:00) lauf coincheck ;;
   18:00) lauf wal ;;
   21:30) lauf wissen ;;
-  0[7-9]:00|1[0-9]:00|2[01]:00) lauf news --eil ;;
 esac
 echo "$(date '+%F %T') Plan $SLOT erledigt"

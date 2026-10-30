@@ -1,2 +1,4 @@
 # WhaleSqueeze Redaktion: Tagesplan (wird bei jedem Update automatisch eingespielt)
 0,30 * * * * root /bin/bash /opt/volumen-social/app/tools/plan.sh >> /var/log/volumen-social-plan.log 2>&1
+# Live-Eilmeldungen alle 10 Minuten, rund um die Uhr (Wunsch Tobias 30.10.2026)
+5-55/10 * * * * root /bin/bash /opt/volumen-social/app/tools/live.sh >> /var/log/volumen-social-live.log 2>&1

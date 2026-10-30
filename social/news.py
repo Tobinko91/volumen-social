@@ -37,7 +37,12 @@ WICHTIG = {
 MAKRO = re.compile(r"\b(fed|fomc|federal reserve|warsh|powell|rate (cut|hike)s?|interest rates?|inflation|cpi|pce|"
                    r"gdp|payrolls|jobs report|unemployment|treasur(y|ies)|bond yields?|yields?|dollar|dxy|tariffs?|"
                    r"recession|ecb|bank of japan|boj|s&p 500|nasdaq|liquidity|qe|qt)\b", re.I)
-EIL = re.compile(r"\betf\b.*\b(approv|genehmig|zugelassen)|\bhack\w*|exploit|insolven|bankrupt|verbot|\bban\b", re.I)
+# Eilmeldung (Live-Modus, Wunsch Tobias 30.10.2026 nach dem Binance-Hack): sofort melden, nicht Stunden spaeter
+EIL = re.compile(r"\betf\b.*\b(approv|genehmig|zugelassen)|\bhack\w*|exploit|drain(ed)?\b|stolen|gestohlen|insolven|"
+                 r"bankrupt|verbot|\bban\b|(halt|suspend|pause|freez|froze)\w*\s+(all\s+)?withdrawals|"
+                 r"withdrawals\s+(halted|suspended|paused|frozen)|auszahlungen\s+\w*\s*(gestoppt|ausgesetzt)|"
+                 r"depeg\w*|(lost|loses|losing) (its|the) peg|emergency rate|notfall", re.I)
+EIL_QUELLEN = 2   # zwei unabhaengige Quellen (Radar-Konten zaehlen mit) – frueher 3, das war zu langsam
 STOPP = set("the a an of to in on for and or with is are was be by at from as that this it its new says after "
             "der die das ein eine und oder mit von im in am auf für ist sind wird werden nach zu den dem des "
             "crypto krypto news price preis kurs".split())
@@ -239,7 +244,7 @@ def buendeln(meldungen: list[dict], schwelle: float = 0.28) -> list[dict]:
         bonus = sum(v for k, v in WICHTIG.items() if re.search(k, text, re.I))
         g["punkte"] = round(sum(max(m["gewicht"] for m in g["meldungen"] if m["quelle"] == q) for q in g["quellen"])
                             + bonus, 2)
-        g["eil"] = bool(EIL.search(text)) and len(g["quellen"]) >= 3
+        g["eil"] = bool(EIL.search(text)) and len(g["quellen"]) >= EIL_QUELLEN
         # S18: Radar-Konten allein sind keine Bestaetigung -> zweite Quelle oder eigene Primaerdaten noetig
         g["bestaetigt"] = (any(not m.get("radar") for m in g["meldungen"]) or len(g["quellen"]) >= 2
                            or any(m.get("primaer") for m in g["meldungen"]))

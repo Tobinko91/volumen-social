@@ -6,6 +6,9 @@ daten:
   dir: /opt/volumen-bot/web
   max_alter_min: 30          # aeltere Daten -> kein Video, Warnung
 
+eil:                         # Live-Eilmeldungen (tools/live.sh, alle 10 Min. rund um die Uhr, Wunsch Tobias 30.10.)
+  max_pro_tag: 5             # hoechstens so viele Eilmeldungs-Vorschlaege in 24 Std.
+
 radar:                       # S18 News-Radar (inhalte/quellen.yaml, radar: true)
   x_lesen: false             # X-Konten (Kobeissi, Walter Bloomberg ...) mitlesen; kostet je Abruf -> erst an, wenn Guthaben da
   x_max_posts: 30            # hoechstens so viele Posts je Abruf (nur in den News-Slots 14/19/21 Uhr, nie stuendlich)

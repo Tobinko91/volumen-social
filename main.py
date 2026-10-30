@@ -187,7 +187,7 @@ def news_beitrag(args, cfg, geheim, sperr, laden=None, schreiber=None, kurs_hole
     gruppen = [g for g in gruppen if g.get("bestaetigt", True)]
     if args.eil:
         heute = [t for t in stand.get("eil", []) if time.time() - t < 86400]
-        gruppen = [g for g in gruppen if g["eil"]] if len(heute) < 2 else []
+        gruppen = [g for g in gruppen if g["eil"]] if len(heute) < int((cfg.get("eil") or {}).get("max_pro_tag", 5)) else []
     if not gruppen:
         print("Keine neue Nachricht." if not args.eil else "Keine Eilmeldung.")
         return 0
@@ -237,6 +237,8 @@ def news_beitrag(args, cfg, geheim, sperr, laden=None, schreiber=None, kurs_hole
               fehler or "bestanden")
         if args.senden:
             hinweis = news_post.quellen_hinweis(g)
+            if args.eil:   # Live-Modus: Tobias soll sofort sehen, dass es eilt
+                hinweis = "🚨 EILMELDUNG – bitte schnell freigeben, News veralten in Minuten.\n" + hinweis
             if fehler:
                 hinweis = "⚠️ Automatische Prüfung: " + "; ".join(fehler) + "\n" + hinweis
             telegram.vorschlag_senden(geheim, ordner, hinweis)
