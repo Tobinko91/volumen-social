@@ -58,6 +58,13 @@ Lern-/News-/Coin-Check-Texte, Stimme (englische ElevenLabs-Stimme fehlt). Startk
 - Der Vorschlag kommt mit „🚨 EILMELDUNG – bitte schnell freigeben“. Gepostet wird erst nach Knopfdruck. `/pause` stoppt auch das.
 - Anlass: Binance-Hack 29.10. um 21:05 deutscher Zeit; der alte Stunden-Check (7–21 Uhr, 3 Quellen) hat ihn verpasst.
 
+## Folge-Liste (seit 31.10.2026)
+- Taeglich 16:30 kommt im Redaktions-Bot die Folge-Liste (`tools/folgen.py`, Konten in `inhalte/folgen.yaml`).
+- X: Knopf „✅ X: allen folgen“ -> der Bot folgt ueber die offizielle Schnittstelle (10 am Tag, `folgen.x_pro_tag`,
+  ca. 0,025 $ je Konto). Ausgeloest immer von Tobias, nie automatisch (X verbietet massenhaftes Folgen).
+- Instagram/TikTok/YouTube: keine Schnittstelle, Fernsteuerung verboten -> Links zum Selbst-Antippen, danach „☑️ Andere erledigt“.
+- Neue Konten traegt der Redaktions-Chat in `inhalte/folgen.yaml` ein.
+
 ## Schutzregeln (fest eingebaut)
 Ueberall nur „Keine Anlageberatung“ (kein KI-, Totalverlust- oder Betreiber-Hinweis), keine Einstiegskurse,
 keine Kauf-/Verkaufsaufforderung, keine Zahl ohne Datenquelle, keine Coins von der Sperrliste.
