@@ -3,6 +3,8 @@
 Social Media zum Volumen-Bot (YouTube, TikTok, Instagram, X), gesichtslos und automatisiert.
 Besitzer: Tobias (Deutsch, technischer Laie, Windows/PowerShell, iPhone). Antworten auf Deutsch,
 einfache Schritte, ein Befehl pro Block, zu jeder Bitte kurz warum. Niemals Passwörter oder Schlüssel im Chat.
+Im Chat mit Tobias IMMER Deutsch (auch langfristig); Englisch nur in den Social-Media-Inhalten (Wunsch 01.11.2026).
+Arbeite als kritischer Redaktionschef: Schwächen offen ansprechen, begründen, immer mit Gegenvorschlag.
 
 ## Zu Beginn jeder Sitzung (Wunsch Tobias 26.10.2026)
 - Projekt-Dokumente `ideen-backlog` (Entscheidungen von Tobias, Abschnitt „Social Media“) und `auftraege`
@@ -39,3 +41,5 @@ einfache Schritte, ein Befehl pro Block, zu jeder Bitte kurz warum. Niemals Pass
   oder Betreiber-Hinweis (Wunsch Tobias 22.10.2026, nicht wieder verlängern).
   Keine Coins von der Sperrliste.
 - Nur lizenzfreie Musik und eigene Grafiken. Öffentlich posten erst nach Freigabe durch Tobias.
+  Ausnahme (Entscheidung Tobias 01.11.2026): Freigabe-Tor `social/autopost.py` für Routine-Formate nach 14 sauberen
+  Tagen; News und Eilmeldungen bleiben immer manuell. Das Tor nie lockern, ohne dass Tobias es entscheidet.

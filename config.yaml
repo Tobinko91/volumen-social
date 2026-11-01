@@ -10,6 +10,12 @@ website:
   oeffentlich: false         # erst auf true, wenn whalesqueeze.com ohne Passwort erreichbar ist (oeffentlicher Start).
                              # Bis dahin keine Website-Links in Posts (fuehrten auf die Passwort-Abfrage, 01.11.2026)
 
+autopost:                    # Freigabe-Tor (Entscheidung Tobias 01.11.2026), Details in social/autopost.py
+  aktiv: true
+  formate: [markt, markt_video, coincheck, wissen, wal, wal_video]   # nie: news, Eilmeldungen, Redaktions-Beitraege
+  saubere_tage: 14           # so lange muss ein Format ohne Verwerfen laufen
+  min_freigaben: 10          # und so oft von Tobias freigegeben sein
+
 kommentare:                  # Kommentar-Assistent (Punkt D): 15:30 + 20:30 Vorschlaege an Tobias, er postet selbst
   aktiv: true
   anzahl: 5                  # Vorschlaege je Lauf (Regel: hoechstens ca. 20 Kommentare am Tag)

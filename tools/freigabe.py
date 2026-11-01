@@ -138,13 +138,21 @@ def befehl(g: dict, text: str) -> str:
         subprocess.Popen([sys.executable, str(app / "main.py"), "coincheck", "--coin", coin, "--senden"],
                          cwd=str(app), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return f"🔎 Coin-Check für {coin} wird erstellt, kommt in etwa einer Minute."
+    if cmd == "/auto":   # Freigabe-Tor: Status, /auto aus, /auto an
+        from social import autopost, bericht
+        aus = autopost.aus_datei(AUSGABE)
+        if len(teile) > 1 and teile[1].lower() == "aus":
+            aus.touch()
+        elif len(teile) > 1 and teile[1].lower() == "an":
+            aus.unlink(missing_ok=True)
+        return autopost.status(bericht.protokoll_laden(PROTOKOLL), kanaele._cfg(), aus.exists())
     if cmd == "/pause":
         PAUSE.touch()
         return "⏸ Pause: keine neuen Vorschläge, bis du /weiter schreibst."
     if cmd == "/weiter":
         PAUSE.unlink(missing_ok=True)
         return "▶️ Geht weiter."
-    return "Befehle: /check AKE, /status, /sperre BTC, /entsperre BTC, /pause, /weiter"
+    return "Befehle: /check AKE, /status, /auto (an/aus), /sperre BTC, /entsperre BTC, /pause, /weiter"
 
 
 def schleife():
