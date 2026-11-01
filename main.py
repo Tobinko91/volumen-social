@@ -66,7 +66,7 @@ def main() -> int:
     ap.add_argument("format", choices=sorted(formate.FORMATE) + ["wissen", "news", "coincheck", "wal", "karussell", "termine"])
     ap.add_argument("--thema", help="nur bei wissen: bestimmtes Thema (id aus inhalte/wissen.yaml)")
     ap.add_argument("--eil", action="store_true", help="nur bei news: nur senden, wenn es eine Eilmeldung gibt")
-    ap.add_argument("--datum", help="nur bei termine: Woche dieses Datums (JJJJ-MM-TT), Standard heute")
+    ap.add_argument("--datum", help="nur bei termine: ab diesem Datum die kommende Woche (JJJJ-MM-TT), Standard heute")
     ap.add_argument("--coin", help="nur bei coincheck: bestimmter Coin, z. B. AKE")
     ap.add_argument("--sprache", choices=["de", "en"], default=None,
                     help="Sprache (Standard: config.yaml). Englisch nur Probe/Schattenlauf: wird nie gesendet.")
@@ -348,7 +348,7 @@ def termine_beitrag(args, cfg, geheim, sperr) -> int:
     from social import termine
     lang = getattr(args, "sprache", None) or cfg.get("sprache", "de")
     heute = _dt.date.fromisoformat(args.datum) if getattr(args, "datum", None) else _dt.date.today()
-    montag = heute - _dt.timedelta(days=heute.weekday())
+    montag = termine.kommende_woche(heute)   # immer die kommende Woche, nie die vergangene
     t = termine.laden(HIER / "inhalte" / "termine.yaml")
     luecken = termine.pflege_luecken(t, montag)
     if luecken and args.senden:   # Redaktion muss die Liste nachpflegen (Hinweis nur an Tobias)

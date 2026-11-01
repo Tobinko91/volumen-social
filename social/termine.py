@@ -18,14 +18,15 @@ from .sprache import MONATE_DE, MONATE_EN
 
 NY = ZoneInfo("America/New_York")
 UTC = dt.timezone.utc
+GANZTAG = {"en": "All day", "de": "Ganztägig"}
 TAGE = {"en": ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"], "de": ["MO", "DI", "MI", "DO", "FR", "SA", "SO"]}
 PFLEGE = ("cpi", "nfp", "pce")   # muessen immer >= 4 Wochen voraus eingetragen sein
 T = {
-    "en": {"etikett": "KEY DATES", "titel": "This week in macro", "sub": "US dates that can move crypto",
-           "x_kopf": "📅 Key dates this week", "tg_kopf": "📅 <b>Key dates this week</b>",
+    "en": {"etikett": "KEY DATES", "titel": "The week ahead", "sub": "US dates that can move crypto",
+           "x_kopf": "📅 The week ahead: key dates", "tg_kopf": "📅 <b>The week ahead: key dates</b>",
            "nichts": "No major US data this week."},
-    "de": {"etikett": "TERMINE", "titel": "Die Woche im Blick", "sub": "US-Termine, die Krypto bewegen können",
-           "x_kopf": "📅 Termine der Woche", "tg_kopf": "📅 <b>Termine der Woche</b>",
+    "de": {"etikett": "TERMINE", "titel": "Die kommende Woche", "sub": "US-Termine, die Krypto bewegen können",
+           "x_kopf": "📅 Termine der kommenden Woche", "tg_kopf": "📅 <b>Termine der kommenden Woche</b>",
            "nichts": "Keine großen US-Daten diese Woche."},
 }
 
@@ -60,7 +61,8 @@ def woche(daten: dict, montag: dt.date, lang: str = "en") -> list[dict]:
     for t in roh:
         if not (montag <= t["datum"] <= sonntag):
             continue
-        h, m = map(int, str(t["zeit"]).split(":"))
+        ganztag = not t.get("zeit")
+        h, m = (12, 0) if ganztag else map(int, str(t["zeit"]).split(":"))
         et = dt.datetime.combine(t["datum"], dt.time(h, m), NY)
         u = et.astimezone(UTC)
         txt = daten["arten"][t["art"]][lang]
@@ -70,8 +72,9 @@ def woche(daten: dict, montag: dt.date, lang: str = "en") -> list[dict]:
             monat = (MONATE_EN if lang == "en" else MONATE_DE)[mo - 1]
         out.append({"art": t["art"], "datum": t["datum"].isoformat(), "tag": TAGE[lang][t["datum"].weekday()],
                     "tag_nr": t["datum"].day, "monat_kurz": (MONATE_EN if lang == "en" else MONATE_DE)[t["datum"].month - 1][:3],
-                    "et": _uhr(et, lang), "utc": u.strftime("%H:%M"), "titel": txt["titel"],
-                    "info": txt["info"].format(monat=monat), "_ts": u.timestamp()})
+                    "et": "" if ganztag else _uhr(et, lang), "utc": "" if ganztag else u.strftime("%H:%M"), "titel": txt["titel"],
+                    "info": txt["info"].format(monat=monat),
+                    "_ts": dt.datetime.combine(t["datum"], dt.time(0), UTC).timestamp() if ganztag else u.timestamp()})
     return sorted(out, key=lambda e: e["_ts"])
 
 
@@ -102,14 +105,26 @@ def _tag(e: dict, lang: str) -> str:
     return f"{e['tag'].title()} {e['tag_nr']}.{int(e['datum'][5:7])}."
 
 
+def _zeit(e: dict, lang: str, kurz: bool = False) -> str:
+    if not e["utc"]:
+        return GANZTAG[lang]
+    return f"{e['utc']} UTC" if kurz else f"{e['et']} ET / {e['utc']} UTC"
+
+
+def kommende_woche(heute: dt.date) -> dt.date:
+    """Montag der KOMMENDEN Woche (Wunsch Tobias 01.11.2026): montags die laufende Woche, sonst der naechste Montag.
+    Nie eine vergangene Woche."""
+    return heute if heute.weekday() == 0 else heute + dt.timedelta(days=7 - heute.weekday())
+
+
 def _zeile(e: dict, lang: str) -> str:
-    return f"{_tag(e, lang)} · {e['et']} ET / {e['utc']} UTC"
+    return f"{_tag(e, lang)} · {_zeit(e, lang)}"
 
 
 def texte(ereignisse: list[dict], cfg: dict, lang: str = "en") -> dict:
     from .sprache import hinweis as _hinweis
     t, hw = T[lang], _hinweis(cfg, lang)
-    xz = [f"• {e['titel']}: {_tag(e, lang)}, {e['utc']} UTC" for e in ereignisse]
+    xz = [f"• {e['titel']}: {_tag(e, lang)}, {_zeit(e, lang, True)}" for e in ereignisse]
     x = "\n".join([t["x_kopf"], *xz, hw])
     while len(x) > 280 and len(xz) > 1:
         xz = xz[:-1]
@@ -149,9 +164,9 @@ def bild(ereignisse: list[dict], cfg: dict, ziel: Path, montag: dt.date, lang: s
         d.text((145 - d.textlength(e["tag"], font=ft) / 2, mitte - 48), e["tag"], font=ft, fill=th.akzent)
         nr = str(e["tag_nr"])
         d.text((145 - d.textlength(nr, font=fn) / 2, mitte - 14), nr, font=fn, fill=th.text)
-        farbe = th.akzent2 if e["art"] in ("fomc", "protokoll") else th.text
+        farbe = th.akzent2 if e["art"] in ("fomc", "protokoll", "wahl") else th.text
         d.text((240, y + 22), e["titel"], font=font("Bold", 40), fill=farbe)
-        d.text((240, y + 72), f"{e['et']} ET · {e['utc']} UTC", font=font("Medium", 30), fill=th.akzent)
+        d.text((240, y + 72), _zeit(e, lang).replace(" / ", " · "), font=font("Medium", 30), fill=th.akzent)
         if hoch >= 150:
             absatz(d, th, 240, y + 108, e["info"], W - 320, groesse=22, farbe=th.neben, abstand=1.25)
         y += hoch + 18

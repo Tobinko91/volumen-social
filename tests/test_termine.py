@@ -63,8 +63,23 @@ class TermineTest(unittest.TestCase):
 
     def test_deutsch(self):
         e = termine.woche(LISTE, dt.date(2026, 11, 2), "de")
-        self.assertEqual(e[0]["tag"], "FR")
+        self.assertEqual(e[-1]["tag"], "FR")
         self.assertIn("Fr 6.11.", termine.texte(e, CFG, "de")["x"])
+
+    def test_immer_kommende_woche(self):
+        self.assertEqual(termine.kommende_woche(dt.date(2026, 11, 1)), dt.date(2026, 11, 2))   # Sonntag -> morgen
+        self.assertEqual(termine.kommende_woche(dt.date(2026, 11, 2)), dt.date(2026, 11, 2))   # Montag -> diese Woche
+        self.assertEqual(termine.kommende_woche(dt.date(2026, 11, 4)), dt.date(2026, 11, 9))   # Mittwoch -> naechste
+
+    def test_ganztaegig_und_woche_2_november(self):
+        e = termine.woche(LISTE, dt.date(2026, 11, 2), "en")
+        self.assertEqual([x["art"] for x in e], ["ism", "wahl", "ism_dienst", "nfp"])
+        txt = termine.texte(e, CFG, "en")
+        self.assertIn("US midterm elections: Tue Nov 3, All day", txt["x"])
+        self.assertIn("ISM manufacturing: Mon Nov 2, 15:00 UTC", txt["x"])
+        fehler = pruefung.pruefen([txt["x"], txt["telegram"]], {"fakten": termine.fakten(e), "szenen": [0, 0]},
+                                  CFG, set(), erlaubt_fusszeile=True)
+        self.assertEqual(fehler, [])
 
 
 if __name__ == "__main__":

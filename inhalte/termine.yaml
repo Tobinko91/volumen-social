@@ -2,6 +2,7 @@
 # Zeiten in New-Yorker Ortszeit (ET); UTC rechnet social/termine.py selbst aus (Sommer-/Winterzeit).
 # Quellen (nur zur Pflege, nie im Beitrag): BLS-Kalender (CPI, Arbeitsmarkt), BEA-Kalender (PCE),
 # Federal Reserve (FOMC). Stand 01.11.2026. Laeuft die Liste aus, meldet der Redaktions-Bot das 4 Wochen vorher.
+# zeit leer = ganztaegig (z. B. Wahl).
 # Der monatliche Optionsverfall auf Deribit (letzter Freitag, 08:00 UTC) wird berechnet, steht nicht hier.
 arten:
   cpi:
@@ -19,11 +20,23 @@ arten:
   protokoll:
     en: {titel: "Fed minutes", info: "Minutes of the last FOMC meeting."}
     de: {titel: "Fed-Protokoll", info: "Protokoll der letzten FOMC-Sitzung."}
+  wahl:
+    en: {titel: "US midterm elections", info: "Control of Congress at stake. Markets react to the results."}
+    de: {titel: "US-Zwischenwahlen", info: "Es geht um den Kongress. Märkte reagieren auf das Ergebnis."}
+  ism:
+    en: {titel: "ISM manufacturing", info: "First big US data of the month, factory activity in {monat}."}
+    de: {titel: "ISM Industrie", info: "Erste große US-Daten im Monat, Industrie im {monat}."}
+  ism_dienst:
+    en: {titel: "ISM services", info: "Services activity in {monat}, the larger part of the US economy."}
+    de: {titel: "ISM Dienstleistungen", info: "Dienstleister im {monat}, der größere Teil der US-Wirtschaft."}
   verfall:
     en: {titel: "Deribit options expiry", info: "Monthly BTC and ETH options expire. Volatility often rises around it."}
     de: {titel: "Optionsverfall Deribit", info: "Monatliche BTC- und ETH-Optionen verfallen. Oft mehr Schwankung."}
 
 termine:
+  - {datum: 2026-11-02, zeit: "10:00", art: ism, monat: 2026-10}
+  - {datum: 2026-11-03, zeit: null, art: wahl}
+  - {datum: 2026-11-04, zeit: "10:00", art: ism_dienst, monat: 2026-10}
   - {datum: 2026-11-06, zeit: "08:30", art: nfp, monat: 2026-10}
   - {datum: 2026-11-10, zeit: "08:30", art: cpi, monat: 2026-10}
   - {datum: 2026-11-18, zeit: "14:00", art: protokoll}
