@@ -29,7 +29,12 @@ def markt_30s(d: Daten, sperrliste: set[str], lang: str | None = None, anzahl_mo
         raise ValueError("Keine Bewegungen in news.json – kein Video")
 
     tag_txt = datum(d.ts, lang)
-    szenen = [{"typ": "titel", "daten": {"datum": tag_txt}, "vorlage": t["s_titel"].format(datum=tag_txt)}]
+    # Haken (Wunsch Tobias 01.11.2026): die ersten 1-2 Sekunden entscheiden auf TikTok/Reels, ob jemand bleibt.
+    # Darum zuerst die groesste Bewegung als riesige Zahl, nicht der Titel.
+    h = mover[0]
+    szenen = [{"typ": "haken", "daten": dict(h, datum=tag_txt), "vorlage": t["s_haken"].format(
+        base=h["base"], wert=zahl(abs(h["chg24"]), lang),
+        verb=t["haken_hoch"] if h["chg24"] >= 0 else t["haken_runter"])}]
     if breite:
         szenen.append({"typ": "breite", "daten": breite, "vorlage": t["s_breite"].format(
             anzahl=breite["anzahl"], median_gesprochen=zahl_gesprochen(breite["median_24h"], lang),

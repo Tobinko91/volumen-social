@@ -283,7 +283,27 @@ def wal_beitrag(args, cfg, geheim, sperr) -> int:
     print(f"Wal des Tages {w['base']} ({w['quelle']}): Pruefung", fehler or "bestanden")
     if args.senden:
         telegram.vorschlag_senden(geheim, ordner, "⚠️ " + "; ".join(fehler) if fehler else "")
+    if getattr(args, "art", "beides") in ("video", "beides"):   # Wunsch Tobias 01.11.2026: auch als Video
+        fehler += wal_video(w, txt, f, cfg, geheim, sperr, Path(f"{ordner}_video"), lang, args.senden)
     return 1 if fehler else 0
+
+
+def wal_video(w, txt, f, cfg, geheim, sperr, ordner: Path, lang: str, senden: bool) -> list[str]:
+    """'Whale of the day' als 9:16-Video (Haken mit der Wal-Zahl, Verlauf, Boersen/Holder, Folgen)."""
+    b = wal.video_szenen(w, lang)
+    zeilen = [sz["vorlage"] for sz in b["szenen"]]
+    fehler = pruefung.pruefen(zeilen, {"fakten": f, "szenen": b["szenen"]}, cfg, sperr)
+    ordner.mkdir(parents=True, exist_ok=True)
+    bild_dateien = bilder.zeichnen(dict(b, ts=time.time()), zeilen, ordner / "bilder", cfg)
+    toene, dauern, tonquelle = stimme.sprechen(zeilen, ordner / "ton", cfg, geheim.get("elevenlabs_api_key"))
+    video.bauen(bild_dateien, toene, dauern, ordner / "video.mp4", cfg)
+    (ordner / "post_x.txt").write_text(txt["x"], encoding="utf-8")
+    (ordner / "post_telegram.txt").write_text(txt["telegram"], encoding="utf-8")
+    print(f"Wal-Video {w['base']}: {round(sum(dauern), 1)} s, Pruefung", fehler or "bestanden")
+    if senden:
+        telegram.vorschlag_senden(geheim, ordner, "🎬 Video-Vorschlag Whale of the day" + (
+            "\n⚠️ " + "; ".join(fehler) if fehler else ""))
+    return fehler
 
 
 def _test_kerzen(n: int = 168) -> list[dict]:
