@@ -28,6 +28,8 @@ class HakenTest(unittest.TestCase):
         zeilen = [s["vorlage"] for s in b["szenen"]]
         self.assertEqual(pruefung.pruefen(zeilen, b, CFG, set()), [])
         self.assertNotIn("dot com", " ".join(zeilen))   # Website noch hinter Passwort
+        self.assertNotIn("percent", " ".join(zeilen))   # Wunsch 01.11.: Zeichen statt Wort
+        self.assertIn(f"{groesste['chg24']}%", s0["vorlage"])
 
     def test_auf_deutsch(self):
         d = daten.laden(HIER / "beispieldaten")
@@ -52,7 +54,7 @@ class WalVideoTest(unittest.TestCase):
              "holder": None, "holder_7d": None, "chg24": 1.0, "verlauf": []}
         b = wal.video_szenen(w, "en")
         self.assertEqual([s["typ"] for s in b["szenen"]], ["wal_haken", "outro"])
-        self.assertEqual(b["szenen"][0]["vorlage"], "Whales hold 12.5 percent of ABC.")
+        self.assertEqual(b["szenen"][0]["vorlage"], "Whales hold 12.5% of ABC.")
 
     @unittest.skipUnless(shutil.which("ffmpeg"), "ffmpeg fehlt")
     def test_wal_lauf_baut_bild_und_video(self):

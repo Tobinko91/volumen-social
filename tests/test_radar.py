@@ -181,6 +181,29 @@ class KryptoZeileTest(unittest.TestCase):
             tg = next(Path(d).glob("*_news/post_telegram.txt")).read_text()
             self.assertIn("What it means for crypto", tg)
 
+    def test_deutscher_news_text_wird_nie_vorgeschlagen(self):
+        rss = """<rss><channel><item><title>Fed holds interest rates at 3.75% to 4.00%</title>
+        <link>https://example.com/fed2</link><description>Decision on Wednesday.</description>
+        <pubDate>Wed, 28 Oct 2026 18:05:00 GMT</pubDate></item></channel></rss>"""
+
+        def laden(url):
+            if "coindesk" in url:
+                return rss
+            raise OSError("offline")
+        deutsch = dict(self.D, schlagzeile="Fed hält die Zinsen", kernsatz="Die Fed hat die Zinsen nicht verändert.",
+                       punkte=["Das ist für den Markt wichtig, und es wird weiter beobachtet."],
+                       x="Die Fed hält die Zinsen bei 3.75% bis 4.00%. Das ist keine Überraschung.")
+        with tempfile.TemporaryDirectory() as d:
+            orig = news.einsammeln
+            news.einsammeln = lambda laden=None, **k: orig(jetzt=JETZT, laden=laden, **k)
+            try:
+                args = types.SimpleNamespace(out=d, eil=False, senden=False, daten=None)
+                main.news_beitrag(args, CFG, {}, set(), laden=laden, schreiber=lambda g: dict(deutsch),
+                                  kurs_holen=None, markt=MARKT)
+            finally:
+                news.einsammeln = orig
+            self.assertEqual(list(Path(d).glob("*_news")), [])   # kein Vorschlag entstanden
+
     def test_fremde_zahl_in_zeile_faellt_auf(self):
         f = pruefung.pruefen(["In the small caps we track, 77% are up."], {"fakten": "41 -0.8", "szenen": [0]},
                              CFG, set())

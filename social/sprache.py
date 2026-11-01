@@ -32,16 +32,16 @@ T = {
         "titel": "Krypto-Markt in 30 Sekunden",
         "zeitraum": "24 Stunden",
         "s_titel": "Krypto-Markt in 30 Sekunden. {datum}.",
-        "s_breite": "Die Hälfte der {anzahl} kleinen Coins lag in 24 Stunden über {median_gesprochen} Prozent, "
-                    "die andere Hälfte darunter. {plus} Prozent stehen im Plus.",
-        "s_btc": " Bitcoin: {btc} Prozent.",
+        "s_breite": "Die Hälfte der {anzahl} kleinen Coins lag in 24 Stunden über {median_gesprochen} %, "
+                    "die andere Hälfte darunter. {plus} % stehen im Plus.",
+        "s_btc": " Bitcoin: {btc} %.",
         "gestiegen": "gestiegen", "gefallen": "gefallen",
-        "s_mover": "{base} liegt {wert} Prozent {richtung}. {grund}",
+        "s_mover": "{base} liegt {wert} % {richtung}. {grund}",
         "hoeher": "höher", "tiefer": "tiefer",
         "grund_ja": "Wahrscheinlicher Auslöser: {ausloeser}.",
         "grund_nein": "",
         "s_outro": "Folge WhaleSqueeze für tägliche Krypto-Daten.",
-        "s_haken": "{base} ist in 24 Stunden um {wert} Prozent {verb}. Das hat den Markt heute bewegt.",
+        "s_haken": "{base} ist in 24 Stunden um {wert} % {verb}. Das hat den Markt heute bewegt.",
         "haken_hoch": "gestiegen", "haken_runter": "gefallen",
         "b_haken": "GRÖSSTE BEWEGUNG HEUTE", "b_warum": "WARUM? ↓", "b_folgen": "FOLGEN FÜR TÄGLICHE DATEN",
         "adresse_gesprochen": " Punkt com",
@@ -64,16 +64,16 @@ T = {
         "titel": "Crypto market in 30 seconds",
         "zeitraum": "24 hours",
         "s_titel": "Crypto market in 30 seconds. {datum}.",
-        "s_breite": "Half of {anzahl} small caps did better than {median_gesprochen} percent in 24 hours, "
-                    "half did worse. {plus} percent are green.",
-        "s_btc": " Bitcoin: {btc} percent.",
+        "s_breite": "Half of {anzahl} small caps did better than {median_gesprochen}% in 24 hours, "
+                    "half did worse. {plus}% are green.",
+        "s_btc": " Bitcoin: {btc}%.",
         "gestiegen": "up", "gefallen": "down",
-        "s_mover": "{base} is {richtung} {wert} percent. {grund}",
+        "s_mover": "{base} is {richtung} {wert}%. {grund}",
         "hoeher": "up", "tiefer": "down",
         "grund_ja": "Likely trigger: {ausloeser}.",
         "grund_nein": "",
         "s_outro": "Follow WhaleSqueeze for daily crypto data.",
-        "s_haken": "{base} {verb} {wert} percent in 24 hours. Here is what moved crypto today.",
+        "s_haken": "{base} {verb} {wert}% in 24 hours. Here is what moved crypto today.",
         "haken_hoch": "jumped", "haken_runter": "dropped",
         "b_haken": "TODAY'S BIGGEST MOVE", "b_warum": "WHY? ↓", "b_folgen": "FOLLOW FOR DAILY DATA",
         "adresse_gesprochen": " dot com",
@@ -109,6 +109,12 @@ def zahl(x: float, lang: str, vorzeichen: bool = False) -> str:
 
 
 def zahl_gesprochen(x: float, lang: str) -> str:
+    """Seit 01.11.2026 (Wunsch Tobias): Zeichen statt Wort, z. B. '+6.9' – die Untertitel zeigen '%' und Vorzeichen,
+    eine KI-Stimme liest '+6.9%' trotzdem als 'plus 6.9 percent' vor."""
+    return zahl(x, lang, True)
+
+
+def zahl_gesprochen_alt(x: float, lang: str) -> str:
     """+7,3 -> 'plus 7,3' (Vorzeichen als Wort, damit die Stimme es richtig liest)."""
     w = {"de": ("plus", "minus"), "en": ("plus", "minus")}[lang]
     return f"{w[0] if x >= 0 else w[1]} {zahl(abs(x), lang)}"

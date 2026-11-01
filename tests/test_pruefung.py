@@ -35,8 +35,22 @@ class PruefungTest(unittest.TestCase):
     def test_deutsche_zahl_mit_komma(self):
         b = formate.markt_30s(D, set(), "de")
         text = " ".join(texte.vorlage(b))
-        self.assertIn("52,8 Prozent", text)
-        self.assertEqual(pruefung.pruefen(texte.vorlage(b), b, CFG, set()), [])
+        self.assertIn("52,8 %", text)
+        self.assertEqual(pruefung.pruefen(texte.vorlage(b), b, dict(CFG, sprache="de"), set()), [])
+
+    def test_deutscher_text_im_englischen_kanal_faellt_auf(self):
+        # Hinweis Tobias 01.11.2026: deutscher Beitrag kam im englischen Redaktions-Bot an
+        b = formate.markt_30s(D, set(), "de")
+        f = pruefung.pruefen(texte.vorlage(b), b, CFG, set())
+        self.assertTrue(any(x.startswith(pruefung.SPRACHFEHLER) for x in f), f)
+        en = formate.markt_30s(D, set(), "en")
+        self.assertEqual(pruefung.pruefen(texte.vorlage(en), en, CFG, set()), [])
+
+    def test_deutsche_feeds_sind_aus(self):
+        from social import news
+        namen = {q["name"] for q in news.quellen() if q.get("aktiv") is not False}
+        self.assertNotIn("BTC-ECHO", namen)
+        self.assertNotIn("Cointelegraph Deutschland", namen)
 
     def test_englisch_bleibt_moeglich(self):
         b = formate.markt_30s(D, set(), "en")

@@ -31,6 +31,16 @@ def _zahlen_aus(obj, lang: str = "de") -> list[float]:
     return out
 
 
+# Woerter, die es nur im Deutschen gibt (Sprach-Waechter fuer englische Kanaele, Hinweis Tobias 01.11.2026)
+DEUTSCH = {"und", "der", "das", "nicht", "ist", "mit", "für", "auf", "wird", "eine", "einen", "auch", "bei", "über",
+           "sich", "werden", "wurde", "sind", "noch", "nach", "heute", "liegt", "stehen", "laut", "dass", "oder"}
+SPRACHFEHLER = "Text ist nicht auf Englisch"
+
+
+def deutsch_woerter(text: str) -> set[str]:
+    return {w for w in re.findall(r"[a-zäöüß]+", text.lower()) if w in DEUTSCH}
+
+
 def pruefen(zeilen: list[str], beitrag: dict, cfg: dict, sperrliste: set[str],
             erlaubt_fusszeile: bool = False) -> list[str]:
     """Liste der Fehler; leer = bestanden."""
@@ -54,6 +64,10 @@ def pruefen(zeilen: list[str], beitrag: dict, cfg: dict, sperrliste: set[str],
             fehler.append(f"Coin auf der Sperrliste: {coin}")
 
     lang = cfg.get("sprache", "de")
+    if lang == "en":
+        dt_ = deutsch_woerter(text)
+        if len(dt_) >= 3:
+            fehler.append(f"{SPRACHFEHLER} (deutsche Wörter: {', '.join(sorted(dt_)[:5])})")
     erlaubt = _zahlen_aus(beitrag["fakten"], lang)
     ohne_aufzaehlung = re.sub(r"(?m)^\s*\d+\.\s", " ", _norm(text, lang))   # "1. ", "2. " am Zeilenanfang sind keine Daten
     for z in ZAHL.findall(ohne_aufzaehlung):

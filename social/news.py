@@ -193,9 +193,9 @@ def einsammeln(stunden: float = 12, jetzt: float | None = None, laden=None, x_le
     jetzt = jetzt or time.time()
     laden = laden or (lambda url: requests.get(url, headers=UA, timeout=20).text)
     alle, status = [], {}
-    x_konten = [q for q in quellen() if q.get("x")]
+    x_konten = [q for q in quellen() if q.get("x") and q.get("aktiv") is not False]
     for q in quellen():
-        if q.get("x"):
+        if q.get("x") or q.get("aktiv") is False:
             continue
         try:
             text = laden(q["url"])
