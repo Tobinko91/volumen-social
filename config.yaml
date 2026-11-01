@@ -61,7 +61,7 @@ text:
   modell: claude-sonnet-5-5
   max_woerter: 85            # ca. 30 Sekunden
 
-stimme:
+stimme:   # Sobald die Stimme laeuft: Tobias an S30 erinnern (Willkommensvideo bauen und anpinnen, ideen-backlog)
   aktiv: false               # 01.11.2026: Videos erst ohne Stimme (keine ElevenLabs-Kosten); Stimme folgt nach Entscheidung
   anbieter: elevenlabs
   voice_name: "Brian"             # englische Stimme (seit 26.10.2026); eigene Stimme spaeter z. B. "WhaleSqueeze EN"; ID wird per Name gesucht
