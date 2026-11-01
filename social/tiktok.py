@@ -205,8 +205,8 @@ def video_posten(geheim: dict, video_url: str, tg_text: str, modus: str = "inbox
             raise TikTokFehler(f"TikTok konnte das Video nicht anlegen ({d.get('fail_reason', 'unbekannt')})")
         warten(5)
     if status == "SEND_TO_USER_INBOX":
-        return ("Video-Entwurf in der TikTok-App: Benachrichtigung öffnen, Sound wählen, diesen Text einfügen, "
-                "posten.\n\n" + text)
+        return ("Video-Entwurf in der TikTok-App: Benachrichtigung öffnen, Sound wählen, den Text aus der nächsten "
+                "Nachricht einfügen (antippen = kopiert), posten.")
     if status == "PUBLISH_COMPLETE":
         return "Video veröffentlicht" + (" (nur privat, bis TikTok die App geprüft hat)" if privat else "")
     return f"Video angelegt, TikTok verarbeitet noch (Status {status or 'unbekannt'})"

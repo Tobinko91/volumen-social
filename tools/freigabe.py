@@ -75,6 +75,13 @@ def posten(g: dict, beitrag_id: str, ziel: str) -> str:
             status[z] = link
             zeilen.append(f"✅ {z}: {link}")
             bericht.protokollieren(PROTOKOLL, ordner.name, "gepostet", z, link)
+            if z == "tiktok" and medium == video and "Entwurf" in str(link):
+                # TikTok nimmt fuer Video-Entwuerfe keinen Text an -> fertigen Text zum Antippen/Kopieren schicken
+                import html as _html
+                from social import tiktok as _tt
+                _, beschreibung = _tt.titel_und_text(text, design.SPRACHE)
+                tg(g, "sendMessage", chat_id=g.get("telegram_chat_id"), parse_mode="HTML",
+                   text="🎵 TikTok-Text (antippen = kopiert):\n<code>" + _html.escape(beschreibung[:3800]) + "</code>")
             if z == "instagram" and (kanaele._cfg().get("instagram") or {}).get("story", True):
                 try:   # Punkt C: jeden Instagram-Beitrag auch als Story (Fehler hier stoppen nichts)
                     from social import story

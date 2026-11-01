@@ -143,13 +143,24 @@ class PostenTest(unittest.TestCase):
         self.assertEqual(init["source_info"]["source"], "PULL_FROM_URL")
         self.assertTrue(init["source_info"]["video_url"].endswith(".mp4"))
         self.assertIn("Video-Entwurf", m)
-        self.assertIn("Not financial advice.", m)   # Text zum Einfuegen kommt mit
+        self.assertIn("nächsten Nachricht", m)   # Text kommt als eigene Kopier-Nachricht (freigabe.py)
         aufrufe.clear()
         m = tiktok.video_posten(dict(G), "https://whalesqueeze.com/medien/x.mp4", TG, modus="direkt", post=post,
                                 warten=lambda s: None)
         init = next(j for a, j in aufrufe if a == "post/publish/video/init/")
         self.assertEqual(init["post_info"]["privacy_level"], "SELF_ONLY")
         self.assertIn("privat", m)
+
+
+class ProzentTest(unittest.TestCase):
+    def test_claude_text_bekommt_zeichen(self):
+        from social import texte
+        self.assertEqual(texte.prozent_zeichen("ESPORTS jumped 113.7 percent in 24 hours.", "en"),
+                         "ESPORTS jumped 113.7% in 24 hours.")
+        self.assertEqual(texte.prozent_zeichen("Half did better than plus 6.9 percent, BTC minus 1.2 percent.", "en"),
+                         "Half did better than +6.9%, BTC -1.2%.")
+        self.assertEqual(texte.prozent_zeichen("BAT liegt 52,8 Prozent höher.", "de"), "BAT liegt 52,8 % höher.")
+        self.assertIn('never the word "percent"', texte.SYSTEM["en"])
 
 
 class VorschlagTest(unittest.TestCase):
@@ -169,6 +180,8 @@ class VorschlagTest(unittest.TestCase):
                 (o / "post_telegram.txt").write_text(TG)
                 (o / "post_x.txt").write_text("x")
                 gesehen = []
+                nachrichten = []
+                freigabe.tg = lambda g, methode, **d: nachrichten.append(d)
                 alt = dict(video_posten.POSTER)
                 video_posten.POSTER["telegram"] = lambda g, m, t: gesehen.append(m.name) or "ok"
                 try:
@@ -177,6 +190,15 @@ class VorschlagTest(unittest.TestCase):
                     video_posten.POSTER.update(alt)
                 self.assertEqual(gesehen, ["video.mp4"])
                 self.assertIn("✅ telegram: ok", r)
+                # TikTok-Entwurf: Text kommt als eigene Nachricht zum Antippen
+                video_posten.POSTER["tiktok"] = lambda g, m, t: "Video-Entwurf in der TikTok-App: …"
+                try:
+                    freigabe.posten({"telegram_chat_id": 1}, o.name, "tt")
+                finally:
+                    video_posten.POSTER.update(alt)
+                self.assertTrue(nachrichten and nachrichten[-1]["text"].startswith("🎵 TikTok-Text"))
+                self.assertIn("<code>", nachrichten[-1]["text"])
+                self.assertIn("#crypto", nachrichten[-1]["text"])
             finally:
                 os.environ.pop("SOCIAL_AUSGABE")
 
