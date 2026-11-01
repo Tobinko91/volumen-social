@@ -74,6 +74,16 @@ Lern-/News-/Coin-Check-Texte, Stimme (englische ElevenLabs-Stimme fehlt). Startk
 - Instagram und TikTok holen das Video unter `https://whalesqueeze.com/medien/<zufall>.mp4` ab (nur Minuten oeffentlich).
 - YouTube Shorts folgen, sobald ein Google-Zugang eingerichtet ist.
 
+## Story, Wochenbericht, Kommentar-Assistent, Freigabe-Tor (seit 01.11.2026)
+- **Instagram-Story:** jeder Instagram-Beitrag wird automatisch auch als Story geteilt (`instagram.story`).
+- **Wochenbericht:** sonntags 18:30 an Tobias. Follower (Telegram, X, Instagram), Aufrufe je Format, Top-Beitraege,
+  Empfehlung „ausbauen/pruefen“. Grundlage: `ausgabe/protokoll.jsonl` (jedes Posten/Verwerfen, dauerhaft).
+- **Kommentar-Assistent:** 15:30 und 20:30 je 5 frische Posts grosser Konten (`kommentare.konten`) mit gepruefter
+  Kommentar-Vorlage (antippen = kopiert). Tobias postet selbst.
+- **Freigabe-Tor:** Routine-Formate (`autopost.formate`) posten automatisch, wenn sie 14 Tage lang mindestens 10-mal
+  freigegeben und nie verworfen wurden und die Pruefung bestanden ist. News/Eilmeldungen nie. `/auto` zeigt den
+  Stand, `/auto aus` stoppt, `/auto an` laesst wieder zu.
+
 ## Schutzregeln (fest eingebaut)
 Ueberall nur „Keine Anlageberatung“ (kein KI-, Totalverlust- oder Betreiber-Hinweis), keine Einstiegskurse,
 keine Kauf-/Verkaufsaufforderung, keine Zahl ohne Datenquelle, keine Coins von der Sperrliste.

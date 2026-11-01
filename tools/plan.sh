@@ -6,9 +6,11 @@
 #   14:30 Markt-Beitrag als Bild + Video (Reels/TikTok) (8:30 ET, vor US-Boersenstart)
 #   15:00 20:00 21:00 News (9:00 / 14:00 / 15:00 ET)
 #   16:00 Coin-Check (10:00 ET)
+#   15:30 20:30 Kommentar-Vorschlaege (9:30 / 14:30 ET, Tobias postet selbst)
 #   17:30 Folge-Liste an Tobias (X per Knopf, Instagram/YouTube per Link; Wunsch 31.10.)
 #   19:00 Wal des Tages (13:00 ET, US-Mittagspause)
 #   21:30 Lern-Beitrag (15:30 ET; spaeter waere fuer die USA besser, ab 22 Uhr ist aber Ruhezeit)
+#   So 18:30 Wochenbericht an Tobias (Follower, Aufrufe je Format, Empfehlung)
 #   Eilmeldungen: eigener Lauf tools/live.sh alle 10 Minuten rund um die Uhr (seit 30.10.2026)
 export TZ=Europe/Berlin
 H=$(date +%H); M=$(date +%M)
@@ -32,6 +34,8 @@ mkdir -p /opt/volumen-social/oeffentlich && chown redaktion:redaktion /opt/volum
 # Pause: im Redaktions-Bot /pause schreiben (oder Datei anlegen), weiter mit /weiter
 [ -f /opt/volumen-social/pause ] || [ -f /opt/volumen-social/ausgabe/.pause ] && exit 0
 lauf() { sudo -u redaktion env $UMGEBUNG python3 main.py "$@" --senden; }
+# Wochenbericht sonntags 18:30 (Punkt E): Follower, Aufrufe je Format, Empfehlung
+[ "$SLOT" = "18:30" ] && [ "$(date +%u)" = "7" ] && sudo -u redaktion env $UMGEBUNG python3 tools/wochenbericht.py --senden
 case "$SLOT" in
   14:30) lauf markt --art beides ;;
   15:00|20:00|21:00) lauf news ;;
@@ -39,5 +43,6 @@ case "$SLOT" in
   19:00) lauf wal ;;
   21:30) lauf wissen ;;
   17:30) sudo -u redaktion env $UMGEBUNG python3 tools/folgen.py --senden ;;
+  15:30|20:30) sudo -u redaktion env $UMGEBUNG python3 tools/kommentare.py --senden ;;
 esac
 echo "$(date '+%F %T') Plan $SLOT erledigt"

@@ -1,0 +1,87 @@
+"""Kommentar-Vorschlaege an Tobias (Punkt D). Aus plan.sh um 15:30 und 20:30:
+    python3 tools/kommentare.py --senden
+Kosten: eine X-Suche je Lauf (ca. 0,005 $ je gelesenem Post, hoechstens kommentare.max_posts) + ein Claude-Aufruf.
+"""
+from __future__ import annotations
+
+import json
+import os
+import sys
+import time
+from pathlib import Path
+
+import requests
+import yaml
+
+HIER = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(HIER))
+from social import daten, kommentare  # noqa: E402
+
+BASIS = Path(os.environ.get("SOCIAL_GEHEIM", "/opt/volumen-social"))
+AUSGABE = Path(os.environ.get("SOCIAL_AUSGABE", BASIS / "ausgabe"))
+
+
+def main(posts_holen=None, schreiber=None, markt="auto", senden=None) -> int:
+    cfg = yaml.safe_load((HIER / "config.yaml").read_text(encoding="utf-8"))
+    k = cfg.get("kommentare") or {}
+    if not k.get("aktiv", True):
+        return 0
+    gp = BASIS / "secrets.yaml"
+    g = (yaml.safe_load(gp.read_text()) if gp.exists() else {}) or {}
+    sp = BASIS / "sperrliste.txt"
+    sperr = {z.split("#")[0].strip().upper() for z in (sp.read_text().splitlines() if sp.exists() else [])
+             if z.split("#")[0].strip()}
+    stand_p = AUSGABE / "kommentare_stand.json"
+    stand = json.loads(stand_p.read_text()) if stand_p.exists() else {"ids": []}
+    if markt == "auto":
+        try:
+            markt = daten.marktlage(daten.laden(cfg["daten"]["dir"], cfg["daten"]["max_alter_min"]))
+        except Exception:
+            markt = None
+    fakten = kommentare.fakten_aus_markt(markt)
+    try:
+        posts = (posts_holen or (lambda: kommentare.posts_holen(g, k["konten"], k.get("stunden", 3),
+                                                                k.get("max_posts", 30))))()
+    except Exception as e:
+        print("X-Posts nicht geholt:", e)
+        return 1
+    posts = [p for p in posts if p["id"] not in stand["ids"]][: int(k.get("anzahl", 5)) + 3]
+    if not posts:
+        print("Keine neuen Posts.")
+        return 0
+    try:
+        vorschlaege = (schreiber or (lambda ps: kommentare.schreiben(ps, fakten, cfg, g["anthropic_api_key"])))(posts)
+    except Exception as e:
+        print("Claude-Fehler:", e)
+        return 1
+    nach_id = {p["id"]: p for p in posts}
+    fertig = []
+    for v in vorschlaege:
+        p = nach_id.get(str(v.get("id")))
+        if not p:
+            continue
+        fehler = kommentare.pruefen(v["text"], p["text"], fakten, cfg, sperr)
+        if fehler:
+            print("Verworfen:", p["link"], fehler)
+            continue
+        fertig.append(dict(p, kommentar=v["text"], deutsch=v.get("deutsch", "")))
+        if len(fertig) >= int(k.get("anzahl", 5)):
+            break
+    if not fertig:
+        print("Kein Kommentar hat die Prüfung bestanden.")
+        return 0
+    text = kommentare.nachricht(fertig)
+    print(text)
+    if "--senden" in sys.argv or senden:
+        if g.get("telegram_token") and g.get("telegram_chat_id"):
+            (senden or requests.post)(f"https://api.telegram.org/bot{g['telegram_token']}/sendMessage",
+                                      data={"chat_id": g["telegram_chat_id"], "text": text[:4096],
+                                            "parse_mode": "HTML", "disable_web_page_preview": "true"}, timeout=30)
+        stand["ids"] = (stand["ids"] + [p["id"] for p in fertig])[-500:]
+        AUSGABE.mkdir(parents=True, exist_ok=True)
+        stand_p.write_text(json.dumps(stand))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

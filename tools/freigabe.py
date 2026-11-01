@@ -22,6 +22,7 @@ BASIS = Path(os.environ.get("SOCIAL_GEHEIM", "/opt/volumen-social"))
 AUSGABE = Path(os.environ.get("SOCIAL_AUSGABE", BASIS / "ausgabe"))
 API = "https://api.telegram.org/bot{token}/{methode}"
 PAUSE = AUSGABE / ".pause"   # hier darf der Benutzer "redaktion" schreiben
+PROTOKOLL = AUSGABE / "protokoll.jsonl"   # dauerhaft (Wochenbericht, Freigabe-Tor); Ordner werden nach 3 Tagen geloescht
 
 
 def geheim() -> dict:
@@ -44,9 +45,11 @@ def posten(g: dict, beitrag_id: str, ziel: str) -> str:
     poster = video_posten.POSTER if medium == video else kanaele.POSTER
     status_p = ordner / "gepostet.json"
     status = json.loads(status_p.read_text()) if status_p.exists() else {}
+    from social import bericht
     if ziel == "nein":
         status["verworfen"] = time.time()
         status_p.write_text(json.dumps(status))
+        bericht.protokollieren(PROTOKOLL, ordner.name, "verworfen")
         return "🗑 Verworfen."
     if ziel == "alle":   # Telegram und X immer (Fehlermeldung, falls nicht eingerichtet), Instagram nur wenn eingerichtet
         k = kanaele.verfuegbar(g)
@@ -67,6 +70,14 @@ def posten(g: dict, beitrag_id: str, ziel: str) -> str:
             link = poster[z](g, medium, text)
             status[z] = link
             zeilen.append(f"✅ {z}: {link}")
+            bericht.protokollieren(PROTOKOLL, ordner.name, "gepostet", z, link)
+            if z == "instagram" and (kanaele._cfg().get("instagram") or {}).get("story", True):
+                try:   # Punkt C: jeden Instagram-Beitrag auch als Story (Fehler hier stoppen nichts)
+                    from social import story
+                    status["instagram_story"] = story.posten(g, medium)
+                    zeilen.append("✅ instagram: auch als Story geteilt")
+                except Exception as e:
+                    zeilen.append(f"⚠️ Instagram-Story nicht geteilt: {e}")
         except kanaele.NichtEingerichtet as e:
             zeilen.append(f"⚙️ {z}: {e}")
         except Exception as e:
@@ -127,13 +138,21 @@ def befehl(g: dict, text: str) -> str:
         subprocess.Popen([sys.executable, str(app / "main.py"), "coincheck", "--coin", coin, "--senden"],
                          cwd=str(app), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return f"🔎 Coin-Check für {coin} wird erstellt, kommt in etwa einer Minute."
+    if cmd == "/auto":   # Freigabe-Tor: Status, /auto aus, /auto an
+        from social import autopost, bericht
+        aus = autopost.aus_datei(AUSGABE)
+        if len(teile) > 1 and teile[1].lower() == "aus":
+            aus.touch()
+        elif len(teile) > 1 and teile[1].lower() == "an":
+            aus.unlink(missing_ok=True)
+        return autopost.status(bericht.protokoll_laden(PROTOKOLL), kanaele._cfg(), aus.exists())
     if cmd == "/pause":
         PAUSE.touch()
         return "⏸ Pause: keine neuen Vorschläge, bis du /weiter schreibst."
     if cmd == "/weiter":
         PAUSE.unlink(missing_ok=True)
         return "▶️ Geht weiter."
-    return "Befehle: /check AKE, /status, /sperre BTC, /entsperre BTC, /pause, /weiter"
+    return "Befehle: /check AKE, /status, /auto (an/aus), /sperre BTC, /entsperre BTC, /pause, /weiter"
 
 
 def schleife():

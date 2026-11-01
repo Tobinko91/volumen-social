@@ -10,6 +10,20 @@ website:
   oeffentlich: false         # erst auf true, wenn whalesqueeze.com ohne Passwort erreichbar ist (oeffentlicher Start).
                              # Bis dahin keine Website-Links in Posts (fuehrten auf die Passwort-Abfrage, 01.11.2026)
 
+autopost:                    # Freigabe-Tor (Entscheidung Tobias 01.11.2026), Details in social/autopost.py
+  aktiv: true
+  formate: [markt, markt_video, coincheck, wissen, wal, wal_video]   # nie: news, Eilmeldungen, Redaktions-Beitraege
+  saubere_tage: 14           # so lange muss ein Format ohne Verwerfen laufen
+  min_freigaben: 10          # und so oft von Tobias freigegeben sein
+
+kommentare:                  # Kommentar-Assistent (Punkt D): 15:30 + 20:30 Vorschlaege an Tobias, er postet selbst
+  aktiv: true
+  anzahl: 5                  # Vorschlaege je Lauf (Regel: hoechstens ca. 20 Kommentare am Tag)
+  stunden: 3                 # nur Posts der letzten 3 Std. (Kommentare in der ersten Stunde werden am meisten gesehen)
+  max_posts: 30              # gelesene Posts je X-Suche (ca. 0,005 $ je Post)
+  konten: [KobeissiLetter, WatcherGuru, whale_alert, lookonchain, arkham, intocryptoverse, alicharts,
+           rektcapital, CryptoMichNL, spotonchain, glassnode, cryptoquant_com, CoinBureau, tier10k]
+
 folgen:                      # Folge-Liste (tools/folgen.py, 16:30 an Tobias; Wunsch 31.10.2026)
   x_pro_tag: 10              # X per Knopf (ca. 0,025 $ je Konto); X verbietet nur massenhaftes Folgen
   andere_pro_tag: 5          # Instagram/TikTok/YouTube als Links (dort keine Schnittstelle zum Folgen)
@@ -53,6 +67,9 @@ stimme:
   voice_name: "Brian"             # englische Stimme (seit 26.10.2026); eigene Stimme spaeter z. B. "WhaleSqueeze EN"; ID wird per Name gesucht
   voice_id: null                  # optional: feste ID statt Name
   modell: eleven_multilingual_v2
+
+instagram:
+  story: true               # jeden Instagram-Beitrag auch als Story teilen (Punkt C, 01.11.2026)
 
 tiktok:
   modus: inbox               # inbox = Entwurf in der TikTok-App (geht ohne Pruefung); direkt = sofort posten (nach Pruefung)

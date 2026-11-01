@@ -27,6 +27,25 @@ HIER = Path(__file__).resolve().parent
 GEHEIM_ORDNER = Path(os.environ.get("SOCIAL_GEHEIM", HIER))
 
 
+def vorschlag(args, geheim: dict, cfg: dict, ordner: Path, hinweis: str = "", fehler: list | None = None) -> bool:
+    """Routine-Formate: automatisch posten, wenn das Freigabe-Tor offen ist (social/autopost.py), sonst wie bisher
+    als Vorschlag an Tobias. News/Eilmeldungen rufen das nie auf."""
+    from social import autopost, bericht
+    ausgabe = Path(args.out)
+    fmt = bericht.format_aus_ordner(ordner.name)
+    ok, grund = autopost.erlaubt(fmt, bericht.protokoll_laden(ausgabe / "protokoll.jsonl"), cfg,
+                                 autopost.aus_datei(ausgabe).exists())
+    if ok and not fehler and not getattr(args, "coin", None):   # /check COIN bleibt immer Vorschlag
+        sys.path.insert(0, str(HIER / "tools"))
+        import freigabe
+        ergebnis = freigabe.posten(geheim, ordner.name, "alle")
+        telegram.text_senden(geheim, f"🤖 Automatisch gepostet ({bericht.NAMEN.get(fmt, fmt)}, {grund}):\n{ergebnis}\n"
+                                     "Stoppen: /auto aus")
+        print("Automatisch gepostet:", ordner.name)
+        return True
+    return telegram.vorschlag_senden(geheim, ordner, hinweis)
+
+
 def lade_cfg() -> tuple[dict, dict]:
     cfg = yaml.safe_load((HIER / "config.yaml").read_text(encoding="utf-8"))
     geheim_p = GEHEIM_ORDNER / "secrets.yaml"
@@ -101,7 +120,7 @@ def main() -> int:
         (ordner / "post_telegram.txt").write_text(txt["telegram"], encoding="utf-8")
         print(f"Post: X {len(txt['x'])} Zeichen, Pruefung:", pfehler or "bestanden")
         if args.senden:
-            telegram.vorschlag_senden(geheim, ordner, "⚠️ " + "; ".join(pfehler) if pfehler else "")
+            vorschlag(args, geheim, cfg, ordner, "⚠️ " + "; ".join(pfehler) if pfehler else "", pfehler)
         if args.art == "post":
             return 1 if pfehler else 0
 
@@ -136,7 +155,7 @@ def main() -> int:
     if args.senden:
         status = "🎬 Video-Vorschlag (Reels, TikTok, X, Telegram)" + (
             "" if not fehler else "\n⚠️ Prüfung: " + "; ".join(fehler)) + f"\nStimme: {tonquelle}"
-        ok = telegram.vorschlag_senden(geheim, ordner, status)
+        ok = vorschlag(args, geheim, cfg, ordner, status, fehler)
         print("Telegram:", "gesendet" if ok else "nicht gesendet (Token/Chat-ID fehlen?)")
     print(json.dumps({k: meta[k] for k in ("titel", "dauer_s", "text", "stimme", "pruefung", "video")},
                      ensure_ascii=False, indent=2))
@@ -159,7 +178,7 @@ def wissen_beitrag(args, cfg, geheim, sperr) -> int:
     (ordner / "post_telegram.txt").write_text(txt["telegram"], encoding="utf-8")
     print(f"Wissen: {t['id']}, X {len(txt['x'])} Zeichen, Pruefung:", fehler or "bestanden")
     if args.senden and not fehler:
-        telegram.vorschlag_senden(geheim, ordner)
+        vorschlag(args, geheim, cfg, ordner)
     if not args.thema:
         wissen.merken(stand, t["id"], time.time())
     return 1 if fehler else 0
@@ -286,13 +305,13 @@ def wal_beitrag(args, cfg, geheim, sperr) -> int:
     (ordner / "fakten.json").write_text(json.dumps(f, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"Wal des Tages {w['base']} ({w['quelle']}): Pruefung", fehler or "bestanden")
     if args.senden:
-        telegram.vorschlag_senden(geheim, ordner, "⚠️ " + "; ".join(fehler) if fehler else "")
+        vorschlag(args, geheim, cfg, ordner, "⚠️ " + "; ".join(fehler) if fehler else "", fehler)
     if getattr(args, "art", "beides") in ("video", "beides"):   # Wunsch Tobias 01.11.2026: auch als Video
-        fehler += wal_video(w, txt, f, cfg, geheim, sperr, Path(f"{ordner}_video"), lang, args.senden)
+        fehler += wal_video(w, txt, f, cfg, geheim, sperr, Path(f"{ordner}_video"), lang, args.senden, args)
     return 1 if fehler else 0
 
 
-def wal_video(w, txt, f, cfg, geheim, sperr, ordner: Path, lang: str, senden: bool) -> list[str]:
+def wal_video(w, txt, f, cfg, geheim, sperr, ordner: Path, lang: str, senden: bool, args=None) -> list[str]:
     """'Whale of the day' als 9:16-Video (Haken mit der Wal-Zahl, Verlauf, Boersen/Holder, Folgen)."""
     b = wal.video_szenen(w, lang)
     zeilen = [sz["vorlage"] for sz in b["szenen"]]
@@ -305,7 +324,7 @@ def wal_video(w, txt, f, cfg, geheim, sperr, ordner: Path, lang: str, senden: bo
     (ordner / "post_telegram.txt").write_text(txt["telegram"], encoding="utf-8")
     print(f"Wal-Video {w['base']}: {round(sum(dauern), 1)} s, Pruefung", fehler or "bestanden")
     if senden:
-        telegram.vorschlag_senden(geheim, ordner, "🎬 Video-Vorschlag Whale of the day" + (
+        vorschlag(args, geheim, cfg, ordner, "🎬 Video-Vorschlag Whale of the day" + (
             "\n⚠️ " + "; ".join(fehler) if fehler else ""))
     return fehler
 
@@ -367,7 +386,7 @@ def coincheck_beitrag(args, cfg, geheim, sperr, kerzen_holen=None) -> int:
     (ordner / "fakten.json").write_text(json.dumps(f, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"Coin-Check {base}: Pruefung", fehler or "bestanden")
     if args.senden:
-        telegram.vorschlag_senden(geheim, ordner, "⚠️ " + "; ".join(fehler) if fehler else "")
+        vorschlag(args, geheim, cfg, ordner, "⚠️ " + "; ".join(fehler) if fehler else "", fehler)
     stand[base] = time.time()
     stand_p.write_text(json.dumps(stand))
     return 1 if fehler else 0
