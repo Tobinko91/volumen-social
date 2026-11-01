@@ -32,7 +32,7 @@ class ServerTest(unittest.TestCase):
     def test_us_zeiten(self):
         # Entscheidung Tobias 27.10.2026: Postingzeiten fuer das US-Publikum; ab 1.11.2026 US-Winterzeit (+1 Std.)
         plan = (HIER / "tools" / "plan.sh").read_text()
-        for zeile in ("14:30) lauf markt", "15:00|20:00|21:00) lauf news", "16:00) lauf coincheck",
+        for zeile in ("14:30) lauf markt --art beides", "15:00|20:00|21:00) lauf news", "16:00) lauf coincheck",
                       "21:30) lauf wissen", "17:30) sudo -u redaktion env $UMGEBUNG python3 tools/folgen.py"):
             self.assertIn(zeile, plan)
 

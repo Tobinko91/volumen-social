@@ -65,6 +65,15 @@ Lern-/News-/Coin-Check-Texte, Stimme (englische ElevenLabs-Stimme fehlt). Startk
 - Instagram/TikTok/YouTube: keine Schnittstelle, Fernsteuerung verboten -> Links zum Selbst-Antippen, danach „☑️ Andere erledigt“.
 - Neue Konten traegt der Redaktions-Chat in `inhalte/folgen.yaml` ein.
 
+## Videos: Reels, TikTok, X, Telegram (seit 01.11.2026)
+- Taeglich 14:30 kommt „Markt in 30 Sekunden“ zweimal: als Bild-Beitrag und als Video-Vorschlag (9:16, 30 s).
+- Ohne Stimme (`stimme.aktiv: false`, keine ElevenLabs-Kosten): Untertitel erzaehlen, darunter eigene, lizenzfreie
+  Musik (`social/musik.py`, mit ffmpeg erzeugt, `video.musik: generiert`).
+- Knoepfe wie bei Bildern: Telegram (Video), X (Video-Upload in Teilen), Instagram (Reel), TikTok (Video-Entwurf
+  in der App: dort Sound waehlen und den mitgeschickten Text einfuegen), Alle Kanaele.
+- Instagram und TikTok holen das Video unter `https://whalesqueeze.com/medien/<zufall>.mp4` ab (nur Minuten oeffentlich).
+- YouTube Shorts folgen, sobald ein Google-Zugang eingerichtet ist.
+
 ## Schutzregeln (fest eingebaut)
 Ueberall nur „Keine Anlageberatung“ (kein KI-, Totalverlust- oder Betreiber-Hinweis), keine Einstiegskurse,
 keine Kauf-/Verkaufsaufforderung, keine Zahl ohne Datenquelle, keine Coins von der Sperrliste.

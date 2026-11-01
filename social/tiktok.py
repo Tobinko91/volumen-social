@@ -177,5 +177,40 @@ def foto_posten(geheim: dict, bild_url: str, tg_text: str, modus: str = "inbox",
     return f"angelegt, TikTok verarbeitet noch (Status {status or 'unbekannt'})"
 
 
+def video_posten(geheim: dict, video_url: str, tg_text: str, modus: str = "inbox", lang: str = "en",
+                 post=requests.post, warten=time.sleep, sichern=speichern) -> str:
+    """Video-Beitrag (PULL_FROM_URL). inbox: Entwurf in der App, Beschreibung und Sound setzt Tobias dort
+    (die Schnittstelle nimmt im Entwurfs-Modus keinen Text an) -> der Text kommt in der Rueckmeldung mit."""
+    token = gueltiger_token(geheim, post, sichern)
+    titel, text = titel_und_text(tg_text, lang)
+    quelle = {"source": "PULL_FROM_URL", "video_url": video_url}
+    if modus == "direkt":
+        optionen = _api("post/publish/creator_info/query/", token, {}, post).get("privacy_level_options") or []
+        privat = "PUBLIC_TO_EVERYONE" not in optionen
+        pid = _api("post/publish/video/init/", token, {
+            "post_info": {"title": text[:2200], "privacy_level": "SELF_ONLY" if privat else "PUBLIC_TO_EVERYONE",
+                          "disable_comment": False, "disable_duet": False, "disable_stitch": False,
+                          "brand_content_toggle": False, "brand_organic_toggle": False},
+            "source_info": quelle}, post)["publish_id"]
+    else:
+        privat = False
+        pid = _api("post/publish/inbox/video/init/", token, {"source_info": quelle}, post)["publish_id"]
+    status = ""
+    for _ in range(40):   # Videos laedt TikTok in 10-60 Sekunden
+        d = _api("post/publish/status/fetch/", token, {"publish_id": pid}, post)
+        status = d.get("status", "")
+        if status in FERTIG:
+            break
+        if status == "FAILED":
+            raise TikTokFehler(f"TikTok konnte das Video nicht anlegen ({d.get('fail_reason', 'unbekannt')})")
+        warten(5)
+    if status == "SEND_TO_USER_INBOX":
+        return ("Video-Entwurf in der TikTok-App: Benachrichtigung öffnen, Sound wählen, diesen Text einfügen, "
+                "posten.\n\n" + text)
+    if status == "PUBLISH_COMPLETE":
+        return "Video veröffentlicht" + (" (nur privat, bis TikTok die App geprüft hat)" if privat else "")
+    return f"Video angelegt, TikTok verarbeitet noch (Status {status or 'unbekannt'})"
+
+
 def neuer_state() -> str:
     return _zufall.token_urlsafe(16)

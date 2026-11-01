@@ -23,8 +23,9 @@ video:
   breite: 1080
   hoehe: 1920
   fps: 30
-  musik: null                # Pfad zu lizenzfreier Musik (mp3), null = ohne
-  musik_db: -22
+  musik: generiert           # "generiert" = eigene lizenzfreie Musik (social/musik.py), Pfad = eigene Datei, null = ohne
+  musik_db: -22              # Lautstaerke unter einer Stimme
+  musik_db_ohne_stimme: -3   # Videos ohne Stimme: Musik traegt, Untertitel erzaehlen
   woerter_pro_sekunde: 2.6   # nur fuer die Probe ohne Stimme
   min_szene_s: 2.5
 
@@ -43,6 +44,7 @@ text:
   max_woerter: 85            # ca. 30 Sekunden
 
 stimme:
+  aktiv: false               # 01.11.2026: Videos erst ohne Stimme (keine ElevenLabs-Kosten); Stimme folgt nach Entscheidung
   anbieter: elevenlabs
   voice_name: "Brian"             # englische Stimme (seit 26.10.2026); eigene Stimme spaeter z. B. "WhaleSqueeze EN"; ID wird per Name gesucht
   voice_id: null                  # optional: feste ID statt Name

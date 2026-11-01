@@ -105,9 +105,20 @@ def main() -> int:
         if args.art == "post":
             return 1 if pfehler else 0
 
+    if args.art == "beides":   # eigener Ordner: ein Vorschlag = ein Medium (Bild ODER Video)
+        ordner = Path(args.out) / f"{stempel}_{beitrag['format']}_video"
+        ordner.mkdir(parents=True, exist_ok=True)
     bild_dateien = bilder.zeichnen(beitrag, zeilen, ordner / "bilder", cfg)
     toene, dauern, tonquelle = stimme.sprechen(zeilen, ordner / "ton", cfg, geheim.get("elevenlabs_api_key"))
-    ziel = video.bauen(bild_dateien, toene, dauern, ordner / f"{beitrag['format']}.mp4", cfg)
+    ziel = video.bauen(bild_dateien, toene, dauern, ordner / "video.mp4", cfg)
+    # Texte fuer die Kanaele wie beim Bild-Beitrag (Telegram-Text mit Link, X-Text)
+    vtxt = post.markt_texte(beitrag, cfg)
+    vtxt["telegram"] = links.mit_telegram_link(vtxt["telegram"], beitrag["format"], ordner.name,
+                                               lang=beitrag.get("sprache", "de"))
+    (ordner / "post_x.txt").write_text(vtxt["x"], encoding="utf-8")
+    (ordner / "post_telegram.txt").write_text(vtxt["telegram"], encoding="utf-8")
+    fehler += [f for f in pruefung.pruefen([vtxt["x"], vtxt["telegram"]], dict(beitrag, szenen=[0, 0]), cfg, sperr,
+                                           erlaubt_fusszeile=True) if f not in fehler]
 
     beschreibung = (" ".join(zeilen) + "\n\n" + sprache.hinweis(cfg, lang) + "\n"
                     + " ".join(beitrag["hashtags"]))
@@ -123,8 +134,9 @@ def main() -> int:
     }
     (ordner / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
     if args.senden:
-        status = "✅ Prüfung bestanden" if not fehler else "⚠️ Prüfung: " + "; ".join(fehler)
-        ok = telegram.video_senden(geheim, ziel, f"{beitrag['titel']}\n{status}\nText: {textquelle}, Stimme: {tonquelle}")
+        status = "🎬 Video-Vorschlag (Reels, TikTok, X, Telegram)" + (
+            "" if not fehler else "\n⚠️ Prüfung: " + "; ".join(fehler)) + f"\nStimme: {tonquelle}"
+        ok = telegram.vorschlag_senden(geheim, ordner, status)
         print("Telegram:", "gesendet" if ok else "nicht gesendet (Token/Chat-ID fehlen?)")
     print(json.dumps({k: meta[k] for k in ("titel", "dauer_s", "text", "stimme", "pruefung", "video")},
                      ensure_ascii=False, indent=2))

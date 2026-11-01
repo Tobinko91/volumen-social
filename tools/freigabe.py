@@ -36,8 +36,12 @@ def tg(g: dict, methode: str, **daten):
 
 def posten(g: dict, beitrag_id: str, ziel: str) -> str:
     ordner = AUSGABE / Path(beitrag_id).name          # nur Ordnername, kein Pfad von aussen
-    if not (ordner / "post.png").exists():
+    video = ordner / "video.mp4"
+    medium = video if video.exists() else ordner / "post.png"   # Video-Vorschlag oder Bild-Beitrag
+    if not medium.exists():
         return "Beitrag nicht mehr vorhanden (Videos/Bilder werden nach 3 Tagen gelöscht)."
+    from social import video_posten
+    poster = video_posten.POSTER if medium == video else kanaele.POSTER
     status_p = ordner / "gepostet.json"
     status = json.loads(status_p.read_text()) if status_p.exists() else {}
     if ziel == "nein":
@@ -60,7 +64,7 @@ def posten(g: dict, beitrag_id: str, ziel: str) -> str:
         try:
             from social import design
             text = kanaele.telegram_hinweis(texte[z], z, g, design.SPRACHE)   # „First on Telegram“
-            link = kanaele.POSTER[z](g, ordner / "post.png", text)
+            link = poster[z](g, medium, text)
             status[z] = link
             zeilen.append(f"✅ {z}: {link}")
         except kanaele.NichtEingerichtet as e:

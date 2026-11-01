@@ -31,10 +31,13 @@ def bauen(bilder: list[Path], toene: list[Path], dauern: list[float], ziel: Path
     roh = tmp / "roh.mp4"
     _ff("-f", "concat", "-safe", "0", "-i", str(liste), "-c", "copy", str(roh))
 
-    musik = v.get("musik")
-    if musik and Path(musik).exists():
-        _ff("-i", str(roh), "-stream_loop", "-1", "-i", musik,
-            "-filter_complex", f"[1:a]volume={v['musik_db']}dB[m];[0:a][m]amix=inputs=2:duration=first[a]",
+    from . import musik as _musik
+    musik = _musik.pfad(cfg, ziel.parent.parent)
+    if musik:
+        mit_stimme = (cfg.get("stimme") or {}).get("aktiv", True)
+        db = v["musik_db"] if mit_stimme else v.get("musik_db_ohne_stimme", 0)
+        _ff("-i", str(roh), "-stream_loop", "-1", "-i", str(musik),
+            "-filter_complex", f"[1:a]volume={db}dB[m];[0:a][m]amix=inputs=2:duration=first:normalize=0[a]",
             "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "160k",
             "-movflags", "+faststart", str(ziel))
     else:

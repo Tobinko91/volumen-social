@@ -3,7 +3,7 @@
 # Laeuft per cron um :00 und :30. Zeiten in deutscher Zeit, Ruhe von 22 bis 7 Uhr.
 # Seit 27.10.2026 auf das englischsprachige Publikum (USA) ausgerichtet. Seit 1.11.2026 US-Winterzeit:
 # Abstand zur US-Ostkueste 6 Std. (bis 8.3.2027; danach 5 Std., dann alles eine Stunde frueher). In Klammern ET:
-#   14:30 Markt-Beitrag (8:30 ET, vor US-Boersenstart)
+#   14:30 Markt-Beitrag als Bild + Video (Reels/TikTok) (8:30 ET, vor US-Boersenstart)
 #   15:00 20:00 21:00 News (9:00 / 14:00 / 15:00 ET)
 #   16:00 Coin-Check (10:00 ET)
 #   17:30 Folge-Liste an Tobias (X per Knopf, Instagram/YouTube per Link; Wunsch 31.10.)
@@ -33,7 +33,7 @@ mkdir -p /opt/volumen-social/oeffentlich && chown redaktion:redaktion /opt/volum
 [ -f /opt/volumen-social/pause ] || [ -f /opt/volumen-social/ausgabe/.pause ] && exit 0
 lauf() { sudo -u redaktion env $UMGEBUNG python3 main.py "$@" --senden; }
 case "$SLOT" in
-  14:30) lauf markt --art post ;;
+  14:30) lauf markt --art beides ;;
   15:00|20:00|21:00) lauf news ;;
   16:00) lauf coincheck ;;
   19:00) lauf wal ;;
