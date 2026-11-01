@@ -9,6 +9,7 @@
 #   17:30 Folge-Liste an Tobias (X per Knopf, Instagram/YouTube per Link; Wunsch 31.10.)
 #   19:00 Wal des Tages (13:00 ET, US-Mittagspause)
 #   21:30 Lern-Beitrag (15:30 ET; spaeter waere fuer die USA besser, ab 22 Uhr ist aber Ruhezeit)
+#   So 18:30 Wochenbericht an Tobias (Follower, Aufrufe je Format, Empfehlung)
 #   Eilmeldungen: eigener Lauf tools/live.sh alle 10 Minuten rund um die Uhr (seit 30.10.2026)
 export TZ=Europe/Berlin
 H=$(date +%H); M=$(date +%M)
@@ -32,6 +33,8 @@ mkdir -p /opt/volumen-social/oeffentlich && chown redaktion:redaktion /opt/volum
 # Pause: im Redaktions-Bot /pause schreiben (oder Datei anlegen), weiter mit /weiter
 [ -f /opt/volumen-social/pause ] || [ -f /opt/volumen-social/ausgabe/.pause ] && exit 0
 lauf() { sudo -u redaktion env $UMGEBUNG python3 main.py "$@" --senden; }
+# Wochenbericht sonntags 18:30 (Punkt E): Follower, Aufrufe je Format, Empfehlung
+[ "$SLOT" = "18:30" ] && [ "$(date +%u)" = "7" ] && sudo -u redaktion env $UMGEBUNG python3 tools/wochenbericht.py --senden
 case "$SLOT" in
   14:30) lauf markt --art beides ;;
   15:00|20:00|21:00) lauf news ;;
