@@ -72,7 +72,9 @@ Lern-/News-/Coin-Check-Texte, Stimme (englische ElevenLabs-Stimme fehlt). Startk
 - Knoepfe wie bei Bildern: Telegram (Video), X (Video-Upload in Teilen), Instagram (Reel), TikTok (Video-Entwurf
   in der App: dort Sound waehlen und den mitgeschickten Text einfuegen), Alle Kanaele.
 - Instagram und TikTok holen das Video unter `https://whalesqueeze.com/medien/<zufall>.mp4` ab (nur Minuten oeffentlich).
-- YouTube Shorts folgen, sobald ein Google-Zugang eingerichtet ist.
+- YouTube Shorts: Knopf ▶️ YouTube (nur Videos). Bis Google die App geprueft hat, laedt sie privat hoch
+  (`youtube.sichtbarkeit: private`); Tobias stellt das Video in der YouTube-Studio-App auf „Oeffentlich“.
+  Einmal verbinden: `schluessel.py` 12 + 13, dann `tools/youtube_verbinden.py`.
 
 ## Story, Wochenbericht, Kommentar-Assistent, Freigabe-Tor (seit 01.11.2026)
 - **Instagram-Story:** jeder Instagram-Beitrag wird automatisch auch als Story geteilt (`instagram.story`).

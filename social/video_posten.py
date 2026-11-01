@@ -6,7 +6,7 @@ text = Telegram-Text des Beitrags (wird je Kanal umgewandelt).
 - X: Video-Upload in Teilen (v2 media upload: initialize / append / finalize / Status), dann Post.
 - Instagram: Reel (media_type REELS) ueber die oeffentliche Adresse /medien/<zufall>.mp4.
 - TikTok: Video per PULL_FROM_URL, im Modus inbox als Entwurf in der App (dort Sound waehlen), sonst direkt.
-YouTube Shorts folgen, sobald ein Google-Zugang eingerichtet ist.
+- YouTube: Short per Data API (bis zur Google-Pruefung privat, siehe youtube.py).
 """
 from __future__ import annotations
 
@@ -140,4 +140,15 @@ def tiktok(geheim: dict, video: Path, text: str, pruefen_url=None, **kw) -> str:
         datei.unlink(missing_ok=True)
 
 
-POSTER = {"telegram": telegram, "x": x, "instagram": instagram, "tiktok": tiktok}
+# ---------------------------------------------------------------- YouTube Shorts
+
+def youtube(geheim: dict, video: Path, text: str, **kw) -> str:
+    if not verfuegbar(geheim).get("youtube"):
+        raise NichtEingerichtet("YouTube ist noch nicht verbunden (schluessel.py 12+13, dann youtube_verbinden.py)")
+    from . import youtube as yt
+    cfg = kanaele._cfg()
+    return yt.hochladen(geheim, video, text, (cfg.get("youtube") or {}).get("sichtbarkeit", "private"),
+                        cfg.get("sprache", "en"), **kw)
+
+
+POSTER = {"telegram": telegram, "x": x, "instagram": instagram, "tiktok": tiktok, "youtube": youtube}

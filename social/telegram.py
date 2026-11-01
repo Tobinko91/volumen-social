@@ -76,7 +76,7 @@ def knoepfe(beitrag_id: str) -> dict:
     def k(text, ziel):
         return {"text": text, "callback_data": f"p|{ziel}|{beitrag_id}"[:64]}
     return {"inline_keyboard": [[k("📢 Telegram-Kanal", "tg"), k("𝕏 X", "x")],
-                                [k("📸 Instagram", "ig"), k("🎵 TikTok", "tt")],
+                                [k("📸 Instagram", "ig"), k("🎵 TikTok", "tt"), k("▶️ YouTube", "yt")],
                                 [k("✅ Alle Kanäle", "alle"), k("🗑 Verwerfen", "nein")]]}
 
 

@@ -43,6 +43,7 @@ def verfuegbar(geheim: dict) -> dict[str, bool]:
         "x": all(geheim.get(k) for k in ("x_api_key", "x_api_secret", "x_access_token", "x_access_secret")),
         "instagram": bool(geheim.get("instagram_token")),
         "tiktok": all(geheim.get(k) for k in ("tiktok_client_key", "tiktok_client_secret", "tiktok_refresh_token")),
+        "youtube": all(geheim.get(k) for k in ("youtube_client_id", "youtube_client_secret", "youtube_refresh_token")),
     }
 
 
@@ -62,7 +63,7 @@ def telegram_hinweis(text: str, ziel: str, geheim: dict, lang: str = "en") -> st
         if not text.lstrip().startswith("🚨"):
             return text
         zeile = basis + (" (link in bio)" if lang == "en" else " (Link im Profil)")
-    elif ziel in ("instagram", "tiktok"):
+    elif ziel in ("instagram", "tiktok", "youtube"):
         zeile = basis + (f": t.me/{kanal}" if kanal and not kanal.lstrip("-").isdigit() else "")
     else:
         return text
