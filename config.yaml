@@ -62,8 +62,10 @@ text:
   max_woerter: 85            # ca. 30 Sekunden
 
 stimme:   # Sobald die Stimme laeuft: Tobias an S30 erinnern (Willkommensvideo bauen und anpinnen, ideen-backlog)
-  aktiv: false               # 01.11.2026: Videos erst ohne Stimme (keine ElevenLabs-Kosten); Stimme folgt nach Entscheidung
-  anbieter: elevenlabs
+  aktiv: true                # 01.11.2026 Tobias: Stimme rein. Ohne google_tts_key in secrets.yaml bleibt es still
+  anbieter: google           # Google Chirp 3 HD (1 Mio Zeichen/Monat gratis); frueher elevenlabs
+  google_stimme: "en-US-Chirp3-HD-Charon"   # maennlich, ruhig; Alternative weiblich: en-US-Chirp3-HD-Kore
+  tempo: null                # z. B. 1.08 = etwas schneller (Kurzvideos); null = normal
   voice_name: "Brian"             # englische Stimme (seit 26.10.2026); eigene Stimme spaeter z. B. "WhaleSqueeze EN"; ID wird per Name gesucht
   voice_id: null                  # optional: feste ID statt Name
   modell: eleven_multilingual_v2

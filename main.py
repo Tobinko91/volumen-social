@@ -133,7 +133,7 @@ def main() -> int:
         ordner = Path(args.out) / f"{stempel}_{beitrag['format']}_video"
         ordner.mkdir(parents=True, exist_ok=True)
     bild_dateien = bilder.zeichnen(beitrag, zeilen, ordner / "bilder", cfg)
-    toene, dauern, tonquelle = stimme.sprechen(zeilen, ordner / "ton", cfg, geheim.get("elevenlabs_api_key"))
+    toene, dauern, tonquelle = stimme.sprechen(zeilen, ordner / "ton", cfg, stimme.schluessel(cfg, geheim))
     ziel = video.bauen(bild_dateien, toene, dauern, ordner / "video.mp4", cfg)
     # Texte fuer die Kanaele wie beim Bild-Beitrag (Telegram-Text mit Link, X-Text)
     vtxt = post.markt_texte(beitrag, cfg)
@@ -380,7 +380,7 @@ def wal_video(w, txt, f, cfg, geheim, sperr, ordner: Path, lang: str, senden: bo
     fehler = pruefung.pruefen(zeilen, {"fakten": f, "szenen": b["szenen"]}, cfg, sperr)
     ordner.mkdir(parents=True, exist_ok=True)
     bild_dateien = bilder.zeichnen(dict(b, ts=time.time()), zeilen, ordner / "bilder", cfg)
-    toene, dauern, tonquelle = stimme.sprechen(zeilen, ordner / "ton", cfg, geheim.get("elevenlabs_api_key"))
+    toene, dauern, tonquelle = stimme.sprechen(zeilen, ordner / "ton", cfg, stimme.schluessel(cfg, geheim))
     video.bauen(bild_dateien, toene, dauern, ordner / "video.mp4", cfg)
     (ordner / "post_x.txt").write_text(txt["x"], encoding="utf-8")
     (ordner / "post_telegram.txt").write_text(txt["telegram"], encoding="utf-8")

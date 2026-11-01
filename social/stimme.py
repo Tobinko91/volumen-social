@@ -1,7 +1,11 @@
-"""KI-Stimme. Mit ElevenLabs-Schluessel und voice_id: echte Stimme je Szene.
-Ohne Schluessel: Stille in passender Laenge (fuer Probevideos)."""
+"""KI-Stimme je Szene. Anbieter (config stimme.anbieter):
+- google (seit 01.11.2026, Wunsch Tobias): Google Cloud Text-to-Speech, Stimme „Chirp 3 HD“.
+  1 Mio Zeichen/Monat gratis, wir brauchen ca. 50.000. Schluessel `google_tts_key` in secrets.yaml.
+- elevenlabs: frueherer Anbieter (Kosten), Schluessel `elevenlabs_api_key`.
+Ohne Schluessel oder bei einem Fehler: Stille in passender Laenge, das Video entsteht trotzdem (ohne Stimme)."""
 from __future__ import annotations
 
+import base64
 import subprocess
 from pathlib import Path
 
@@ -56,21 +60,63 @@ def _elevenlabs(text: str, datei: Path, cfg: dict, key: str) -> None:
     datei.write_bytes(r.content)
 
 
+GOOGLE_TTS = "https://texttospeech.googleapis.com/v1/text:synthesize"
+
+
+def _google(text: str, datei: Path, cfg: dict, key: str, post=requests.post) -> None:
+    st = cfg["stimme"]
+    name = st.get("google_stimme") or "en-US-Chirp3-HD-Charon"
+    audio = {"audioEncoding": "MP3"}
+    if st.get("tempo"):
+        audio["speakingRate"] = st["tempo"]
+    r = post(GOOGLE_TTS, params={"key": key}, timeout=60,
+             json={"input": {"text": text}, "voice": {"languageCode": "-".join(name.split("-")[:2]), "name": name},
+                   "audioConfig": audio})
+    if r.status_code >= 300:
+        try:
+            msg = r.json().get("error", {}).get("message", "")
+        except Exception:
+            msg = r.text[:200]
+        raise StimmeFehlt(f"Google-Stimme: {r.status_code} {msg}")
+    datei.write_bytes(base64.b64decode(r.json()["audioContent"]))
+
+
+def schluessel(cfg: dict, geheim: dict) -> str | None:
+    """Passender Schluessel zum eingestellten Anbieter."""
+    anbieter = (cfg.get("stimme") or {}).get("anbieter", "elevenlabs")
+    return geheim.get("google_tts_key") if anbieter == "google" else geheim.get("elevenlabs_api_key")
+
+
 def sprechen(zeilen: list[str], ordner: Path, cfg: dict, key: str | None) -> tuple[list[Path], list[float], str]:
     """Erzeugt je Zeile eine Tondatei. Gibt (Dateien, Dauern, Quelle) zurueck."""
     ordner.mkdir(parents=True, exist_ok=True)
-    echt = bool(key and cfg["stimme"].get("aktiv", True)
-                and (cfg["stimme"].get("voice_id") or cfg["stimme"].get("voice_name")))
+    st = cfg["stimme"]
+    google = st.get("anbieter") == "google"
+    echt = bool(key and st.get("aktiv", True) and (google or st.get("voice_id") or st.get("voice_name")))
+    if echt:
+        try:
+            return _echt(zeilen, ordner, cfg, key, google)
+        except Exception as e:   # Stimme kaputt -> Video trotzdem bauen, Hinweis an Tobias ueber die Quelle
+            print("Stimme fehlgeschlagen, Video ohne Stimme:", e)
+            fehler = f"stille (Stimme fehlgeschlagen: {str(e)[:120]})"
+            dateien, dauern, _ = sprechen(zeilen, ordner, dict(cfg, stimme=dict(st, aktiv=False)), None)
+            return dateien, dauern, fehler
     dateien, dauern = [], []
     for i, z in enumerate(zeilen):
-        if echt:
-            f = ordner / f"ton_{i:02d}.mp3"
-            _elevenlabs(z, f, cfg, key)
-            d = dauer(f) + 0.35          # kurze Pause nach jedem Satz
-        else:
-            f = ordner / f"ton_{i:02d}.m4a"
-            d = max(cfg["video"]["min_szene_s"], len(z.split()) / cfg["video"]["woerter_pro_sekunde"] + 0.4)
-            _stille(f, d)
+        f = ordner / f"ton_{i:02d}.m4a"
+        d = max(cfg["video"]["min_szene_s"], len(z.split()) / cfg["video"]["woerter_pro_sekunde"] + 0.4)
+        _stille(f, d)
         dateien.append(f)
         dauern.append(max(d, cfg["video"]["min_szene_s"]))
-    return dateien, dauern, ("elevenlabs" if echt else "stille")
+    return dateien, dauern, "stille"
+
+
+def _echt(zeilen, ordner, cfg, key, google):
+    dateien, dauern = [], []
+    for i, z in enumerate(zeilen):
+        f = ordner / f"ton_{i:02d}.mp3"
+        (_google if google else _elevenlabs)(z, f, cfg, key)
+        d = dauer(f) + 0.35          # kurze Pause nach jedem Satz
+        dateien.append(f)
+        dauern.append(max(d, cfg["video"]["min_szene_s"]))
+    return dateien, dauern, ("google" if google else "elevenlabs")
