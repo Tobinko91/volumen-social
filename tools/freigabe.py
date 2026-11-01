@@ -58,7 +58,9 @@ def posten(g: dict, beitrag_id: str, ziel: str) -> str:
             zeilen.append(f"{z}: schon gepostet ({status[z]})")
             continue
         try:
-            link = kanaele.POSTER[z](g, ordner / "post.png", texte[z])
+            from social import design
+            text = kanaele.telegram_hinweis(texte[z], z, g, design.SPRACHE)   # „First on Telegram“
+            link = kanaele.POSTER[z](g, ordner / "post.png", text)
             status[z] = link
             zeilen.append(f"✅ {z}: {link}")
         except kanaele.NichtEingerichtet as e:

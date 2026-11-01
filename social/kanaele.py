@@ -48,6 +48,33 @@ def verfuegbar(geheim: dict) -> dict[str, bool]:
 
 # ---------------------------------------------------------------- Telegram-Kanal
 
+HINWEIS_TG = {"en": "⚡ Live alerts first on Telegram", "de": "⚡ Eilmeldungen zuerst auf Telegram"}
+
+
+def telegram_hinweis(text: str, ziel: str, geheim: dict, lang: str = "en") -> str:
+    """„First on Telegram“ (Wunsch Tobias 31.10.2026): auf X, Instagram und TikTok auf den Telegram-Kanal hinweisen.
+    - Instagram/TikTok: immer, mit t.me-Adresse (Links sind dort ohnehin nicht klickbar).
+    - X: nur bei Eilmeldungen (beginnen mit 🚨) und nur ohne Link (X zeigt Posts mit Links seltener), wenn es passt.
+    Die Zeile kommt vor den Pflicht-Hinweis in der letzten Zeile."""
+    kanal = str(geheim.get("telegram_kanal") or "").strip().lstrip("@")
+    basis = HINWEIS_TG.get(lang, HINWEIS_TG["en"])
+    if ziel == "x":
+        if not text.lstrip().startswith("🚨"):
+            return text
+        zeile = basis + (" (link in bio)" if lang == "en" else " (Link im Profil)")
+    elif ziel in ("instagram", "tiktok"):
+        zeile = basis + (f": t.me/{kanal}" if kanal and not kanal.lstrip("-").isdigit() else "")
+    else:
+        return text
+    if zeile in text:
+        return text
+    zeilen = text.rstrip().split("\n")
+    neu = "\n".join(zeilen[:-1] + ["", zeile, zeilen[-1]] if ziel != "x" else zeilen[:-1] + [zeile, zeilen[-1]])
+    if ziel == "x" and len(neu) > 280:
+        return text
+    return neu
+
+
 def telegram_kanal(geheim: dict, bild: Path, text: str) -> str:
     if not verfuegbar(geheim)["telegram"]:
         raise NichtEingerichtet("Telegram-Kanal fehlt (schluessel.py, Punkt 4)")
