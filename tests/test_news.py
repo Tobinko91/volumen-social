@@ -10,6 +10,13 @@ from social import news
 
 HIER = Path(__file__).resolve().parent.parent
 CFG = yaml.safe_load((HIER / "config.yaml").read_text())
+CFG_DE = dict(CFG, sprache="de")   # diese Tests pruefen den deutschen Modus (deutsche Beispiel-Feeds und -Texte)
+_QUELLEN = news.quellen
+
+
+def alle_quellen():
+    """Fuer die Tests auch die abgeschalteten deutschen Feeds (Beispieldateien sind deutsch)."""
+    return [{k: v for k, v in q.items() if k != "aktiv"} for q in _QUELLEN()]
 RSS = (HIER / "tests/feeds/rss.xml").read_text()
 ATOM = (HIER / "tests/feeds/atom.xml").read_text()
 JETZT = 1792490400  # 20.10.2026 12:00 UTC
@@ -24,6 +31,12 @@ def laden(url):
 
 
 class NewsTest(unittest.TestCase):
+    def setUp(self):
+        news.quellen = alle_quellen
+
+    def tearDown(self):
+        news.quellen = _QUELLEN
+
     def test_rss_und_atom_werden_gelesen(self):
         a = news.parse_feed(RSS, {"name": "X"})
         b = news.parse_feed(ATOM, {"name": "Y"})
@@ -54,7 +67,7 @@ class NewsTest(unittest.TestCase):
         try:
             with tempfile.TemporaryDirectory() as d:
                 args = types.SimpleNamespace(out=d, eil=False, senden=False)
-                self.assertEqual(main.news_beitrag(args, CFG, {}, set(), laden=laden, schreiber=schreiber), 0)
+                self.assertEqual(main.news_beitrag(args, CFG_DE, {}, set(), laden=laden, schreiber=schreiber), 0)
                 x = next(Path(d).glob("*_news/post_x.txt")).read_text()
                 self.assertLessEqual(len(x), 280)
                 self.assertNotIn("Quelle", x)
@@ -63,7 +76,7 @@ class NewsTest(unittest.TestCase):
                 # zweiter Lauf: dieselbe Nachricht nicht noch einmal
                 for p in Path(d).glob("*_news"):
                     p.rename(p.with_name("alt_" + p.name))
-                main.news_beitrag(args, CFG, {}, set(), laden=laden, schreiber=schreiber)
+                main.news_beitrag(args, CFG_DE, {}, set(), laden=laden, schreiber=schreiber)
                 neu = [p for p in Path(d).glob("*_news") if not p.name.startswith("alt_")]
                 if neu:
                     self.assertNotIn("ETF", (neu[0] / "quellen.json").read_text())
@@ -80,7 +93,7 @@ class NewsTest(unittest.TestCase):
         try:
             with tempfile.TemporaryDirectory() as d:
                 args = types.SimpleNamespace(out=d, eil=False, senden=False)
-                self.assertEqual(main.news_beitrag(args, CFG, {}, set(), laden=laden, schreiber=schreiber), 1)
+                self.assertEqual(main.news_beitrag(args, CFG_DE, {}, set(), laden=laden, schreiber=schreiber), 1)
         finally:
             news.einsammeln = orig
 
@@ -94,7 +107,7 @@ class NewsTest(unittest.TestCase):
         try:
             with tempfile.TemporaryDirectory() as d:
                 args = types.SimpleNamespace(out=d, eil=False, senden=False)
-                self.assertEqual(main.news_beitrag(args, CFG, {}, {"SOL"}, laden=laden, schreiber=schreiber), 1)
+                self.assertEqual(main.news_beitrag(args, CFG_DE, {}, {"SOL"}, laden=laden, schreiber=schreiber), 1)
         finally:
             news.einsammeln = orig
 

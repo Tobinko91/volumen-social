@@ -232,6 +232,10 @@ def news_beitrag(args, cfg, geheim, sperr, laden=None, schreiber=None, kurs_hole
                                   {"fakten": quelltext, "szenen": [0] * 5}, cfg, sperr, erlaubt_fusszeile=True)
         fehler += [f"Coin auf der Sperrliste: {c}" for c in d.get("coins", []) if str(c).upper() in sperr]
         fehler = list(dict.fromkeys(fehler))
+        if any(f.startswith(pruefung.SPRACHFEHLER) for f in fehler):   # nie einen deutschen Text vorschlagen
+            print("Uebersprungen, nicht Englisch:", d.get("schlagzeile"), fehler)
+            news.stand_merken(stand_p, g)
+            continue
         ordner = out / f"{time.strftime('%Y%m%d-%H%M')}_news"
         kurs = None
         coins = [str(c).upper() for c in d.get("coins", []) if str(c).upper() not in sperr]

@@ -67,19 +67,49 @@ class Leinwand:
         d.line([(90, 348), (self.W - 90, 348)], fill=self.f["linie"], width=2)
 
     def untertitel(self, d, text, y=1230):
-        """Gesprochener Satz als Untertitel (wichtig: viele schauen ohne Ton)."""
-        groesse, breite = 50, 30
+        """Untertitel (viele schauen ohne Ton). Zahlen fett und in Leuchtminze (Wunsch Tobias 01.11.2026),
+        damit sie beim Durchscrollen sofort auffallen."""
         text = text.replace(self.t["adresse_gesprochen"], ".com")   # Stimme sagt "Punkt com", Bild zeigt die Adresse
-        zeilen = textwrap.wrap(text, width=breite)
-        while len(zeilen) > 4 and groesse > 38:   # lange Saetze: kleiner statt abgeschnitten
-            groesse, breite = groesse - 4, breite + 3
-            zeilen = textwrap.wrap(text, width=breite)
-        font = _font("SemiBold", groesse)
+        breite_max = self.W - 140 - 80
+        groesse = 50
+        while True:
+            normal, fett = _font("SemiBold", groesse), _font("Black", groesse + 4)
+            zeilen = self._umbrechen(d, text.split(), normal, fett, breite_max)
+            if len(zeilen) <= 4 or groesse <= 38:   # lange Saetze: kleiner statt abgeschnitten
+                break
+            groesse -= 4
         abstand = int(groesse * 1.32)
         hoehe = len(zeilen) * abstand + 50
         d.rounded_rectangle([70, y, self.W - 70, y + hoehe], radius=28, fill=self.f["flaeche"])
-        for i, z in enumerate(zeilen):
-            self.mitte(d, y + 25 + i * abstand, z, font, self.f["text"])
+        leer = d.textlength(" ", font=normal)
+        for i, worte in enumerate(zeilen):
+            gesamt = sum(d.textlength(w, font=fett if self._ist_zahl(w) else normal) for w in worte) + leer * (len(worte) - 1)
+            x = (self.W - gesamt) / 2
+            for w in worte:
+                zahl_wort = self._ist_zahl(w)
+                f = fett if zahl_wort else normal
+                d.text((x, y + 25 + i * abstand - (2 if zahl_wort else 0)), w, font=f,
+                       fill=(self.f["minus"] if w.lstrip("($").startswith(("-", "−")) else self.f["plus"])
+                       if zahl_wort else self.f["text"])
+                x += d.textlength(w, font=f) + leer
+
+    @staticmethod
+    def _ist_zahl(wort: str) -> bool:
+        return any(c.isdigit() for c in wort)
+
+    def _umbrechen(self, d, worte, normal, fett, breite):
+        zeilen, akt, w_akt = [], [], 0.0
+        leer = d.textlength(" ", font=normal)
+        for w in worte:
+            lw = d.textlength(w, font=fett if self._ist_zahl(w) else normal)
+            if akt and w_akt + leer + lw > breite:
+                zeilen.append(akt)
+                akt, w_akt = [], 0.0
+            w_akt = lw if not akt else w_akt + leer + lw
+            akt.append(w)
+        if akt:
+            zeilen.append(akt)
+        return zeilen
 
     def farbe_wert(self, x):
         return self.f["plus"] if x >= 0 else self.f["minus"]
