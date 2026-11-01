@@ -74,7 +74,8 @@ class SpracheTest(unittest.TestCase):
             self.assertTrue(any("Crypto market" in x for x in xs), xs)
             self.assertTrue(any("Whale of the day" in x for x in xs), xs)
             tg = next(Path(tmp).glob("*_wal_*/post_telegram.txt")).read_text()
-            self.assertIn("whalesqueeze.com/en/coin/", tg)
+            # Website noch hinter Passwort (config website.oeffentlich: false) -> kein Link im Beitrag
+            self.assertNotIn("whalesqueeze.com/", tg)
             self.assertNotIn("Anlageberatung", " ".join(xs) + tg)
 
 

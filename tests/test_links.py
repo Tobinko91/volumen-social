@@ -41,7 +41,7 @@ class LinkTest(unittest.TestCase):
         d = daten.laden(HIER / "beispieldaten")
         b = formate.markt_30s(d, set(), "en")
         t = post.markt_texte(b, CFG)
-        tg = links.mit_telegram_link(t["telegram"], b["format"], "20261024-0730_markt")
+        tg = links.mit_telegram_link(t["telegram"], b["format"], "20261024-0730_markt", oeffentlich=True)
         self.assertIn('href="https://whalesqueeze.com/en/?utm_source=telegram&amp;utm_medium=social', tg)
         self.assertIn("More data", tg)
         self.assertTrue(tg.rstrip().endswith("</i>"))   # Hinweis bleibt letzte Zeile
@@ -56,7 +56,15 @@ class LinkTest(unittest.TestCase):
 
     def test_zu_lang_fuer_telegram_kein_halber_link(self):
         lang = "x" * 1000
-        self.assertEqual(links.mit_telegram_link(lang, "news", "a"), lang)
+        self.assertEqual(links.mit_telegram_link(lang, "news", "a", oeffentlich=True), lang)
+
+    def test_kein_link_solange_website_hinter_passwort(self):
+        # Fehler 01.11.2026: Links fuehrten auf die Passwort-Abfrage der Website
+        import yaml as _y
+        self.assertFalse(_y.safe_load((HIER / "config.yaml").read_text())["website"]["oeffentlich"])
+        self.assertFalse(links.website_oeffentlich())
+        self.assertEqual(links.mit_telegram_link("Text\nNot financial advice.", "news", "a"),
+                         "Text\nNot financial advice.")
 
     def test_beschreibungen_je_kanal(self):
         b = links.beschreibungen("Text", "markt_30s", "id1")
