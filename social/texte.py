@@ -13,7 +13,7 @@ Regeln:
 - Nutze NUR Zahlen und Fakten aus dem JSON. Erfinde keine Ursachen, Kurse, Prognosen oder Kursziele.
 - Steht bei einem Coin kein Auslöser, sag nichts über den Grund der Bewegung (keine Vermutung wie "spekulativ").
 - Keine Empfehlung, keine Aufforderung zu kaufen oder zu verkaufen, keine Hype-Wörter, keine Emojis.
-- Sag "Prozent", nicht "%". Zahlen genau wie angegeben, mit Komma und einer Nachkommastelle.
+- Schreib Prozent als Zeichen: "52,8 %" (nicht das Wort "Prozent"), Vorzeichen als "+" bzw. "−". Zahlen genau wie angegeben, mit Komma und einer Nachkommastelle.
 - Insgesamt höchstens {max_woerter} Wörter.
 Antworte nur mit JSON: {{"zeilen": ["Satz 1", "Satz 2", ...]}} mit genau {n} Zeilen.""",
     "en": """You write voice-over lines for a faceless 30-second crypto market video (WhaleSqueeze).
@@ -22,10 +22,23 @@ Rules:
 - Use ONLY numbers and facts from the JSON. Never invent causes, prices, predictions or targets.
 - If a coin has no trigger, say nothing about why it moved (no guesses like "speculative").
 - No advice, no calls to action to buy or sell, no hype words, no emojis.
-- Say "percent", not "%". Keep numbers exactly as given (one decimal).
+- Write percentages with the sign: "52.8%" (never the word "percent"), signs as "+" or "-". Keep numbers exactly as given (one decimal).
 - Total length at most {max_woerter} words.
 Return JSON only: {{"zeilen": ["line 1", "line 2", ...]}} with exactly {n} lines.""",
 }
+
+
+def prozent_zeichen(text: str, lang: str = "en") -> str:
+    """Untertitel zeigen Zahlen als Zeichen (Wunsch Tobias 01.11.2026): '52.8 percent' -> '52.8%',
+    'plus 6.9 percent' -> '+6.9%'. Gilt auch, wenn Claude das Wort doch ausschreibt."""
+    import re
+    if lang == "en":
+        text = re.sub(r"\bplus (\d)", r"+\1", text)
+        text = re.sub(r"\bminus (\d)", r"-\1", text)
+        return re.sub(r"(\d)\s*percent\b", r"\1%", text)
+    text = re.sub(r"\bplus (\d)", r"+\1", text)
+    text = re.sub(r"\bminus (\d)", r"−\1", text)
+    return re.sub(r"(\d)\s*Prozent\b", r"\1 %", text)
 
 
 def vorlage(beitrag: dict) -> list[str]:
@@ -58,7 +71,7 @@ def schreiben(beitrag: dict, cfg: dict, api_key: str | None) -> tuple[list[str],
         zeilen = json.loads(txt[txt.find("{"): txt.rfind("}") + 1])["zeilen"]
         if len(zeilen) != n or not all(isinstance(z, str) and z.strip() for z in zeilen):
             raise ValueError("falsche Zeilenzahl")
-        return [z.strip() for z in zeilen], "claude"
+        return [prozent_zeichen(z.strip(), beitrag.get("sprache", "de")) for z in zeilen], "claude"
     except Exception as e:  # Netz, Format: lieber die sichere Vorlage
         print(f"Claude-Text fehlgeschlagen ({e}) – nehme Vorlage")
         return vorlage(beitrag), "vorlage"
