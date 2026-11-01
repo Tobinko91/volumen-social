@@ -1,0 +1,42 @@
+# S13 Termine der Woche (montags): wichtige US-Termine, die Krypto bewegen.
+# Zeiten in New-Yorker Ortszeit (ET); UTC rechnet social/termine.py selbst aus (Sommer-/Winterzeit).
+# Quellen (nur zur Pflege, nie im Beitrag): BLS-Kalender (CPI, Arbeitsmarkt), BEA-Kalender (PCE),
+# Federal Reserve (FOMC). Stand 01.11.2026. Laeuft die Liste aus, meldet der Redaktions-Bot das 4 Wochen vorher.
+# Der monatliche Optionsverfall auf Deribit (letzter Freitag, 08:00 UTC) wird berechnet, steht nicht hier.
+arten:
+  cpi:
+    en: {titel: "US CPI inflation", info: "Consumer prices for {monat}. Hotter than expected often hits risk assets."}
+    de: {titel: "US-Inflation (CPI)", info: "Verbraucherpreise für {monat}. Höher als erwartet belastet oft Risiko-Anlagen."}
+  nfp:
+    en: {titel: "US jobs report", info: "Payrolls and unemployment for {monat}. Shapes rate-cut bets."}
+    de: {titel: "US-Arbeitsmarktbericht", info: "Stellen und Arbeitslosigkeit für {monat}. Prägt die Zinserwartungen."}
+  pce:
+    en: {titel: "US PCE inflation", info: "The Fed's preferred inflation gauge, data for {monat}."}
+    de: {titel: "US-Inflation (PCE)", info: "Das Inflationsmaß der Fed, Daten für {monat}."}
+  fomc:
+    en: {titel: "Fed rate decision", info: "FOMC statement, press conference 30 minutes later."}
+    de: {titel: "Fed-Zinsentscheid", info: "FOMC-Beschluss, Pressekonferenz 30 Minuten später."}
+  protokoll:
+    en: {titel: "Fed minutes", info: "Minutes of the last FOMC meeting."}
+    de: {titel: "Fed-Protokoll", info: "Protokoll der letzten FOMC-Sitzung."}
+  verfall:
+    en: {titel: "Deribit options expiry", info: "Monthly BTC and ETH options expire. Volatility often rises around it."}
+    de: {titel: "Optionsverfall Deribit", info: "Monatliche BTC- und ETH-Optionen verfallen. Oft mehr Schwankung."}
+
+termine:
+  - {datum: 2026-11-06, zeit: "08:30", art: nfp, monat: 2026-10}
+  - {datum: 2026-11-10, zeit: "08:30", art: cpi, monat: 2026-10}
+  - {datum: 2026-11-18, zeit: "14:00", art: protokoll}
+  - {datum: 2026-11-25, zeit: "08:30", art: pce, monat: 2026-10}
+  - {datum: 2026-12-04, zeit: "08:30", art: nfp, monat: 2026-11}
+  - {datum: 2026-12-09, zeit: "14:00", art: fomc}
+  - {datum: 2026-12-10, zeit: "08:30", art: cpi, monat: 2026-11}
+  - {datum: 2026-12-23, zeit: "08:30", art: pce, monat: 2026-11}
+  - {datum: 2027-01-08, zeit: "08:30", art: nfp, monat: 2026-12}
+  - {datum: 2027-01-13, zeit: "08:30", art: cpi, monat: 2026-12}
+  - {datum: 2027-01-27, zeit: "14:00", art: fomc}
+  - {datum: 2027-02-05, zeit: "08:30", art: nfp, monat: 2027-01}
+  - {datum: 2027-02-11, zeit: "08:30", art: cpi, monat: 2027-01}
+  - {datum: 2027-03-05, zeit: "08:30", art: nfp, monat: 2027-02}
+  - {datum: 2027-03-10, zeit: "08:30", art: cpi, monat: 2027-02}
+  - {datum: 2027-03-17, zeit: "14:00", art: fomc}

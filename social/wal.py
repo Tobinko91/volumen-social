@@ -112,7 +112,8 @@ def video_szenen(w: dict, lang: str = "de") -> dict:
             "titel": t["x_kopf"].format(b=w["base"])}
 
 
-def bild(w: dict, cfg: dict, ziel: Path, lang: str = "de", jetzt: float | None = None) -> Path:
+def bild(w: dict, cfg: dict, ziel: Path, lang: str = "de", jetzt: float | None = None,
+         etikett_text: str | None = None) -> Path:
     from . import grafik
     from .design import absatz, etikett, font, fuss, hintergrund, karte, marke, thema_waehlen
     t = W[lang]
@@ -124,7 +125,7 @@ def bild(w: dict, cfg: dict, ziel: Path, lang: str = "de", jetzt: float | None =
     datum = f"{d0.day}. {MONATE_DE[d0.month - 1]}" if lang == "de" else d0.strftime("%B %-d")
     marke(img, th, 80, 64, 64, untertitel=datum)
     d = ImageDraw.Draw(img)
-    etikett(d, th, 80, 170, t["etikett"])
+    etikett(d, th, 80, 170, etikett_text or t["etikett"])
     d.text((80, 246), f"${w['base']}", font=font("Bold", 92), fill=th.text)
     y = 370
     if w.get("wal_7d") is not None:

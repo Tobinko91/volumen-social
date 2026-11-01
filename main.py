@@ -63,9 +63,10 @@ def lade_sperrliste() -> set[str]:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("format", choices=sorted(formate.FORMATE) + ["wissen", "news", "coincheck", "wal"])
+    ap.add_argument("format", choices=sorted(formate.FORMATE) + ["wissen", "news", "coincheck", "wal", "karussell", "termine"])
     ap.add_argument("--thema", help="nur bei wissen: bestimmtes Thema (id aus inhalte/wissen.yaml)")
     ap.add_argument("--eil", action="store_true", help="nur bei news: nur senden, wenn es eine Eilmeldung gibt")
+    ap.add_argument("--datum", help="nur bei termine: Woche dieses Datums (JJJJ-MM-TT), Standard heute")
     ap.add_argument("--coin", help="nur bei coincheck: bestimmter Coin, z. B. AKE")
     ap.add_argument("--sprache", choices=["de", "en"], default=None,
                     help="Sprache (Standard: config.yaml). Englisch nur Probe/Schattenlauf: wird nie gesendet.")
@@ -92,6 +93,10 @@ def main() -> int:
         return coincheck_beitrag(args, cfg, geheim, sperr)
     if args.format == "wal":
         return wal_beitrag(args, cfg, geheim, sperr)
+    if args.format == "karussell":
+        return karussell_beitrag(args, cfg, geheim, sperr)
+    if args.format == "termine":
+        return termine_beitrag(args, cfg, geheim, sperr)
     probe = bool(args.daten)
     d = daten.laden(args.daten or cfg["daten"]["dir"],
                     None if probe else cfg["daten"]["max_alter_min"])
@@ -308,6 +313,63 @@ def wal_beitrag(args, cfg, geheim, sperr) -> int:
         vorschlag(args, geheim, cfg, ordner, "⚠️ " + "; ".join(fehler) if fehler else "", fehler)
     if getattr(args, "art", "beides") in ("video", "beides"):   # Wunsch Tobias 01.11.2026: auch als Video
         fehler += wal_video(w, txt, f, cfg, geheim, sperr, Path(f"{ordner}_video"), lang, args.senden, args)
+    return 1 if fehler else 0
+
+
+def karussell_beitrag(args, cfg, geheim, sperr) -> int:
+    """S11 Wal-Karussell (sonntags): die Wale der Woche als Bilderserie (Instagram, TikTok, X, Telegram)."""
+    from social import karussell
+    probe = bool(args.daten)
+    d = daten.laden(args.daten or cfg["daten"]["dir"], None if probe else cfg["daten"]["max_alter_min"])
+    wale = daten.wale_der_woche(d, sperr)
+    if len(wale) < 3:   # weniger als 3 Folien lohnt kein Karussell
+        print("Zu wenige Wal-Daten fuer das Karussell:", len(wale))
+        return 0
+    lang = getattr(args, "sprache", None) or cfg.get("sprache", "de")
+    ordner = Path(args.out) / f"{time.strftime('%Y%m%d-%H%M')}_karussell"
+    txt = karussell.texte(wale, cfg, lang)
+    f = karussell.fakten(wale)
+    fehler = pruefung.pruefen([txt["x"], txt["telegram"]], {"fakten": f, "szenen": [0, 0]}, cfg, sperr,
+                              erlaubt_fusszeile=True)
+    karussell.bauen(wale, cfg, ordner, lang)
+    (ordner / "post_x.txt").write_text(txt["x"], encoding="utf-8")
+    (ordner / "post_telegram.txt").write_text(txt["telegram"], encoding="utf-8")
+    (ordner / "fakten.json").write_text(json.dumps(f, ensure_ascii=False, indent=1), encoding="utf-8")
+    print(f"Wal-Karussell ({', '.join(w['base'] for w in wale)}): Pruefung", fehler or "bestanden")
+    if args.senden:
+        vorschlag(args, geheim, cfg, ordner, "🎠 Karussell-Vorschlag Whales of the week (YouTube: nicht möglich)"
+                  + ("\n⚠️ " + "; ".join(fehler) if fehler else ""), fehler)
+    return 1 if fehler else 0
+
+
+def termine_beitrag(args, cfg, geheim, sperr) -> int:
+    """S13 Termine der Woche (montags): CPI, Arbeitsmarkt, PCE, Fed, Optionsverfall – Bild + Text."""
+    import datetime as _dt
+    from social import termine
+    lang = getattr(args, "sprache", None) or cfg.get("sprache", "de")
+    heute = _dt.date.fromisoformat(args.datum) if getattr(args, "datum", None) else _dt.date.today()
+    montag = heute - _dt.timedelta(days=heute.weekday())
+    t = termine.laden(HIER / "inhalte" / "termine.yaml")
+    luecken = termine.pflege_luecken(t, montag)
+    if luecken and args.senden:   # Redaktion muss die Liste nachpflegen (Hinweis nur an Tobias)
+        telegram.text_senden(geheim, "📅 Termine-Liste bald leer: " + ", ".join(luecken)
+                             + ". Bitte im Redaktions-Chat sagen: „Termine nachpflegen“.")
+    ereignisse = termine.woche(t, montag, lang)
+    if not ereignisse:
+        print("Keine Termine diese Woche – kein Beitrag.")
+        return 0
+    ordner = Path(args.out) / f"{time.strftime('%Y%m%d-%H%M')}_termine"
+    txt = termine.texte(ereignisse, cfg, lang)
+    f = termine.fakten(ereignisse)
+    fehler = pruefung.pruefen([txt["x"], txt["telegram"]], {"fakten": f, "szenen": [0, 0]}, cfg, sperr,
+                              erlaubt_fusszeile=True)
+    termine.bild(ereignisse, cfg, ordner / "post.png", montag, lang)
+    (ordner / "post_x.txt").write_text(txt["x"], encoding="utf-8")
+    (ordner / "post_telegram.txt").write_text(txt["telegram"], encoding="utf-8")
+    (ordner / "fakten.json").write_text(json.dumps(f, ensure_ascii=False, indent=1), encoding="utf-8")
+    print(f"Termine der Woche ab {montag}: {len(ereignisse)} Termine, Pruefung", fehler or "bestanden")
+    if args.senden:
+        vorschlag(args, geheim, cfg, ordner, "⚠️ " + "; ".join(fehler) if fehler else "", fehler)
     return 1 if fehler else 0
 
 

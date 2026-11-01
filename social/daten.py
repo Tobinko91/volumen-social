@@ -127,6 +127,23 @@ def wal_des_tages(d: Daten, sperrliste: set[str], min_mcap: float = 20e6) -> dic
         base, quelle = max(alt)[1], "anteil"
     else:
         return None
+    return _wal_eintrag(d, base, quelle)
+
+
+def wale_der_woche(d: Daten, sperrliste: set[str], n: int = 5, min_mcap: float = 20e6) -> list[dict]:
+    """S11 Wal-Karussell: die n Coins mit der groessten Wal-Veraenderung in 7 Tagen (Betrag, Prozentpunkte).
+    Nur echte 7-Tage-Werte (kein Rueckfall), damit jede Folie dieselbe Aussage hat."""
+    liste = []
+    for b, c in d.coins.items():
+        if b.upper() in sperrliste or (c.get("mcap") or 0) < min_mcap:
+            continue
+        w7 = (c.get("wale_7d") or {}).get("wal")
+        if _zahl(w7) and w7 != 0:
+            liste.append((abs(w7), b))
+    return [_wal_eintrag(d, b, "7d") for _, b in sorted(liste, reverse=True)[:n]]
+
+
+def _wal_eintrag(d: Daten, base: str, quelle: str) -> dict:
     c = d.coins[base]
     w7 = c.get("wale_7d") or {}
     verlauf = [p for p in (c.get("wale_verlauf") or []) if len(p) >= 3 and _zahl(p[1])]

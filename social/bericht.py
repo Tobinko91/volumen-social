@@ -121,7 +121,8 @@ def telegram_abonnenten(geheim: dict, post=requests.post) -> int | None:
 # ---------------------------------------------------------------- Auswerten
 
 NAMEN = {"markt": "Markt (Bild)", "markt_video": "Markt (Video)", "news": "News", "coincheck": "Coin-Check",
-         "wal": "Wal des Tages", "wal_video": "Wal (Video)", "wissen": "Lernen", "redaktion": "Redaktion (Hand)"}
+         "wal": "Wal des Tages", "wal_video": "Wal (Video)", "wissen": "Lernen", "redaktion": "Redaktion (Hand)",
+         "karussell": "Wal-Karussell", "termine": "Termine der Woche"}
 
 
 def auswerten(protokoll: list[dict], x: dict, ig: dict) -> dict:

@@ -144,7 +144,7 @@ def titel_und_text(tg_text: str, lang: str = "en") -> tuple[str, str]:
     return titel[:TITEL_MAX], (text[:TEXT_MAX - len(tags) - 2].rstrip() + "\n\n" + tags)
 
 
-def foto_posten(geheim: dict, bild_url: str, tg_text: str, modus: str = "inbox", lang: str = "en",
+def foto_posten(geheim: dict, bild_url: str | list[str], tg_text: str, modus: str = "inbox", lang: str = "en",
                 post=requests.post, warten=time.sleep, sichern=speichern) -> str:
     """Bild-Beitrag anlegen. Rueckgabe: Meldung fuer Tobias."""
     token = gueltiger_token(geheim, post, sichern)
@@ -158,7 +158,8 @@ def foto_posten(geheim: dict, bild_url: str, tg_text: str, modus: str = "inbox",
     pid = _api("post/publish/content/init/", token, {
         "media_type": "PHOTO", "post_mode": "DIRECT_POST" if modus == "direkt" else "MEDIA_UPLOAD",
         "post_info": info,
-        "source_info": {"source": "PULL_FROM_URL", "photo_images": [bild_url], "photo_cover_index": 0},
+        "source_info": {"source": "PULL_FROM_URL", "photo_cover_index": 0,   # Liste = Fotoserie (Karussell)
+                        "photo_images": list(bild_url) if isinstance(bild_url, (list, tuple)) else [bild_url]},
     }, post)["publish_id"]
     status = ""
     for _ in range(20):   # TikTok holt das Bild meist in wenigen Sekunden
