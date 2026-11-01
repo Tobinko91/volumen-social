@@ -91,7 +91,22 @@ def vorschlag_senden(geheim: dict, ordner: Path, hinweis: str = "") -> bool:
     x = (ordner / "post_x.txt").read_text(encoding="utf-8")
     kopf, rest = teilen(tg)
     video = ordner / "video.mp4"
-    if video.exists():   # Video-Vorschlag (Reels/TikTok/X/Telegram): Video mit Text, Knoepfe darunter
+    if (ordner / "karussell.json").exists() and not video.exists():   # S11: Album als Vorschau, Knoepfe danach
+        from . import karussell
+        folien = karussell.folien(ordner)[:10]
+        medien = [{"type": "photo", "media": f"attach://f{i}"} for i in range(len(folien))]
+        dateien = {f"f{i}": (f.name, open(f, "rb"), "image/png") for i, f in enumerate(folien)}
+        try:
+            requests.post(API.format(token=token, methode="sendMediaGroup"),
+                          data={"chat_id": chat, "media": json.dumps(medien)}, files=dateien, timeout=180)
+        finally:
+            for _, fh, _ in dateien.values():
+                fh.close()
+        r = requests.post(API.format(token=token, methode="sendMessage"),
+                          data={"chat_id": chat, "text": tg[:4096], "parse_mode": "HTML",
+                                "disable_web_page_preview": "true",
+                                "reply_markup": json.dumps(knoepfe(ordner.name))}, timeout=30)
+    elif video.exists():   # Video-Vorschlag (Reels/TikTok/X/Telegram): Video mit Text, Knoepfe darunter
         with open(video, "rb") as fh:
             r = requests.post(API.format(token=token, methode="sendVideo"),
                               data={"chat_id": chat, "caption": kopf, "parse_mode": "HTML",

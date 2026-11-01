@@ -36,6 +36,9 @@ mkdir -p /opt/volumen-social/oeffentlich && chown redaktion:redaktion /opt/volum
 lauf() { sudo -u redaktion env $UMGEBUNG python3 main.py "$@" --senden; }
 # Wochenbericht sonntags 18:30 (Punkt E): Follower, Aufrufe je Format, Empfehlung
 [ "$SLOT" = "18:30" ] && [ "$(date +%u)" = "7" ] && sudo -u redaktion env $UMGEBUNG python3 tools/wochenbericht.py --senden
+# S11 Wal-Karussell sonntags 17:00; S13 Termine der KOMMENDEN Woche sonntags 18:00 (vor Wochenbeginn)
+[ "$SLOT" = "17:00" ] && [ "$(date +%u)" = "7" ] && lauf karussell
+[ "$SLOT" = "18:00" ] && [ "$(date +%u)" = "7" ] && lauf termine
 case "$SLOT" in
   14:30) lauf markt --art beides ;;
   15:00|20:00|21:00) lauf news ;;

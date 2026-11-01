@@ -86,6 +86,15 @@ Lern-/News-/Coin-Check-Texte, Stimme (englische ElevenLabs-Stimme fehlt). Startk
   freigegeben und nie verworfen wurden und die Pruefung bestanden ist. News/Eilmeldungen nie. `/auto` zeigt den
   Stand, `/auto aus` stoppt, `/auto an` laesst wieder zu.
 
+## Wal-Karussell (S11) und Termine der Woche (S13), seit 02.11.2026
+- `main.py karussell` (sonntags 17:00): die 5 größten Wal-Bewegungen der Woche (7 Tage, Prozentpunkte, ab 20 Mio $ MCap)
+  als Bilderserie: Deckblatt mit Balken, je Wal eine Folie, Abschluss „Follow“. Instagram-Karussell, TikTok-Fotoserie,
+  X (erste 4 Folien), Telegram-Album (`social/karussell.py`, `social/karussell_posten.py`). YouTube: nicht möglich.
+- `main.py termine` (sonntags 18:00): US-Termine der **kommenden** Woche (nie die vergangene) (CPI, Arbeitsmarkt, PCE, ISM, Fed, Fed-Protokoll, Wahlen) aus
+  `inhalte/termine.yaml` plus Optionsverfall Deribit (letzter Freitag, 08:00 UTC, berechnet). Zeiten in ET und UTC.
+  Die Liste muss die Redaktion pflegen; 4 Wochen bevor sie ausläuft, meldet der Redaktions-Bot das.
+- Fußzeile in Bildern zeigt `@whalesqueeze`, solange `website.oeffentlich: false` (vorher `whalesqueeze.com` mit Passwort).
+
 ## Schutzregeln (fest eingebaut)
 Ueberall nur „Keine Anlageberatung“ (kein KI-, Totalverlust- oder Betreiber-Hinweis), keine Einstiegskurse,
 keine Kauf-/Verkaufsaufforderung, keine Zahl ohne Datenquelle, keine Coins von der Sperrliste.

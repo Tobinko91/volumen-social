@@ -41,8 +41,10 @@ def posten(g: dict, beitrag_id: str, ziel: str) -> str:
     medium = video if video.exists() else ordner / "post.png"   # Video-Vorschlag oder Bild-Beitrag
     if not medium.exists():
         return "Beitrag nicht mehr vorhanden (Videos/Bilder werden nach 3 Tagen gelöscht)."
-    from social import video_posten
-    poster = video_posten.POSTER if medium == video else kanaele.POSTER
+    from social import karussell_posten, video_posten
+    ist_karussell = medium != video and (ordner / "karussell.json").exists()   # S11: Bilderserie
+    poster = (video_posten.POSTER if medium == video
+              else karussell_posten.POSTER if ist_karussell else kanaele.POSTER)
     status_p = ordner / "gepostet.json"
     status = json.loads(status_p.read_text()) if status_p.exists() else {}
     from social import bericht
@@ -59,7 +61,8 @@ def posten(g: dict, beitrag_id: str, ziel: str) -> str:
     else:
         ziele = [{"tg": "telegram", "x": "x", "ig": "instagram", "tt": "tiktok", "yt": "youtube"}[ziel]]
         if ziele == ["youtube"] and medium != video:
-            return "▶️ YouTube nimmt nur Videos (Shorts). Dieser Vorschlag ist ein Bild."
+            return ("▶️ YouTube nimmt nur Videos (Shorts). Dieser Vorschlag ist "
+                    + ("eine Bilderserie." if ist_karussell else "ein Bild."))
     tg_text = (ordner / "post_telegram.txt").read_text(encoding="utf-8")
     texte = {"telegram": tg_text, "instagram": tg_text, "tiktok": tg_text, "youtube": tg_text,   # wandeln selbst um
              "x": (ordner / "post_x.txt").read_text(encoding="utf-8")}

@@ -28,6 +28,19 @@ def _sprache() -> str:
 
 SPRACHE = _sprache()   # Zahlenformat in Bildern: en = 1,234.5 / de = 1.234,5
 
+
+def _webseite_oeffentlich() -> bool:
+    try:
+        import yaml
+        cfg = yaml.safe_load((HIER / "config.yaml").read_text(encoding="utf-8")) or {}
+        return bool((cfg.get("website") or {}).get("oeffentlich", True))
+    except Exception:
+        return True
+
+
+# Fusszeile rechts: Website erst, wenn sie ohne Passwort erreichbar ist, sonst der Kanalname (Fehler 01.11.2026)
+FUSS_MARKE = "whalesqueeze.com" if _webseite_oeffentlich() else "@whalesqueeze"
+
 MITTERNACHT = "#140F2E"
 FLAECHE = "#1C1640"
 TEXT = "#F2F0FF"
@@ -246,7 +259,7 @@ def fuss(img: Image.Image, t: Thema, hinweis: str, quelle: str | None = None):
         y += 36
     d.text((80, y), hinweis, font=font("Medium", 24), fill=t.neben)
     f = font("Bold", 26)
-    d.text((w - 80 - d.textlength("whalesqueeze.com", font=f), y - 2), "whalesqueeze.com", font=f,
+    d.text((w - 80 - d.textlength(FUSS_MARKE, font=f), y - 2), FUSS_MARKE, font=f,
            fill=t.akzent if t.dunkel else MITTERNACHT)
 
 
