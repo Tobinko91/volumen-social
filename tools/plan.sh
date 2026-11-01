@@ -6,6 +6,7 @@
 #   14:00 19:00 21:00 News (9:00 / 14:00 / 16:00 ET)
 #   15:00 Coin-Check (10:00 ET)
 #   18:00 Wal des Tages (12:00 ET)
+#   16:30 Folge-Liste an Tobias (X per Knopf, Instagram/YouTube per Link; Wunsch 31.10.)
 #   21:30 Lern-Beitrag (16:30 ET; 0:00 deutscher Zeit waere besser, liegt aber in der Ruhezeit fuer die Freigabe)
 #   Eilmeldungen: eigener Lauf tools/live.sh alle 10 Minuten rund um die Uhr (seit 30.10.2026)
 export TZ=Europe/Berlin
@@ -36,5 +37,6 @@ case "$SLOT" in
   15:00) lauf coincheck ;;
   18:00) lauf wal ;;
   21:30) lauf wissen ;;
+  16:30) sudo -u redaktion env $UMGEBUNG python3 tools/folgen.py --senden ;;
 esac
 echo "$(date '+%F %T') Plan $SLOT erledigt"

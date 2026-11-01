@@ -1,7 +1,7 @@
 """Freigabe-Dienst: wartet auf Knopfdruecke von Tobias im Redaktions-Bot und postet dann.
 
 Laeuft dauerhaft als systemd-Dienst (deploy/volumen-social-freigabe.service), Benutzer "redaktion".
-Knoepfe: Telegram-Kanal, X, Instagram, alle eingerichteten Kanaele, verwerfen. Befehle: /check AKE, /status, /sperre BTC, /entsperre BTC, /pause, /weiter.
+Knoepfe: Telegram-Kanal, X, Instagram, alle eingerichteten Kanaele, verwerfen; Folge-Liste (X allen folgen). Befehle: /check AKE, /status, /sperre BTC, /entsperre BTC, /pause, /weiter.
 Nur Nachrichten aus Tobias' Chat werden beachtet.
 """
 from __future__ import annotations
@@ -69,6 +69,31 @@ def posten(g: dict, beitrag_id: str, ziel: str) -> str:
     return "\n".join(zeilen)
 
 
+def folge_knopf(g: dict, art: str, datum: str) -> str:
+    """Knopf aus der taeglichen Folge-Liste (tools/folgen.py)."""
+    from social import folgen
+    p = AUSGABE / "folgen_stand.json"
+    stand = folgen.stand_laden(p)
+    tag = (stand.get("heute") or {}).get(datum)
+    if not tag:
+        return "Diese Folge-Liste ist zu alt. Die nächste kommt morgen."
+    if art == "ok":
+        for k in tag.get("andere", []):
+            stand.setdefault("erledigt", {})[k] = int(time.time())
+        tag["andere"] = []
+        folgen.stand_speichern(p, stand)
+        return "☑️ Danke, als erledigt gemerkt."
+    namen = [n for n in tag.get("x", []) if f"x:{n.lower()}" not in stand.get("erledigt", {})]
+    if not namen:
+        return "X: schon erledigt."
+    try:
+        zeilen = folgen.x_folgen(g, namen, stand)
+    except folgen.FolgenFehler as e:
+        zeilen = [f"❌ X: {e}"]
+    folgen.stand_speichern(p, stand)
+    return "👥 X-Folgen:\n" + "\n".join(zeilen)
+
+
 def befehl(g: dict, text: str) -> str:
     teile = text.strip().split()
     cmd = teile[0].lower().split("@")[0]
@@ -126,7 +151,11 @@ def schleife():
                 if str(c["from"]["id"]) != chef:
                     continue
                 teile = (c.get("data") or "").split("|", 2)
-                if len(teile) == 3 and teile[0] == "p":
+                if len(teile) == 3 and teile[0] == "f":
+                    tg(g, "answerCallbackQuery", callback_query_id=c["id"], text="Wird erledigt …")
+                    tg(g, "sendMessage", chat_id=chef, text=folge_knopf(g, teile[1], teile[2]),
+                       disable_web_page_preview=True, reply_to_message_id=c["message"]["message_id"])
+                elif len(teile) == 3 and teile[0] == "p":
                     tg(g, "answerCallbackQuery", callback_query_id=c["id"], text="Wird erledigt …")
                     ergebnis = posten(g, teile[2], teile[1])
                     tg(g, "sendMessage", chat_id=chef, text=ergebnis, disable_web_page_preview=True,

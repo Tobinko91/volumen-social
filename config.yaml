@@ -6,6 +6,10 @@ daten:
   dir: /opt/volumen-bot/web
   max_alter_min: 30          # aeltere Daten -> kein Video, Warnung
 
+folgen:                      # Folge-Liste (tools/folgen.py, 16:30 an Tobias; Wunsch 31.10.2026)
+  x_pro_tag: 10              # X per Knopf (ca. 0,025 $ je Konto); X verbietet nur massenhaftes Folgen
+  andere_pro_tag: 5          # Instagram/TikTok/YouTube als Links (dort keine Schnittstelle zum Folgen)
+
 eil:                         # Live-Eilmeldungen (tools/live.sh, alle 10 Min. rund um die Uhr, Wunsch Tobias 30.10.)
   max_pro_tag: 5             # hoechstens so viele Eilmeldungs-Vorschlaege in 24 Std.
 

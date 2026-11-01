@@ -1,0 +1,39 @@
+# Folge-Liste fuer @whalesqueeze (pflegt der Redaktions-Chat; Wunsch Tobias 31.10.2026).
+# Taeglich gehen die naechsten Konten als Liste an Tobias: X per Knopf (Schnittstelle), Rest per Link.
+# Bereits von Hand gefolgt (28.-30.10., nicht noch einmal): KobeissiLetter, WatcherGuru, DeItaone, WuBlockchain,
+# whale_alert, lookonchain, arkham, santimentfeed, intocryptoverse, alicharts, rektcapital (+ TikTok-Konten).
+# Reihenfolge = Prioritaet. Ein falscher Name kostet nichts ausser einer Zeile "nicht gefunden".
+
+# --- X: On-Chain und Wal-Daten (unser Kernthema) ---
+- {plattform: x, name: glassnode, warum: "On-Chain-Analysen, Publikum wie unseres"}
+- {plattform: x, name: cryptoquant_com, warum: "Börsenflüsse und On-Chain-Daten"}
+- {plattform: x, name: ki_young_ju, warum: "Gründer CryptoQuant, viel diskutierte Daten-Posts"}
+- {plattform: x, name: spotonchain, warum: "Wal-Wallets und Smart Money"}
+- {plattform: x, name: EmberCN, warum: "Wal-Bewegungen, sehr aktiv"}
+- {plattform: x, name: nansen_ai, warum: "Smart-Money-Daten"}
+- {plattform: x, name: DefiLlama, warum: "DeFi- und Börsenbestände (u. a. Binance-Zahlen)"}
+- {plattform: x, name: zachxbt, warum: "Hack-Ermittlungen (Binance-Hack)"}
+- {plattform: x, name: PeckShieldAlert, warum: "Hack- und Exploit-Meldungen in Minuten"}
+- {plattform: x, name: tier10k, warum: "Schnellste Krypto-Schlagzeilen"}
+# --- X: News und Analyse ---
+- {plattform: x, name: CoinDesk, warum: "Großes Krypto-Medium, viele Antworten"}
+- {plattform: x, name: Cointelegraph, warum: "Großes Krypto-Medium"}
+- {plattform: x, name: TheBlock__, warum: "Krypto-News und Daten"}
+- {plattform: x, name: MessariCrypto, warum: "Research, sachliches Publikum"}
+- {plattform: x, name: BitMEXResearch, warum: "Bitcoin-Analysen, Fachpublikum"}
+- {plattform: x, name: CoinBureau, warum: "Bildung, großes sachliches Publikum"}
+- {plattform: x, name: CryptoMichNL, warum: "Altcoin-Analyse, viele Kommentare"}
+- {plattform: x, name: AltcoinDaily, warum: "Altcoin-News, sehr aktive Antworten"}
+- {plattform: x, name: unusual_whales, warum: "Markt- und Makro-Schlagzeilen, 4,7 Mio."}
+- {plattform: x, name: BitcoinMagazine, warum: "Bitcoin-News, große Reichweite"}
+
+# --- YouTube (nur Link, selbst abonnieren) ---
+- {plattform: youtube, name: benjaminjcowen, warum: "Datengetriebene Zyklusanalyse, 1 Mio."}
+- {plattform: youtube, name: CoinBureau, warum: "Größter Bildungskanal"}
+- {plattform: youtube, name: AltcoinDaily, warum: "Altcoin-News, aktive Kommentare"}
+- {plattform: youtube, name: JasonPizzinoOfficial, warum: "Marktzyklen"}
+- {plattform: youtube, name: cryptocasey, warum: "Einsteiger-Publikum"}
+# --- Instagram (nur Link) ---
+- {plattform: instagram, name: watcher.guru, warum: "Krypto-Eilmeldungen"}
+- {plattform: instagram, name: cointelegraph, warum: "Krypto-News"}
+- {plattform: instagram, name: coindesk, warum: "Krypto-News"}
