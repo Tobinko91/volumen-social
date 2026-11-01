@@ -60,8 +60,24 @@ def telegram_zeile(format: str, beitrag_id: str, pfad: str = "/", lang: str | No
     return f'🔗 <a href="{html.escape(url)}">{text}: whalesqueeze.com</a>'   # & -> &amp; (Telegram-HTML)
 
 
-def mit_telegram_link(tg_text: str, format: str, beitrag_id: str, pfad: str = "/", lang: str | None = None) -> str:
-    """Haengt die Link-Zeile vor den Hinweis 'Keine Anlageberatung' (letzte Zeile) bzw. ans Ende."""
+def website_oeffentlich() -> bool:
+    """config.yaml website.oeffentlich: erst true, wenn die Website ohne Passwort erreichbar ist.
+    Fehler 01.11.2026: Bis dahin fuehrten alle 'More data'-Links in Posts auf eine Passwort-Abfrage."""
+    try:
+        import yaml
+        from pathlib import Path
+        cfg = yaml.safe_load((Path(__file__).resolve().parent.parent / "config.yaml").read_text(encoding="utf-8"))
+        return bool((cfg.get("website") or {}).get("oeffentlich", True))
+    except Exception:
+        return True
+
+
+def mit_telegram_link(tg_text: str, format: str, beitrag_id: str, pfad: str = "/", lang: str | None = None,
+                      oeffentlich: bool | None = None) -> str:
+    """Haengt die Link-Zeile vor den Hinweis 'Keine Anlageberatung' (letzte Zeile) bzw. ans Ende.
+    Solange die Website noch hinter dem Passwort liegt, kommt kein Link in den Beitrag."""
+    if not (website_oeffentlich() if oeffentlich is None else oeffentlich):
+        return tg_text
     zeile = telegram_zeile(format, beitrag_id, pfad, lang)
     if len(tg_text) + len(zeile) + 2 > TG_MAX:   # Telegram schneidet Bildtexte bei 1024 Zeichen ab -> kein halber Link
         return tg_text
