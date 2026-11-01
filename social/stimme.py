@@ -59,7 +59,8 @@ def _elevenlabs(text: str, datei: Path, cfg: dict, key: str) -> None:
 def sprechen(zeilen: list[str], ordner: Path, cfg: dict, key: str | None) -> tuple[list[Path], list[float], str]:
     """Erzeugt je Zeile eine Tondatei. Gibt (Dateien, Dauern, Quelle) zurueck."""
     ordner.mkdir(parents=True, exist_ok=True)
-    echt = bool(key and (cfg["stimme"].get("voice_id") or cfg["stimme"].get("voice_name")))
+    echt = bool(key and cfg["stimme"].get("aktiv", True)
+                and (cfg["stimme"].get("voice_id") or cfg["stimme"].get("voice_name")))
     dateien, dauern = [], []
     for i, z in enumerate(zeilen):
         if echt:

@@ -90,7 +90,20 @@ def vorschlag_senden(geheim: dict, ordner: Path, hinweis: str = "") -> bool:
     tg = (ordner / "post_telegram.txt").read_text(encoding="utf-8")
     x = (ordner / "post_x.txt").read_text(encoding="utf-8")
     kopf, rest = teilen(tg)
-    if rest:   # langer Beitrag: so, wie er spaeter im Kanal erscheint (Bild + Text darunter), Knoepfe am Ende
+    video = ordner / "video.mp4"
+    if video.exists():   # Video-Vorschlag (Reels/TikTok/X/Telegram): Video mit Text, Knoepfe darunter
+        with open(video, "rb") as fh:
+            r = requests.post(API.format(token=token, methode="sendVideo"),
+                              data={"chat_id": chat, "caption": kopf, "parse_mode": "HTML",
+                                    "supports_streaming": "true",
+                                    **({} if rest else {"reply_markup": json.dumps(knoepfe(ordner.name))})},
+                              files={"video": (video.name, fh, "video/mp4")}, timeout=180)
+        if rest:
+            r = requests.post(API.format(token=token, methode="sendMessage"),
+                              data={"chat_id": chat, "text": rest[:4096], "parse_mode": "HTML",
+                                    "disable_web_page_preview": "true",
+                                    "reply_markup": json.dumps(knoepfe(ordner.name))}, timeout=30)
+    elif rest:   # langer Beitrag: so, wie er spaeter im Kanal erscheint (Bild + Text darunter), Knoepfe am Ende
         with open(bild, "rb") as fh:
             requests.post(API.format(token=token, methode="sendPhoto"),
                           data={"chat_id": chat, "caption": kopf, "parse_mode": "HTML"},
