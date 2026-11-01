@@ -36,7 +36,8 @@ class OAuthTest(unittest.TestCase):
     def test_ohne_schluessel_nicht_eingerichtet(self):
         with self.assertRaises(kanaele.NichtEingerichtet):
             kanaele.x_posten({}, HIER / "assets/logo-1080.png", "x")
-        self.assertEqual(kanaele.verfuegbar({}), {"telegram": False, "x": False, "instagram": False, "tiktok": False})
+        self.assertEqual(kanaele.verfuegbar({}), {"telegram": False, "x": False, "instagram": False, "tiktok": False,
+                                                  "youtube": False})
 
     def test_knoepfe_passen_in_64_zeichen(self):
         for zeile in telegram.knoepfe("20261022-0730_markt_30s")["inline_keyboard"]:

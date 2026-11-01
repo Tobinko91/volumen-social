@@ -71,6 +71,9 @@ stimme:
 instagram:
   story: true               # jeden Instagram-Beitrag auch als Story teilen (Punkt C, 01.11.2026)
 
+youtube:
+  sichtbarkeit: private      # bis Google die App geprueft hat (Audit), dann public
+
 tiktok:
   modus: inbox               # inbox = Entwurf in der TikTok-App (geht ohne Pruefung); direkt = sofort posten (nach Pruefung)
 

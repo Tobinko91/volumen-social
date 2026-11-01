@@ -54,10 +54,14 @@ def posten(g: dict, beitrag_id: str, ziel: str) -> str:
     if ziel == "alle":   # Telegram und X immer (Fehlermeldung, falls nicht eingerichtet), Instagram nur wenn eingerichtet
         k = kanaele.verfuegbar(g)
         ziele = ["telegram", "x"] + [z for z in ("instagram", "tiktok") if k[z]]
+        if medium == video and k.get("youtube"):
+            ziele.append("youtube")
     else:
-        ziele = [{"tg": "telegram", "x": "x", "ig": "instagram", "tt": "tiktok"}[ziel]]
+        ziele = [{"tg": "telegram", "x": "x", "ig": "instagram", "tt": "tiktok", "yt": "youtube"}[ziel]]
+        if ziele == ["youtube"] and medium != video:
+            return "▶️ YouTube nimmt nur Videos (Shorts). Dieser Vorschlag ist ein Bild."
     tg_text = (ordner / "post_telegram.txt").read_text(encoding="utf-8")
-    texte = {"telegram": tg_text, "instagram": tg_text, "tiktok": tg_text,   # IG/TikTok wandeln den Text selbst um
+    texte = {"telegram": tg_text, "instagram": tg_text, "tiktok": tg_text, "youtube": tg_text,   # wandeln selbst um
              "x": (ordner / "post_x.txt").read_text(encoding="utf-8")}
     zeilen = []
     for z in ziele:
@@ -119,7 +123,8 @@ def befehl(g: dict, text: str) -> str:
         k = kanaele.verfuegbar(g)
         offen = sum(1 for o in AUSGABE.glob("*/post.png") if not (o.parent / "gepostet.json").exists())
         return (f"Kanäle: Telegram {'✅' if k['telegram'] else '–'}, X {'✅' if k['x'] else '–'}, "
-                f"Instagram {'✅' if k['instagram'] else '–'}, TikTok {'✅' if k['tiktok'] else '–'}\n"
+                f"Instagram {'✅' if k['instagram'] else '–'}, TikTok {'✅' if k['tiktok'] else '–'}, "
+                f"YouTube {'✅' if k.get('youtube') else '–'}\n"
                 f"Offene Vorschläge: {offen}\nPause: {'ja' if PAUSE.exists() else 'nein'}")
     if cmd in ("/sperre", "/entsperre") and len(teile) > 1:
         coin = teile[1].upper().strip("$#")

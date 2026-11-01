@@ -23,8 +23,10 @@ FELDER = [
     ("instagram_token", "Instagram: Access Token (Meta-App -> API-Einrichtung mit Instagram-Login -> Generate token)"),
     ("tiktok_client_key", "TikTok: Client key (developers.tiktok.com -> App -> Credentials)"),
     ("tiktok_client_secret", "TikTok: Client secret"),
+    ("youtube_client_id", "YouTube: OAuth-Client-ID (Google Cloud -> APIs & Dienste -> Anmeldedaten)"),
+    ("youtube_client_secret", "YouTube: OAuth-Clientschluessel (Client secret)"),
 ]
-OFFEN = {"telegram_kanal", "tiktok_client_key"}   # kein Geheimnis: Eingabe sichtbar
+OFFEN = {"telegram_kanal", "tiktok_client_key", "youtube_client_id"}   # kein Geheimnis: Eingabe sichtbar
 
 
 def main():
