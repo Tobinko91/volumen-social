@@ -54,6 +54,9 @@ stimme:
   voice_id: null                  # optional: feste ID statt Name
   modell: eleven_multilingual_v2
 
+instagram:
+  story: true               # jeden Instagram-Beitrag auch als Story teilen (Punkt C, 01.11.2026)
+
 tiktok:
   modus: inbox               # inbox = Entwurf in der TikTok-App (geht ohne Pruefung); direkt = sofort posten (nach Pruefung)
 

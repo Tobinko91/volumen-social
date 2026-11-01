@@ -67,6 +67,13 @@ def posten(g: dict, beitrag_id: str, ziel: str) -> str:
             link = poster[z](g, medium, text)
             status[z] = link
             zeilen.append(f"✅ {z}: {link}")
+            if z == "instagram" and (kanaele._cfg().get("instagram") or {}).get("story", True):
+                try:   # Punkt C: jeden Instagram-Beitrag auch als Story (Fehler hier stoppen nichts)
+                    from social import story
+                    status["instagram_story"] = story.posten(g, medium)
+                    zeilen.append("✅ instagram: auch als Story geteilt")
+                except Exception as e:
+                    zeilen.append(f"⚠️ Instagram-Story nicht geteilt: {e}")
         except kanaele.NichtEingerichtet as e:
             zeilen.append(f"⚙️ {z}: {e}")
         except Exception as e:
