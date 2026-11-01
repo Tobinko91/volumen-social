@@ -94,6 +94,83 @@ class Leinwand:
         self.untertitel(d, text)
         return img
 
+    def haken(self, daten, text):
+        """Erste Szene: groesste Bewegung als riesige Zahl + „Warum?“ (Haken fuer die ersten 1-2 Sekunden)."""
+        img, d = self.neu()
+        self.kopf(d)
+        c = daten["chg24"]
+        self.mitte(d, 430, self.t["b_haken"], _font("Bold", 46), self.f["neben"])
+        wert = f"{zahl(c, self.lang, True)}{self.pz}"
+        gr = 260
+        while d.textlength(wert, font=_font("Black", gr)) > self.W - 120 and gr > 140:
+            gr -= 10
+        self.mitte(d, 500, wert, _font("Black", gr), self.farbe_wert(c))
+        self.mitte(d, 500 + gr + 30, f"{daten['base']} · {self.t['b_24h']}", _font("Black", 96), self.f["text"])
+        self.mitte(d, 500 + gr + 170, self.t["b_warum"], _font("Black", 70), self.f["amber"])
+        self.mitte(d, 500 + gr + 270, str(daten.get("datum", "")).upper(), _font("SemiBold", 40), self.f["neben"])
+        self.untertitel(d, text)
+        return img
+
+    # ---------- Whale of the day (Video) ----------
+    def _wt(self):
+        from .wal import W
+        return W[self.lang]
+
+    def wal_haken(self, w, text):
+        img, d = self.neu()
+        self.kopf(d)
+        wt = self._wt()
+        self.mitte(d, 420, wt["etikett"], _font("Bold", 46), self.f["neben"])
+        self.mitte(d, 490, f"${w['base']}", _font("Black", 150), self.f["text"])
+        if w.get("wal_7d") is not None:
+            v = w["wal_7d"]
+            gross, farbe = f"{zahl(v, self.lang, True)} {'pp' if self.lang == 'en' else 'PP'}", self.farbe_wert(v)
+        else:
+            gross, farbe = f"{zahl(w.get('wal') or 0, self.lang)}{self.pz}", self.f["plus"]
+        self.mitte(d, 680, gross, _font("Black", 190), farbe)
+        self.mitte(d, 920, wt["v_frage"], _font("Black", 64), self.f["amber"])
+        self.untertitel(d, text)
+        return img
+
+    def wal_verlauf(self, w, text):
+        from . import grafik
+        img, d = self.neu()
+        self.kopf(d)
+        wt = self._wt()
+        v = w["verlauf"]
+        tage = round((v[-1][0] - v[0][0]) / 86400)
+        labels = [""] * len(v)
+        labels[0], labels[-1] = wt["vor"].format(n=tage), wt["jetzt"]
+        reihen = [{"name": wt["kurve_w"], "werte": [p[1] for p in v], "farbe": self.th.akzent}]
+        if all(p[2] is not None for p in v):
+            reihen.append({"name": wt["kurve_b"], "werte": [p[2] for p in v], "farbe": self.th.akzent2})
+        rgba = img.convert("RGBA")
+        self.mitte(d, 420, f"${w['base']}", _font("Black", 90), self.f["text"])
+        grafik.linien(rgba, self.th, (60, 560, self.W - 60, 1150), reihen, labels, titel=wt["chart"],
+                      einheit="%" if self.lang == "en" else " %", flaeche=False)
+        self.img = rgba.convert("RGB")
+        d = ImageDraw.Draw(self.img)
+        self.mitte(d, 420, f"${w['base']}", _font("Black", 90), self.f["text"])
+        self.untertitel(d, text)
+        return self.img
+
+    def wal_details(self, w, text):
+        img, d = self.neu()
+        self.kopf(d)
+        wt = self._wt()
+        self.mitte(d, 420, wt["v_details"], _font("Bold", 46), self.f["neben"])
+        y = 520
+        if w.get("boerse") is not None:
+            self.mitte(d, y, f"{zahl(w['boerse'], self.lang)}{self.pz}", _font("Black", 160), self.f["amber"])
+            self.mitte(d, y + 185, wt["kurve_b"].upper(), _font("Bold", 44), self.f["neben"])
+            y += 300
+        if w.get("holder") is not None:
+            h = f"{int(w['holder']):,}"   # nur im Bild mit Tausendertrennung (Untertitel bleibt pruefbar)
+            self.mitte(d, y, h if self.lang == "en" else h.replace(",", "."), _font("Black", 120), self.f["text"])
+            self.mitte(d, y + 140, "HOLDERS" if self.lang == "en" else "HOLDER", _font("Bold", 44), self.f["neben"])
+        self.untertitel(d, text)
+        return img
+
     def breite(self, daten, text):
         img, d = self.neu()
         self.kopf(d)
@@ -143,8 +220,10 @@ class Leinwand:
         img, d = self.neu()
         self.kopf(d)
         self.logo(d, (self.W - 32 * 7) / 2, 420, 7)
-        self.mitte(d, 690, "whalesqueeze.com", _font("Black", 92), self.f["amber"])
-        self.mitte(d, 820, self.t["b_outro"], _font("SemiBold", 46), self.f["text"])
+        # Folgen statt Website (Website noch hinter Passwort; „Folgen“ am Ende bringt auf Reels/TikTok Follower)
+        self.mitte(d, 690, "@whalesqueeze", _font("Black", 104), self.f["amber"])
+        self.mitte(d, 830, self.t["b_folgen"], _font("Bold", 50), self.f["text"])
+        self.mitte(d, 910, self.t["b_outro"], _font("SemiBold", 42), self.f["neben"])
         konflikt = textwrap.wrap(self.cfg["hinweise"].get("konflikt") or "", width=48)
         for i, z in enumerate(konflikt):
             self.mitte(d, 930 + i * 44, z, _font("Medium", 34), self.f["neben"])
