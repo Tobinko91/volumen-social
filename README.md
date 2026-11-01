@@ -95,6 +95,12 @@ Lern-/News-/Coin-Check-Texte, Stimme (englische ElevenLabs-Stimme fehlt). Startk
   Die Liste muss die Redaktion pflegen; 4 Wochen bevor sie ausläuft, meldet der Redaktions-Bot das.
 - Fußzeile in Bildern zeigt `@whalesqueeze`, solange `website.oeffentlich: false` (vorher `whalesqueeze.com` mit Passwort).
 
+## Stimme (S17, seit 01.11.2026)
+- Google Cloud Text-to-Speech, Stimme „Chirp 3 HD“ (`stimme.anbieter: google`, `stimme.google_stimme`).
+  1 Mio Zeichen/Monat gratis, Bedarf ca. 50.000. Schlüssel `google_tts_key` über `tools/schluessel.py`.
+- Hörproben: `tools/stimme_probe.py` schickt 4 Stimmen an Tobias. Ohne Schlüssel oder bei Fehler entstehen
+  Videos ohne Stimme (Quelle steht im Freigabe-Hinweis), es bricht nichts ab.
+
 ## Schutzregeln (fest eingebaut)
 Ueberall nur „Keine Anlageberatung“ (kein KI-, Totalverlust- oder Betreiber-Hinweis), keine Einstiegskurse,
 keine Kauf-/Verkaufsaufforderung, keine Zahl ohne Datenquelle, keine Coins von der Sperrliste.
