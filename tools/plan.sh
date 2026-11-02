@@ -24,6 +24,8 @@ if git fetch -q origin warteschlange 2>/dev/null; then
   chmod -R a+rX /opt/volumen-social/eingang
   sudo -u redaktion env $UMGEBUNG python3 tools/eingang.py
 fi
+# Musik-Ordner (Tobias schickt Stuecke an den Redaktions-Bot, der speichert sie hier)
+mkdir -p /opt/volumen-social/musik && chown redaktion:redaktion /opt/volumen-social/musik
 # Oeffentlicher Bild-Ordner fuer Instagram (Website liefert ihn unter /medien/ aus, nur fuer Minuten befuellt)
 mkdir -p /opt/volumen-social/oeffentlich && chown redaktion:redaktion /opt/volumen-social/oeffentlich && \
   chmod 755 /opt/volumen-social/oeffentlich

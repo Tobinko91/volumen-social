@@ -46,6 +46,26 @@ class MusikTest(unittest.TestCase):
             c = {"video": {"musik": str(o)}}
             self.assertEqual({musik.pfad(c, o, 0).name, musik.pfad(c, o, 1).name}, {"a.mp3", "b.m4a"})
 
+    def test_bot_speichert_musik(self):
+        import sys
+        from unittest import mock
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
+        import freigabe
+
+        class R:
+            content = b"ID3"
+
+            def raise_for_status(self):
+                pass
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(freigabe, "MUSIK", Path(d) / "musik"), \
+                mock.patch.object(freigabe, "tg", return_value={"ok": True, "result": {"file_path": "music/f.mp3"}}):
+            m = {"audio": {"file_id": "x", "file_name": "Tech Ambient (Velario).mp3", "mime_type": "audio/mpeg"}}
+            antwort = freigabe.musik_speichern({"telegram_token": "t"}, m, holen=lambda url, timeout=None: R())
+            self.assertIn("Tech_Ambient_Velario_.mp3", antwort)
+            self.assertTrue((Path(d) / "musik" / "Tech_Ambient_Velario_.mp3").exists())
+            self.assertIn("keine Audiodatei", freigabe.musik_speichern({}, {"document": {"file_name": "a.pdf"}}))
+            self.assertIn("1 Stücke", freigabe.befehl({}, "/musik"))
+
     def test_musik_wird_erzeugt_und_wiederverwendet(self):
         with tempfile.TemporaryDirectory() as d:
             p = musik.erzeugen(Path(d) / "m.m4a", 6)
