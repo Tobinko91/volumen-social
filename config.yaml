@@ -71,6 +71,15 @@ stimme:
 instagram:
   story: true               # jeden Instagram-Beitrag auch als Story teilen (Punkt C, 01.11.2026)
 
+zeitplan:                    # S31 (Tobias 02.11.2026): einmal freigeben, jeder Kanal zu seiner Zeit
+  aktiv: true
+  fenster:                   # Beginn in deutscher Zeit (US-Winterzeit: ET + 6 Std.), Ende 23:59; Telegram/X immer sofort
+    instagram: "18:00"       # 12:00 ET
+    tiktok: "19:00"          # 13:00 ET
+    youtube: "20:00"         # 14:00 ET
+  sofort_formate: [news, redaktion]   # News, Eilmeldungen, Beitraege aus dem Redaktions-Chat: ueberall sofort
+  nur_video: [tiktok]        # bei „Alle Kanäle“: TikTok nur Videos und Bilderserien (einzelner Knopf geht immer)
+
 youtube:
   in_alle: false            # 02.11.2026 Tobias: YouTube nicht bei „Alle Kanäle“, nur per ▶️-Knopf; true nach der Google-Pruefung
   sichtbarkeit: private      # bis Google die App geprueft hat (Audit), dann public

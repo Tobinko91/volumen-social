@@ -95,6 +95,12 @@ Lern-/News-/Coin-Check-Texte, Stimme (englische ElevenLabs-Stimme fehlt). Startk
   Die Liste muss die Redaktion pflegen; 4 Wochen bevor sie ausläuft, meldet der Redaktions-Bot das.
 - Fußzeile in Bildern zeigt `@whalesqueeze`, solange `website.oeffentlich: false` (vorher `whalesqueeze.com` mit Passwort).
 
+## Zeitversetzt posten (S31, seit 02.11.2026)
+- „✅ Alle Kanäle“ postet Telegram und X sofort, Instagram ab 18:00, TikTok ab 19:00, YouTube ab 20:00 (deutsche Zeit,
+  US-Hauptzeit). Liegt die Freigabe im Fenster, geht es sofort. `tools/geplant.py` (alle 10 Min.) holt Fälliges nach.
+- News und Beiträge aus dem Redaktions-Chat: überall sofort. TikTok bei „Alle“ nur Videos/Bilderserien.
+- Ein einzelner Kanal-Knopf postet immer sofort. 🗑 Verwerfen stoppt geplante Posts. Einstellungen: `config.yaml zeitplan`.
+
 ## Schutzregeln (fest eingebaut)
 Ueberall nur „Keine Anlageberatung“ (kein KI-, Totalverlust- oder Betreiber-Hinweis), keine Einstiegskurse,
 keine Kauf-/Verkaufsaufforderung, keine Zahl ohne Datenquelle, keine Coins von der Sperrliste.
