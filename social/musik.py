@@ -37,12 +37,24 @@ def erzeugen(ziel: Path, dauer: float = 64.0) -> Path:
     return ziel
 
 
-def pfad(cfg: dict, ausgabe: Path) -> Path | None:
-    """Welche Musik: eigene Datei aus config.yaml (video.musik), 'generiert' oder keine."""
+ENDUNGEN = (".mp3", ".m4a", ".aac", ".wav")
+
+
+def pfad(cfg: dict, ausgabe: Path, tag: int | None = None) -> Path | None:
+    """Welche Musik (video.musik): Ordner mit eigenen lizenzfreien Stuecken (Wunsch Tobias 02.11.2026: die erzeugte
+    Musik gefaellt nicht) – jeden Tag ein anderes Stueck; eine Datei; 'generiert'; oder keine.
+    Leerer oder fehlender Ordner = ohne Musik (mit Stimme voellig in Ordnung)."""
     m = (cfg.get("video") or {}).get("musik")
     if not m:
         return None
     if m == "generiert":
         return erzeugen(ausgabe / "musik_whalesqueeze.m4a")
     p = Path(m)
+    if p.is_dir():
+        stuecke = sorted(f for f in p.iterdir() if f.suffix.lower() in ENDUNGEN)
+        if not stuecke:
+            return None
+        import datetime as _dt
+        tag = _dt.date.today().toordinal() if tag is None else tag
+        return stuecke[tag % len(stuecke)]
     return p if p.exists() else None

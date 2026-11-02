@@ -41,7 +41,8 @@ video:
   breite: 1080
   hoehe: 1920
   fps: 30
-  musik: generiert           # "generiert" = eigene lizenzfreie Musik (social/musik.py), Pfad = eigene Datei, null = ohne
+  musik: /opt/volumen-social/musik   # 02.11.2026 Tobias: erzeugte Musik gefaellt nicht. Ordner mit lizenzfreien Stuecken
+                             # (taeglich ein anderes); leer = ohne Musik. Alternativ "generiert" oder eine Datei
   musik_db: -22              # Lautstaerke unter einer Stimme
   musik_db_ohne_stimme: -3   # Videos ohne Stimme: Musik traegt, Untertitel erzaehlen
   woerter_pro_sekunde: 2.6   # nur fuer die Probe ohne Stimme
