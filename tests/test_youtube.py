@@ -81,5 +81,36 @@ class YouTubeTest(unittest.TestCase):
         self.assertIn("t.me/whalesqueeze", kanaele.telegram_hinweis(TG, "youtube", {"telegram_kanal": "@whalesqueeze"}))
 
 
+    def test_alle_kanaele_ohne_youtube_einzeln_mit(self):
+        """Wunsch Tobias 02.11.: „Alle Kanäle“ ohne YouTube (solange youtube.in_alle false), ▶️-Knopf geht weiter."""
+        import json
+        import sys
+        import tempfile
+        from unittest import mock
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
+        import freigabe
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            o = tmp / "20261102-1430_markt_30s_video"
+            o.mkdir()
+            (o / "video.mp4").write_bytes(b"x")
+            (o / "post_telegram.txt").write_text("T\n\nNot financial advice.")
+            (o / "post_x.txt").write_text("T")
+            gerufen = []
+            poster = {z: (lambda z: lambda g, m, t: gerufen.append(z) or "ok")(z)
+                      for z in ("telegram", "x", "instagram", "tiktok", "youtube")}
+            g = dict(G, telegram_token="t", telegram_kanal="@w")
+            with mock.patch.object(freigabe, "AUSGABE", tmp), mock.patch.object(freigabe, "PROTOKOLL", tmp / "p.jsonl"), \
+                    mock.patch.object(video_posten, "POSTER", poster), \
+                    mock.patch.object(kanaele, "_cfg", return_value={"youtube": {"in_alle": False},
+                                                                     "instagram": {"story": False}}):
+                freigabe.posten(g, o.name, "alle")
+                self.assertNotIn("youtube", gerufen)
+                freigabe.posten(g, o.name, "yt")
+                self.assertIn("youtube", gerufen)
+        finally:
+            shutil.rmtree(tmp)
+
+
 if __name__ == "__main__":
     unittest.main()

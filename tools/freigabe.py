@@ -56,7 +56,8 @@ def posten(g: dict, beitrag_id: str, ziel: str) -> str:
     if ziel == "alle":   # Telegram und X immer (Fehlermeldung, falls nicht eingerichtet), Instagram nur wenn eingerichtet
         k = kanaele.verfuegbar(g)
         ziele = ["telegram", "x"] + [z for z in ("instagram", "tiktok") if k[z]]
-        if medium == video and k.get("youtube"):
+        # YouTube nur per eigenem Knopf, solange Uploads privat sind (Wunsch Tobias 02.11.2026, config youtube.in_alle)
+        if medium == video and k.get("youtube") and (kanaele._cfg().get("youtube") or {}).get("in_alle", False):
             ziele.append("youtube")
     else:
         ziele = [{"tg": "telegram", "x": "x", "ig": "instagram", "tt": "tiktok", "yt": "youtube"}[ziel]]
