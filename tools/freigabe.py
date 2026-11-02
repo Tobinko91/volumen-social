@@ -22,6 +22,7 @@ BASIS = Path(os.environ.get("SOCIAL_GEHEIM", "/opt/volumen-social"))
 AUSGABE = Path(os.environ.get("SOCIAL_AUSGABE", BASIS / "ausgabe"))
 API = "https://api.telegram.org/bot{token}/{methode}"
 PAUSE = AUSGABE / ".pause"   # hier darf der Benutzer "redaktion" schreiben
+MUSIK = Path(os.environ.get("SOCIAL_MUSIK", BASIS / "musik"))   # eigene Musikstuecke (Tobias schickt sie dem Bot)
 PROTOKOLL = AUSGABE / "protokoll.jsonl"   # dauerhaft (Wochenbericht, Freigabe-Tor); Ordner werden nach 3 Tagen geloescht
 
 
@@ -173,13 +174,51 @@ def befehl(g: dict, text: str) -> str:
         elif len(teile) > 1 and teile[1].lower() == "an":
             aus.unlink(missing_ok=True)
         return autopost.status(bericht.protokoll_laden(PROTOKOLL), kanaele._cfg(), aus.exists())
+    if cmd == "/musik":
+        if len(teile) > 2 and teile[1].lower() == "weg" and teile[2].isdigit():
+            from social import musik
+            stuecke = sorted(f for f in MUSIK.glob("*") if f.suffix.lower() in musik.ENDUNGEN)
+            i = int(teile[2]) - 1
+            if 0 <= i < len(stuecke):
+                stuecke[i].unlink()
+                return f"🗑 {stuecke[i].name} gelöscht.\n" + musik_liste()
+        return musik_liste()
     if cmd == "/pause":
         PAUSE.touch()
         return "⏸ Pause: keine neuen Vorschläge, bis du /weiter schreibst."
     if cmd == "/weiter":
         PAUSE.unlink(missing_ok=True)
         return "▶️ Geht weiter."
-    return "Befehle: /check AKE, /status, /auto (an/aus), /sperre BTC, /entsperre BTC, /pause, /weiter"
+    return "Befehle: /check AKE, /status, /auto (an/aus), /musik, /sperre BTC, /entsperre BTC, /pause, /weiter"
+
+
+def musik_speichern(g: dict, m: dict, holen=requests.get) -> str:
+    """Tobias schickt dem Redaktions-Bot eine Audiodatei (z. B. von Pixabay) -> landet im Musik-Ordner der Videos."""
+    import re as _re
+    datei = m.get("audio") or m.get("document") or {}
+    name = datei.get("file_name") or (datei.get("title") or "stueck") + ".mp3"
+    if not (m.get("audio") or (datei.get("mime_type") or "").startswith("audio/")
+            or name.lower().endswith((".mp3", ".m4a", ".wav", ".aac"))):
+        return "Das ist keine Audiodatei. Bitte eine mp3 schicken."
+    info = tg(g, "getFile", file_id=datei["file_id"])
+    if not info.get("ok"):
+        return "Datei zu groß oder nicht abrufbar (Telegram-Grenze für Bots: 20 MB)."
+    url = f"https://api.telegram.org/file/bot{g['telegram_token']}/{info['result']['file_path']}"
+    r = holen(url, timeout=120)
+    r.raise_for_status()
+    MUSIK.mkdir(parents=True, exist_ok=True)
+    sauber = _re.sub(r"[^A-Za-z0-9._-]+", "_", Path(name).name)[:80] or "stueck.mp3"
+    (MUSIK / sauber).write_bytes(r.content)
+    return f"🎵 Gespeichert: {sauber}\n" + musik_liste()
+
+
+def musik_liste() -> str:
+    from social import musik
+    stuecke = sorted(f.name for f in MUSIK.glob("*") if f.suffix.lower() in musik.ENDUNGEN) if MUSIK.exists() else []
+    if not stuecke:
+        return "Noch keine Musik. Schick mir mp3-Dateien, dann laufen sie unter den Videos (jeden Tag ein anderes Stück)."
+    return f"Musik ({len(stuecke)} Stücke, täglich wechselnd):\n" + "\n".join(
+        f"{i}. {n}" for i, n in enumerate(stuecke, 1)) + "\nLöschen: /musik weg 2"
 
 
 def schleife():
@@ -216,6 +255,12 @@ def schleife():
                 m = u["message"]
                 if str(m["chat"]["id"]) == chef and (m.get("text") or "").startswith("/"):
                     tg(g, "sendMessage", chat_id=chef, text=befehl(g, m["text"]))
+                elif str(m["chat"]["id"]) == chef and (m.get("audio") or m.get("document")):
+                    try:
+                        antwort = musik_speichern(g, m)
+                    except Exception as e:
+                        antwort = f"❌ Musik nicht gespeichert: {e}"
+                    tg(g, "sendMessage", chat_id=chef, text=antwort)
 
 
 if __name__ == "__main__":

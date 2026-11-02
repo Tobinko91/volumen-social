@@ -109,6 +109,7 @@ Lern-/News-/Coin-Check-Texte, Stimme (englische ElevenLabs-Stimme fehlt). Startk
 
 ## Musik (seit 02.11.2026)
 - Eigene lizenzfreie Stücke in `/opt/volumen-social/musik/` (mp3/m4a), jeden Tag ein anderes. Leer = ohne Musik.
+  Tobias schickt die mp3 einfach an den Redaktions-Bot; `/musik` zeigt die Liste, `/musik weg 2` löscht.
   Die erzeugte Musik ist abgeschaltet (Tobias mochte sie nicht), mit `video.musik: generiert` wieder an.
 
 ## Lern-Video (S28, seit 02.11.2026)
