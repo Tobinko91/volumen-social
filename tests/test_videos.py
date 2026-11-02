@@ -31,12 +31,21 @@ class Antwort:
 
 class MusikTest(unittest.TestCase):
     def test_musik_einstellungen(self):
-        self.assertEqual(CFG["video"]["musik"], "generiert")
+        self.assertEqual(CFG["video"]["musik"], "/opt/volumen-social/musik")   # 02.11.: eigene Stuecke statt erzeugt
         self.assertEqual(CFG["stimme"]["anbieter"], "google")   # 01.11.: Stimme per Google Chirp 3 HD, keine ElevenLabs-Kosten
         self.assertIsNone(musik.pfad({"video": {"musik": None}}, Path("/tmp")))
         self.assertIsNone(musik.pfad({"video": {"musik": "/gibt/es/nicht.mp3"}}, Path("/tmp")))
 
     @unittest.skipUnless(shutil.which("ffmpeg"), "ffmpeg fehlt")
+    def test_musik_ordner_wechselt_taeglich(self):
+        with tempfile.TemporaryDirectory() as d:
+            o = Path(d)
+            self.assertIsNone(musik.pfad({"video": {"musik": str(o)}}, o))   # leer = ohne Musik
+            for n in ("a.mp3", "b.m4a", "notiz.txt"):
+                (o / n).write_bytes(b"x")
+            c = {"video": {"musik": str(o)}}
+            self.assertEqual({musik.pfad(c, o, 0).name, musik.pfad(c, o, 1).name}, {"a.mp3", "b.m4a"})
+
     def test_musik_wird_erzeugt_und_wiederverwendet(self):
         with tempfile.TemporaryDirectory() as d:
             p = musik.erzeugen(Path(d) / "m.m4a", 6)
