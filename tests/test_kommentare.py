@@ -79,18 +79,33 @@ class KommentarTest(unittest.TestCase):
                 vorschlaege = [{"id": "2", "text": "Meanwhile only 41% of small caps are green over 24h.", "deutsch": "x"},
                                {"id": "3", "text": "That's 999 ETH more than yesterday.", "deutsch": "y"}]   # erfunden
                 gesendet = []
+
+                class Ok:
+                    def json(self):
+                        return {"ok": True}
+
+                def senden(url, data=None, timeout=None):
+                    gesendet.append(data["text"])
+                    return Ok()
                 r = werkzeug.main(posts_holen=lambda: posts, schreiber=lambda ps: vorschlaege, markt=MARKT,
-                                  senden=lambda url, data=None, timeout=None: gesendet.append(data["text"]))
+                                  senden=senden)
                 self.assertEqual(r, 0)
                 self.assertEqual(len(gesendet), 1)
                 self.assertIn("41%", gesendet[0])
                 self.assertNotIn("999", gesendet[0])   # Kommentar mit erfundener Zahl fliegt raus
                 stand = json.loads((Path(d) / "kommentare_stand.json").read_text())
                 self.assertEqual(stand["ids"], ["2"])
-                gesendet.clear()   # zweiter Lauf: derselbe Post kommt nicht noch einmal
+                gesendet.clear()   # zweiter Lauf: derselbe Post kommt nicht noch einmal, nur der Hinweis „keine neuen“
                 werkzeug.main(posts_holen=lambda: posts[:1], schreiber=lambda ps: vorschlaege, markt=MARKT,
-                              senden=lambda url, data=None, timeout=None: gesendet.append(data["text"]))
-                self.assertEqual(gesendet, [])
+                              senden=senden)
+                self.assertEqual(len(gesendet), 1)
+                self.assertIn("keine neuen Posts", gesendet[0])
+                gesendet.clear()   # X-Fehler wird gemeldet statt verschwiegen (Fehler 02.11.2026)
+
+                def kaputt():
+                    raise RuntimeError("X-Suche: 402 CreditsDepleted")
+                self.assertEqual(werkzeug.main(posts_holen=kaputt, markt=MARKT, senden=senden), 1)
+                self.assertIn("402", gesendet[0])
             finally:
                 os.environ.pop("SOCIAL_AUSGABE")
                 os.environ.pop("SOCIAL_GEHEIM")

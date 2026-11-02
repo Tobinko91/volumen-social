@@ -110,16 +110,9 @@ Reply with JSON ONLY:
 def schreiben(f: dict, cfg: dict, api_key: str | None) -> dict:
     if api_key:
         try:
-            r = requests.post("https://api.anthropic.com/v1/messages",
-                              headers={"x-api-key": api_key, "anthropic-version": "2023-06-01",
-                                       "content-type": "application/json"},
-                              json={"model": cfg["text"]["modell"], "max_tokens": 700,
-                                    "system": SYSTEM_EN if cfg.get("sprache") == "en" else SYSTEM,
-                                    "messages": [{"role": "user", "content": json.dumps(f, ensure_ascii=False)}]},
-                              timeout=90)
-            r.raise_for_status()
-            t = "".join(b.get("text", "") for b in r.json().get("content", []))
-            d = json.loads(t[t.find("{"): t.rfind("}") + 1])
+            from . import claude
+            d = claude.json_antwort(SYSTEM_EN if cfg.get("sprache") == "en" else SYSTEM,
+                                    json.dumps(f, ensure_ascii=False), cfg, api_key, 2000)
             if d.get("schlagzeile") and d.get("punkte") and d.get("x"):
                 d["punkte"] = d["punkte"][:3]
                 return d

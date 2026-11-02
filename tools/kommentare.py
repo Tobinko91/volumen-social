@@ -21,6 +21,13 @@ BASIS = Path(os.environ.get("SOCIAL_GEHEIM", "/opt/volumen-social"))
 AUSGABE = Path(os.environ.get("SOCIAL_AUSGABE", BASIS / "ausgabe"))
 
 
+def _melden(g: dict, senden, text: str) -> None:
+    """Auch „nichts gefunden“ und Fehler an Tobias (02.11.2026: er bekam nie etwas und wusste nicht warum)."""
+    if "--senden" in sys.argv or senden:
+        from social import telegram
+        telegram.an_tobias(g, text, post=senden or requests.post)
+
+
 def main(posts_holen=None, schreiber=None, markt="auto", senden=None) -> int:
     cfg = yaml.safe_load((HIER / "config.yaml").read_text(encoding="utf-8"))
     k = cfg.get("kommentare") or {}
@@ -44,15 +51,20 @@ def main(posts_holen=None, schreiber=None, markt="auto", senden=None) -> int:
                                                                 k.get("max_posts", 30))))()
     except Exception as e:
         print("X-Posts nicht geholt:", e)
+        _melden(g, senden, f"💬 Kommentar-Assistent: keine Vorschläge, X-Abfrage fehlgeschlagen ({str(e)[:200]}). "
+                           "Häufigster Grund: X-Guthaben leer (developer.x.com → Billing).")
         return 1
     posts = [p for p in posts if p["id"] not in stand["ids"]][: int(k.get("anzahl", 5)) + 3]
     if not posts:
         print("Keine neuen Posts.")
+        _melden(g, senden, f"💬 Kommentar-Assistent: keine neuen Posts der Zielkonten in den letzten "
+                           f"{k.get('stunden', 3)} Std. Nächster Versuch beim nächsten Termin.")
         return 0
     try:
         vorschlaege = (schreiber or (lambda ps: kommentare.schreiben(ps, fakten, cfg, g["anthropic_api_key"])))(posts)
     except Exception as e:
         print("Claude-Fehler:", e)
+        _melden(g, senden, f"💬 Kommentar-Assistent: Fehler beim Schreiben ({str(e)[:200]}).")
         return 1
     nach_id = {p["id"]: p for p in posts}
     fertig = []
@@ -69,14 +81,14 @@ def main(posts_holen=None, schreiber=None, markt="auto", senden=None) -> int:
             break
     if not fertig:
         print("Kein Kommentar hat die Prüfung bestanden.")
+        _melden(g, senden, f"💬 Kommentar-Assistent: {len(posts)} Posts gefunden, aber kein Vorschlag hat die "
+                           "Prüfung bestanden (Zahlen/Regeln). Nichts zu tun.")
         return 0
     text = kommentare.nachricht(fertig)
     print(text)
     if "--senden" in sys.argv or senden:
-        if g.get("telegram_token") and g.get("telegram_chat_id"):
-            (senden or requests.post)(f"https://api.telegram.org/bot{g['telegram_token']}/sendMessage",
-                                      data={"chat_id": g["telegram_chat_id"], "text": text[:4096],
-                                            "parse_mode": "HTML", "disable_web_page_preview": "true"}, timeout=30)
+        from social import telegram
+        print("Gesendet:", telegram.an_tobias(g, text, post=senden or requests.post))
         stand["ids"] = (stand["ids"] + [p["id"] for p in fertig])[-500:]
         AUSGABE.mkdir(parents=True, exist_ok=True)
         stand_p.write_text(json.dumps(stand))
