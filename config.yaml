@@ -72,6 +72,7 @@ instagram:
   story: true               # jeden Instagram-Beitrag auch als Story teilen (Punkt C, 01.11.2026)
 
 youtube:
+  in_alle: false            # 02.11.2026 Tobias: YouTube nicht bei „Alle Kanäle“, nur per ▶️-Knopf; true nach der Google-Pruefung
   sichtbarkeit: private      # bis Google die App geprueft hat (Audit), dann public
 
 tiktok:
