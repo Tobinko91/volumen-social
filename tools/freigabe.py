@@ -59,6 +59,13 @@ def posten(g: dict, beitrag_id: str, ziel: str) -> str:
         # YouTube nur per eigenem Knopf, solange Uploads privat sind (Wunsch Tobias 02.11.2026, config youtube.in_alle)
         if medium == video and k.get("youtube") and (kanaele._cfg().get("youtube") or {}).get("in_alle", False):
             ziele.append("youtube")
+        # S31: Instagram/TikTok/YouTube zur US-Hauptzeit, Telegram/X sofort; News/Redaktion ueberall sofort
+        from social import zeitplan
+        ziele, spaeter = zeitplan.aufteilen(ziele, bericht.format_aus_ordner(ordner.name),
+                                            medium != video and not ist_karussell, kanaele._cfg(), time.time())
+        if spaeter:
+            status.setdefault("geplant", {}).update({k: v for k, v in spaeter.items() if k not in status})
+            status_p.write_text(json.dumps(status))
     else:
         ziele = [{"tg": "telegram", "x": "x", "ig": "instagram", "tt": "tiktok", "yt": "youtube"}[ziel]]
         if ziele == ["youtube"] and medium != video:
@@ -97,6 +104,10 @@ def posten(g: dict, beitrag_id: str, ziel: str) -> str:
             zeilen.append(f"⚙️ {z}: {e}")
         except Exception as e:
             zeilen.append(f"❌ {z}: {e}")
+    for k, v in (status.get("geplant") or {}).items():
+        if ziel == "alle" and k not in status:
+            from social import zeitplan as _zp
+            zeilen.append(f"⏰ {k}: geplant um {_zp.uhr(v)} (US-Hauptzeit)")
     status_p.write_text(json.dumps(status))
     return "\n".join(zeilen)
 

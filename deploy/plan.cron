@@ -2,3 +2,5 @@
 0,30 * * * * root /bin/bash /opt/volumen-social/app/tools/plan.sh >> /var/log/volumen-social-plan.log 2>&1
 # Live-Eilmeldungen alle 10 Minuten, rund um die Uhr (Wunsch Tobias 30.10.2026)
 5-55/10 * * * * root /bin/bash /opt/volumen-social/app/tools/live.sh >> /var/log/volumen-social-live.log 2>&1
+# S31 zeitversetzt posten: geplante Kanaele (Instagram/TikTok/YouTube zur US-Hauptzeit), alle 10 Minuten
+2-52/10 * * * * redaktion cd /opt/volumen-social/app && TZ=Europe/Berlin SOCIAL_GEHEIM=/opt/volumen-social SOCIAL_AUSGABE=/opt/volumen-social/ausgabe python3 tools/geplant.py >> /opt/volumen-social/ausgabe/geplant.log 2>&1
