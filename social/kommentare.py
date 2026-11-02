@@ -85,13 +85,8 @@ def posts_holen(geheim: dict, konten: list[str], stunden: float = 3, max_posts: 
 def schreiben(posts: list[dict], fakten: dict, cfg: dict, api_key: str, post=requests.post) -> list[dict]:
     eingabe = {"our_data": fakten, "posts": [{"id": p["id"], "account": p["konto"], "text": p["text"][:600]}
                                              for p in posts]}
-    r = post("https://api.anthropic.com/v1/messages",
-             headers={"x-api-key": api_key, "anthropic-version": "2023-06-01", "content-type": "application/json"},
-             json={"model": cfg["text"]["modell"], "max_tokens": 1500, "system": SYSTEM,
-                   "messages": [{"role": "user", "content": json.dumps(eingabe, ensure_ascii=False)}]}, timeout=90)
-    r.raise_for_status()
-    txt = "".join(b.get("text", "") for b in r.json().get("content", []))
-    d = json.loads(txt[txt.find("{"): txt.rfind("}") + 1])
+    from . import claude
+    d = claude.json_antwort(SYSTEM, json.dumps(eingabe, ensure_ascii=False), cfg, api_key, 3000, post=post)
     return [k for k in d.get("kommentare", []) if not k.get("skip") and k.get("text")]
 
 
