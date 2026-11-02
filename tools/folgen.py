@@ -34,13 +34,9 @@ def main(senden=None) -> int:
     if "--senden" in sys.argv or senden:
         gp = BASIS / "secrets.yaml"
         g = (yaml.safe_load(gp.read_text()) if gp.exists() else {}) or {}
-        if g.get("telegram_token") and g.get("telegram_chat_id"):
-            daten = {"chat_id": g["telegram_chat_id"], "text": text, "parse_mode": "HTML",
-                     "disable_web_page_preview": "true"}
-            if knoepfe:
-                daten["reply_markup"] = json.dumps(knoepfe)
-            (senden or requests.post)(f"https://api.telegram.org/bot{g['telegram_token']}/sendMessage",
-                                      data=daten, timeout=30)
+        from social import telegram
+        ergebnis = telegram.an_tobias(g, text, knoepfe, post=senden or requests.post)
+        print("Gesendet:", ergebnis)
     AUSGABE.mkdir(parents=True, exist_ok=True)
     folgen.stand_speichern(STAND, stand)
     return 0

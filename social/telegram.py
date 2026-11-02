@@ -62,6 +62,35 @@ def bild_senden(geheim: dict, datei: Path, text: str) -> bool:
     return r.ok
 
 
+def an_tobias(geheim: dict, text: str, knoepfe: dict | None = None, post=requests.post) -> str:
+    """Nachricht an Tobias mit Pruefung der Antwort (Fehler 02.11.2026: Folge-Liste/Kommentare kamen nie an,
+    Fehler blieben unbemerkt). HTML zuerst; lehnt Telegram ab, ohne Formatierung noch einmal. Rueckgabe: 'ok' oder Grund."""
+    import json as _json
+    token, chat = geheim.get("telegram_token"), geheim.get("telegram_chat_id")
+    if not (token and chat):
+        return "telegram_token oder telegram_chat_id fehlt"
+    grund = ""
+    for html in (True, False):
+        daten = {"chat_id": chat, "text": text[:4096], "disable_web_page_preview": "true"}
+        if html:
+            daten["parse_mode"] = "HTML"
+        else:
+            import re as _re
+            daten["text"] = _re.sub(r"<[^>]+>", "", text)[:4096]
+        if knoepfe:
+            daten["reply_markup"] = _json.dumps(knoepfe)
+        try:
+            j = post(API.format(token=token, methode="sendMessage"), data=daten, timeout=30).json()
+        except Exception as e:
+            grund = str(e)
+            continue
+        if j.get("ok"):
+            return "ok"
+        grund = j.get("description", "unbekannt")
+    print("Telegram hat die Nachricht abgelehnt:", grund)
+    return grund
+
+
 def text_senden(geheim: dict, text: str) -> bool:
     token, chat = geheim.get("telegram_token"), geheim.get("telegram_chat_id")
     if not (token and chat):

@@ -119,3 +119,27 @@ class KnopfTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AnTobiasTest(unittest.TestCase):
+    """Fehler 02.11.2026: Folge-Liste kam nie an, niemand merkte es. Jetzt: Antwort pruefen, ohne HTML nochmal."""
+
+    def test_html_abgelehnt_dann_ohne_formatierung(self):
+        from social import telegram
+        gesehen = []
+
+        class A:
+            def __init__(self, j):
+                self.j = j
+
+            def json(self):
+                return self.j
+
+        def post(url, data=None, timeout=None):
+            gesehen.append(data)
+            return A({"ok": False, "description": "can't parse entities"} if "parse_mode" in data else {"ok": True})
+        g = {"telegram_token": "t", "telegram_chat_id": 1}
+        self.assertEqual(telegram.an_tobias(g, "<b>Folge-Liste</b> <x>", post=post), "ok")
+        self.assertEqual(len(gesehen), 2)
+        self.assertEqual(gesehen[1]["text"], "Folge-Liste ")
+        self.assertIn("fehlt", telegram.an_tobias({}, "x", post=post))
