@@ -46,17 +46,59 @@ def stand_speichern(p: Path, s: dict) -> None:
     p.write_text(json.dumps(s, ensure_ascii=False, indent=1))
 
 
-def auswahl(konten: list[dict], stand: dict, n_x: int = 10, n_andere: int = 5) -> dict:
-    """Naechste noch nicht erledigte Konten: bis zu n_x auf X, bis zu n_andere auf den anderen Plattformen."""
+def auswahl(konten: list[dict], stand: dict, n_x: int = 10, n_andere: int = 5,
+            je_plattform: dict | None = None) -> dict:
+    """Naechste noch nicht erledigte Konten: bis zu n_x auf X; die anderen Plattformen entweder zusammen bis n_andere
+    oder (je_plattform, seit 02.11.2026: Tobias will Instagram- und TikTok-Follower) je Plattform eine eigene Zahl."""
     offen = [k for k in konten if _schluessel(k) not in stand.get("erledigt", {})]
     x = [k for k in offen if k["plattform"] == "x"][:n_x]
-    andere = [k for k in offen if k["plattform"] != "x"][:n_andere]
+    if je_plattform:
+        andere = []
+        for pl, n in je_plattform.items():
+            andere += [k for k in offen if k["plattform"] == pl][:int(n)]
+    else:
+        andere = [k for k in offen if k["plattform"] != "x"][:n_andere]
     return {"x": x, "andere": andere}
 
 
-def nachricht(a: dict, datum: str) -> tuple[str, dict | None]:
-    """Text (HTML) + Knoepfe fuer den Redaktions-Bot."""
+KOMMENTAR_SYSTEM = """You write short comments for WhaleSqueeze (faceless crypto data account: on-chain whale data,
+small-cap market breadth) that the editor pastes under the LATEST market or crypto-news post of big Instagram,
+TikTok and YouTube creators. You do not see their posts, so each comment must fit any post about today's crypto market.
+
+Rules:
+- 1 to 2 short sentences, friendly and factual, plain English, max 200 characters, no hashtags, at most one emoji.
+- Exactly one concrete number from OUR DATA (never invent or calculate numbers).
+- No links, no "follow us", no price targets, no buy/sell calls, no predictions, no hype.
+- Every comment different in wording and number. Ending with a short question to the creator is welcome.
+Reply with JSON only: {"kommentare": [{"text": "<comment>", "deutsch": "<short German translation>"}]}"""
+
+
+def kommentare_schreiben(n: int, fakten: dict, cfg: dict, api_key: str, post=requests.post) -> list[dict]:
+    """n verschiedene Kommentare mit unseren Zahlen (Instagram/TikTok/YouTube haben keine Schnittstelle zum Lesen
+    fremder Posts, darum passend zu „heute am Markt“). Jede Zahl wird geprueft, Fehlerhafte fliegen raus."""
+    from . import claude, pruefung
+    if not (n and fakten and api_key):
+        return []
+    d = claude.json_antwort(KOMMENTAR_SYSTEM, json.dumps({"our_data": fakten, "anzahl": n + 2}, ensure_ascii=False),
+                            cfg, api_key, 2000, post=post)
+    out, gesehen = [], set()
+    for k in d.get("kommentare", []):
+        t = (k.get("text") or "").strip()
+        if not t or t.lower() in gesehen or len(t) > 260 or "http" in t.lower() or "@" in t:
+            continue
+        if pruefung.pruefen([t], {"fakten": fakten, "szenen": [0]}, cfg, set()):
+            continue
+        gesehen.add(t.lower())
+        out.append({"text": t, "deutsch": k.get("deutsch", "")})
+        if len(out) >= n:
+            break
+    return out
+
+
+def nachricht(a: dict, datum: str, kommentare: list[dict] | None = None) -> tuple[str, dict | None]:
+    """Text (HTML) + Knoepfe fuer den Redaktions-Bot. kommentare: je Instagram/TikTok/YouTube-Konto einer zum Kopieren."""
     e = html.escape
+    kommentare = list(kommentare or [])
     z = [f"👥 <b>Folge-Liste {datum}</b>", ""]
     if a["x"]:
         z.append(f"<b>X</b> – ein Tipp auf den Knopf, dann folgt @whalesqueeze allen {len(a['x'])}:")
@@ -64,9 +106,16 @@ def nachricht(a: dict, datum: str) -> tuple[str, dict | None]:
               for k in a["x"]]
         z.append("")
     if a["andere"]:
-        z.append("<b>Instagram / TikTok / YouTube</b> – bitte selbst antippen und folgen (Schnittstelle gibt es dort nicht):")
-        z += [f"• {NAMEN[k['plattform']]}: <a href=\"{LINKS[k['plattform']].format(n=k['name'])}\">"
-              f"{e(k['name'])}</a> – {e(k.get('warum', ''))}" for k in a["andere"]]
+        z.append("<b>Instagram / TikTok / YouTube</b> – selbst antippen, folgen und unter den neuesten Markt-Post "
+                 "kommentieren (Kommentar antippen = kopiert):")
+        for i, k in enumerate(a["andere"]):
+            z.append(f"• {NAMEN[k['plattform']]}: <a href=\"{LINKS[k['plattform']].format(n=k['name'])}\">"
+                     f"{e(k['name'])}</a> – {e(k.get('warum', ''))}")
+            if i < len(kommentare):
+                z.append(f"<code>{e(kommentare[i]['text'])}</code>")
+        if kommentare:
+            z.append("<i>Passt der neueste Post nicht zum Markt (Meme, Werbung), Kommentar weglassen. "
+                     "Jeden Text nur einmal verwenden.</i>")
         z.append("")
     if not (a["x"] or a["andere"]):
         return "👥 Folge-Liste: alle Konten erledigt. Der Redaktions-Chat ergänzt neue in inhalte/folgen.yaml.", None

@@ -37,3 +37,19 @@
 - {plattform: instagram, name: watcher.guru, warum: "Krypto-Eilmeldungen"}
 - {plattform: instagram, name: cointelegraph, warum: "Krypto-News"}
 - {plattform: instagram, name: coindesk, warum: "Krypto-News"}
+- {plattform: instagram, name: bitcoinmagazine, warum: "Bitcoin-News, großes Publikum"}
+- {plattform: instagram, name: cryptomaniaks, warum: "DeFi/Altcoins, über 900.000 Follower"}
+- {plattform: instagram, name: sharecrypto, warum: "Markt-News und Lernen"}
+- {plattform: instagram, name: readdailycoin, warum: "Sachliche Krypto-News"}
+- {plattform: instagram, name: thecryptograph, warum: "Märkte, Regulierung, Sicherheit"}
+- {plattform: instagram, name: ethereum_updates, warum: "Ethereum-News"}
+- {plattform: instagram, name: coinbureau, warum: "Bildung, großes sachliches Publikum"}
+# --- TikTok (nur Link; Auswahl nach Thema, nicht nur nach Größe; 02.11.2026) ---
+- {plattform: tiktok, name: understandingcrypto, warum: "Erklärvideos, passt zu unseren Lern-Videos"}
+- {plattform: tiktok, name: cryptomasun, warum: "1,5 Mio. Follower, Markt-Updates"}
+- {plattform: tiktok, name: clockwisecrypto, warum: "Markt-Analysen, ca. 500.000 Follower"}
+- {plattform: tiktok, name: jollygreeninvestor, warum: "Anlage-Erklärungen, aktive Kommentare"}
+- {plattform: tiktok, name: virtualbacon, warum: "Krypto und Web3"}
+- {plattform: tiktok, name: cryptowendyo, warum: "Krypto-Bildung, aktive Community"}
+- {plattform: tiktok, name: brightchuksm, warum: "Markt-Kommentare, 880.000 Follower"}
+- {plattform: tiktok, name: cryptofronts, warum: "Krypto-News, hohe Interaktion"}

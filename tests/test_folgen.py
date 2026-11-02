@@ -109,7 +109,7 @@ class KnopfTest(unittest.TestCase):
                 self.assertEqual(len(stand["heute"][datum]["x"]), 10)
                 self.assertIn("erledigt", freigabe.folge_knopf({}, "ok", datum))
                 stand = folgen.stand_laden(Path(d) / "folgen_stand.json")
-                self.assertEqual(len(stand["erledigt"]), 5)
+                self.assertEqual(len(stand["erledigt"]), 10)   # 4 Instagram + 4 TikTok + 2 YouTube (02.11.2026)
                 self.assertIn("X-Schlüssel fehlen", freigabe.folge_knopf({}, "x", datum))
                 self.assertIn("zu alt", freigabe.folge_knopf({}, "x", "2020-01-01"))
             finally:
@@ -143,3 +143,34 @@ class AnTobiasTest(unittest.TestCase):
         self.assertEqual(len(gesehen), 2)
         self.assertEqual(gesehen[1]["text"], "Folge-Liste ")
         self.assertIn("fehlt", telegram.an_tobias({}, "x", post=post))
+
+
+class InstaTikTokTest(unittest.TestCase):
+    """Wunsch Tobias 02.11.2026: Instagram- und TikTok-Konten jeden Tag, mit Kommentar zum Einkopieren."""
+
+    def test_je_plattform(self):
+        a = folgen.auswahl(folgen.liste(), {}, 10, 5, {"instagram": 4, "tiktok": 4, "youtube": 2})
+        pl = [k["plattform"] for k in a["andere"]]
+        self.assertEqual((pl.count("instagram"), pl.count("tiktok"), pl.count("youtube")), (4, 4, 2))
+
+    def test_kommentare_geprueft_und_in_nachricht(self):
+        import yaml as _y
+        cfg = _y.safe_load((HIER / "config.yaml").read_text(encoding="utf-8"))
+        fakten = {"window_hours": 24, "share_of_small_caps_up_24h_percent": 38.5, "small_caps_tracked": 412}
+
+        class A:
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                return {"stop_reason": "end_turn", "content": [{"type": "text", "text": json.dumps({"kommentare": [
+                    {"text": "Only 38.5% of 412 small caps are green over 24h. Do you see the same?", "deutsch": "a"},
+                    {"text": "Whales bought 9,999 BTC today.", "deutsch": "erfunden"},
+                    {"text": "Check our page https://x.y", "deutsch": "Link"},
+                    {"text": "Only 38.5% of 412 small caps are green over 24h. Do you see the same?", "deutsch": "doppelt"}]})}]}
+        k = folgen.kommentare_schreiben(3, fakten, cfg, "key", post=lambda *a, **kw: A())
+        self.assertEqual(len(k), 1)
+        a = folgen.auswahl(folgen.liste(), {}, 0, 5, {"instagram": 1})
+        text, _ = folgen.nachricht(a, "2026-11-03", k)
+        self.assertIn("<code>Only 38.5% of 412 small caps", text)
+        self.assertIn("instagram.com", text)

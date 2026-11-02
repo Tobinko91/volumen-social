@@ -20,20 +20,31 @@ AUSGABE = Path(os.environ.get("SOCIAL_AUSGABE", BASIS / "ausgabe"))
 STAND = AUSGABE / "folgen_stand.json"
 
 
-def main(senden=None) -> int:
+def main(senden=None, schreiber=None) -> int:
     cfg = yaml.safe_load((Path(__file__).resolve().parent.parent / "config.yaml").read_text(encoding="utf-8"))
     f = cfg.get("folgen") or {}
     stand = folgen.stand_laden(STAND)
-    a = folgen.auswahl(folgen.liste(), stand, int(f.get("x_pro_tag", 10)), int(f.get("andere_pro_tag", 5)))
+    a = folgen.auswahl(folgen.liste(), stand, int(f.get("x_pro_tag", 10)), int(f.get("andere_pro_tag", 5)),
+                       f.get("je_plattform"))
+    gp = BASIS / "secrets.yaml"
+    g = (yaml.safe_load(gp.read_text()) if gp.exists() else {}) or {}
+    kommentare = []
+    if f.get("kommentare", True) and a["andere"]:   # Wunsch Tobias 02.11.: Kommentare zum Einkopieren
+        try:
+            from social import daten
+            from social import kommentare as km
+            fakten = km.fakten_aus_markt(daten.marktlage(daten.laden(cfg["daten"]["dir"], cfg["daten"]["max_alter_min"])))
+            kommentare = (schreiber or folgen.kommentare_schreiben)(len(a["andere"]), fakten, cfg,
+                                                                     g.get("anthropic_api_key"))
+        except Exception as e:
+            print("Kommentare für die Folge-Liste nicht geschrieben:", e)
     datum = folgen.heute()
     stand.setdefault("heute", {})[datum] = {"x": [k["name"] for k in a["x"]],
                                            "andere": [f"{k['plattform']}:{k['name'].lower()}" for k in a["andere"]]}
     stand["heute"] = dict(list(stand["heute"].items())[-14:])
-    text, knoepfe = folgen.nachricht(a, datum)
+    text, knoepfe = folgen.nachricht(a, datum, kommentare)
     print(text)
     if "--senden" in sys.argv or senden:
-        gp = BASIS / "secrets.yaml"
-        g = (yaml.safe_load(gp.read_text()) if gp.exists() else {}) or {}
         from social import telegram
         ergebnis = telegram.an_tobias(g, text, knoepfe, post=senden or requests.post)
         print("Gesendet:", ergebnis)
