@@ -34,7 +34,7 @@ def bauen(bilder: list[Path], toene: list[Path], dauern: list[float], ziel: Path
     from . import musik as _musik
     musik = _musik.pfad(cfg, ziel.parent.parent)
     if musik:
-        mit_stimme = (cfg.get("stimme") or {}).get("aktiv", True)
+        mit_stimme = any(Path(t).suffix == ".mp3" for t in toene)   # echte Stimme = mp3, Stille = m4a
         db = v["musik_db"] if mit_stimme else v.get("musik_db_ohne_stimme", 0)
         _ff("-i", str(roh), "-stream_loop", "-1", "-i", str(musik),
             "-filter_complex", f"[1:a]volume={db}dB[m];[0:a][m]amix=inputs=2:duration=first:normalize=0[a]",

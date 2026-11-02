@@ -33,5 +33,55 @@ class StimmeTest(unittest.TestCase):
         self.assertEqual(stimme.voice_id(cfg, "k"), "fest")
 
 
+
+class GoogleStimmeTest(unittest.TestCase):
+    """Chirp 3 HD (Wunsch Tobias 01.11.2026): Anfrage, Schluessel, Rueckfall auf Stille bei Fehler."""
+    CFG = {"stimme": {"aktiv": True, "anbieter": "google", "google_stimme": "en-US-Chirp3-HD-Charon", "tempo": 1.08},
+           "video": {"min_szene_s": 1.5, "woerter_pro_sekunde": 2.6}}
+
+    def test_schluessel_je_anbieter(self):
+        g = {"google_tts_key": "gk", "elevenlabs_api_key": "ek"}
+        self.assertEqual(stimme.schluessel(self.CFG, g), "gk")
+        self.assertEqual(stimme.schluessel({"stimme": {"anbieter": "elevenlabs"}}, g), "ek")
+
+    def test_anfrage(self):
+        import base64
+        import tempfile
+        from pathlib import Path
+        gesehen = {}
+
+        class R:
+            status_code = 200
+
+            def json(self):
+                return {"audioContent": base64.b64encode(b"ID3mp3").decode()}
+
+        def post(url, params=None, json=None, timeout=None):
+            gesehen.update(url=url, params=params, json=json)
+            return R()
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "a.mp3"
+            stimme._google("Bitcoin is up +2.1%.", f, self.CFG, "gk", post=post)
+            self.assertEqual(f.read_bytes(), b"ID3mp3")
+        self.assertEqual(gesehen["params"], {"key": "gk"})
+        self.assertEqual(gesehen["json"]["voice"], {"languageCode": "en-US", "name": "en-US-Chirp3-HD-Charon"})
+        self.assertEqual(gesehen["json"]["audioConfig"]["speakingRate"], 1.08)
+
+    def test_fehler_gibt_stille_statt_abbruch(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as d, \
+                mock.patch.object(stimme, "_google", side_effect=stimme.StimmeFehlt("403 API not enabled")):
+            dateien, dauern, quelle = stimme.sprechen(["One two three."], Path(d), self.CFG, "gk")
+            self.assertTrue(quelle.startswith("stille (Stimme fehlgeschlagen"))
+            self.assertEqual(dateien[0].suffix, ".m4a")
+
+    def test_ohne_schluessel_still(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as d:
+            self.assertEqual(stimme.sprechen(["a b"], Path(d), self.CFG, None)[2], "stille")
+
+
 if __name__ == "__main__":
     unittest.main()

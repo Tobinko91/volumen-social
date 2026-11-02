@@ -32,7 +32,7 @@ class Antwort:
 class MusikTest(unittest.TestCase):
     def test_musik_einstellungen(self):
         self.assertEqual(CFG["video"]["musik"], "generiert")
-        self.assertFalse(CFG["stimme"]["aktiv"])   # erst ohne Stimme (keine ElevenLabs-Kosten)
+        self.assertEqual(CFG["stimme"]["anbieter"], "google")   # 01.11.: Stimme per Google Chirp 3 HD, keine ElevenLabs-Kosten
         self.assertIsNone(musik.pfad({"video": {"musik": None}}, Path("/tmp")))
         self.assertIsNone(musik.pfad({"video": {"musik": "/gibt/es/nicht.mp3"}}, Path("/tmp")))
 

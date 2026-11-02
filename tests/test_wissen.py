@@ -50,5 +50,20 @@ class WissenTest(unittest.TestCase):
             self.assertNotEqual(wissen.naechstes(s)["id"], a["id"])
 
 
+class LernVideoTest(unittest.TestCase):
+    """S28: jedes Lern-Thema als Video – gleiche Saetze, Zahlen-Pruefung bestanden, eine Szene je Punkt."""
+
+    def test_alle_themen_als_video(self):
+        import yaml as _y
+        from social import pruefung as _p
+        cfg = _y.safe_load((Path(__file__).resolve().parent.parent / "config.yaml").read_text(encoding="utf-8"))
+        for t in wissen.themen():
+            b = wissen.video_szenen(t, "en")
+            self.assertEqual(len(b["szenen"]), len(t["punkte"]) + 2)
+            self.assertEqual(b["szenen"][0]["typ"], "lern_haken")
+            zeilen = [s["vorlage"] for s in b["szenen"]]
+            self.assertEqual(_p.pruefen(zeilen, {"fakten": b["fakten"], "szenen": b["szenen"]}, cfg, set()), [], t["id"])
+
+
 if __name__ == "__main__":
     unittest.main()

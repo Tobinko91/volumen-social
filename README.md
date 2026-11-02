@@ -101,6 +101,16 @@ Lern-/News-/Coin-Check-Texte, Stimme (englische ElevenLabs-Stimme fehlt). Startk
 - News und Beiträge aus dem Redaktions-Chat: überall sofort. TikTok bei „Alle“ nur Videos/Bilderserien.
 - Ein einzelner Kanal-Knopf postet immer sofort. 🗑 Verwerfen stoppt geplante Posts. Einstellungen: `config.yaml zeitplan`.
 
+## Stimme (S17, seit 01.11.2026)
+- Google Cloud Text-to-Speech, Stimme „Chirp 3 HD“ (`stimme.anbieter: google`, `stimme.google_stimme`).
+  1 Mio Zeichen/Monat gratis, Bedarf ca. 50.000. Schlüssel `google_tts_key` über `tools/schluessel.py`.
+- Hörproben: `tools/stimme_probe.py` schickt 4 Stimmen an Tobias. Ohne Schlüssel oder bei Fehler entstehen
+  Videos ohne Stimme (Quelle steht im Freigabe-Hinweis), es bricht nichts ab.
+
+## Lern-Video (S28, seit 02.11.2026)
+- `main.py wissen` baut zusätzlich ein 9:16-Video (`_video`-Ordner): große Zahl als Haken, je Punkt eine Szene mit
+  Ergebnis-Zahl und Fortschrittsbalken, Folgen-Abschluss. Gleiche Sätze und Fakten wie das Bild, mit Stimme (S17).
+
 ## Schutzregeln (fest eingebaut)
 Ueberall nur „Keine Anlageberatung“ (kein KI-, Totalverlust- oder Betreiber-Hinweis), keine Einstiegskurse,
 keine Kauf-/Verkaufsaufforderung, keine Zahl ohne Datenquelle, keine Coins von der Sperrliste.
