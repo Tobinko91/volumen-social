@@ -246,6 +246,55 @@ class Leinwand:
         self.untertitel(d, text)
         return img
 
+    # ---------- Lern-Video (S28, Wunsch Tobias 01.11.2026) ----------
+    def lern_haken(self, t, text):
+        """Erste Szene: grosse Zahl/Wort des Themas + kurze Erklaerung, Etikett „LEARN IN 20 SECONDS“."""
+        img, d = self.neu()
+        self.kopf(d)
+        etikett = "LEARN IN 20 SECONDS" if self.lang == "en" else "IN 20 SEKUNDEN ERKLÄRT"
+        self.mitte(d, 440, etikett, _font("Bold", 46), self.f["amber"])
+        wert = str(t["gross"])
+        gr = 230
+        while d.textlength(wert, font=_font("Black", gr)) > self.W - 140 and gr > 110:
+            gr -= 10
+        farbe = self.f["minus"] if wert.startswith(("-", "−")) else self.f["plus"]
+        self.mitte(d, 520, wert, _font("Black", gr), farbe)
+        y = 520 + gr + 40
+        for z in textwrap.wrap(t.get("gross_text", ""), width=24)[:3]:
+            self.mitte(d, y, z, _font("Bold", 58), self.f["text"])
+            y += 74
+        self.untertitel(d, text)
+        return img
+
+    def lern_punkt(self, daten, text):
+        """Ein Punkt des Themas: Schritt-Nummer + wichtigste Zahl des Satzes gross, der Satz als Untertitel."""
+        import re as _re
+        img, d = self.neu()
+        self.kopf(d)
+        nr, von = daten["nr"], daten["von"]
+        self.mitte(d, 430, f"{nr}/{von}", _font("Bold", 52), self.f["neben"])
+        # Ergebnis-Zahl = letzte Zahl im Satz („Risk 1% ... you still have 90.4%“ -> 90.4%)
+        treffer = _re.findall(r"[-−+]?\$?\d[\d,.]*\d%?|[-−+]?\$?\d%?(?:x)?", daten["satz"])
+        gross = treffer[-1].rstrip(".,") if treffer else ""
+        if not gross:   # ohne Zahl: Stichwort vor dem Doppelpunkt („Resistance:“) oder Stichwort des Themas
+            kopf = daten["satz"].split(":")[0] if ":" in daten["satz"][:30] else daten.get("ersatz", "")
+            y = 600
+            for z in textwrap.wrap(kopf, width=14)[:2]:
+                self.mitte(d, y, z, _font("Black", 120), self.f["amber"])
+                y += 140
+        if gross:
+            gr = 250
+            while d.textlength(gross, font=_font("Black", gr)) > self.W - 140 and gr > 110:
+                gr -= 10
+            self.mitte(d, 560, gross, _font("Black", gr),
+                       self.f["minus"] if gross.startswith(("-", "−")) else self.f["plus"])
+        # Fortschrittsbalken (zeigt: es kommt noch was -> laenger zuschauen)
+        x0, x1, y = 160, self.W - 160, 1080
+        d.rounded_rectangle([x0, y, x1, y + 14], radius=7, fill=self.f["flaeche"])
+        d.rounded_rectangle([x0, y, x0 + (x1 - x0) * nr / von, y + 14], radius=7, fill=self.f["plus"])
+        self.untertitel(d, text)
+        return img
+
     def outro(self, daten, text):
         img, d = self.neu()
         self.kopf(d)

@@ -41,6 +41,19 @@ def texte(t: dict, cfg: dict) -> dict:
     return {"x": t["x"], "telegram": "\n".join(tg)}
 
 
+def video_szenen(t: dict, lang: str = "en") -> dict:
+    """S28 Lern-Video: Haken (Titel als Frage/Aussage + grosse Zahl), je Punkt eine Szene, Folgen.
+    Gleiche Saetze und Fakten wie der Bild-Beitrag, darum gilt dieselbe Zahlen-Pruefung."""
+    from .sprache import T as _T
+    n = len(t["punkte"])
+    szenen = [{"typ": "lern_haken", "daten": t, "vorlage": t["titel"].rstrip(".") + "."}]
+    for i, p in enumerate(t["punkte"], 1):
+        szenen.append({"typ": "lern_punkt", "daten": {"nr": i, "von": n, "satz": p, "ersatz": "Takeaway" if lang == "en" else "Merke"},
+                       "vorlage": p})
+    szenen.append({"typ": "outro", "daten": {}, "vorlage": _T[lang]["s_outro"]})
+    return {"format": "wissen", "sprache": lang, "szenen": szenen, "fakten": t["fakten"], "titel": t["titel"]}
+
+
 def _grafik(img, t, th, box):
     """Passende Grafik je Thema (Werte nachgerechnet, siehe tests/test_wissen.py)."""
     from . import design, grafik as g

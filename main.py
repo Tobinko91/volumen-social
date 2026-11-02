@@ -184,9 +184,29 @@ def wissen_beitrag(args, cfg, geheim, sperr) -> int:
     print(f"Wissen: {t['id']}, X {len(txt['x'])} Zeichen, Pruefung:", fehler or "bestanden")
     if args.senden and not fehler:
         vorschlag(args, geheim, cfg, ordner)
+    if getattr(args, "art", "beides") in ("video", "beides"):   # S28: Lernen auch als Reel/TikTok/Short
+        fehler += wissen_video(t, txt, cfg, geheim, sperr, Path(f"{ordner}_video"), args)
     if not args.thema:
         wissen.merken(stand, t["id"], time.time())
     return 1 if fehler else 0
+
+
+def wissen_video(t, txt, cfg, geheim, sperr, ordner: Path, args) -> list[str]:
+    """S28 Lern-Video (9:16): grosse Zahl als Haken, je Punkt eine Szene, Folgen. Mit Stimme, wenn eingerichtet."""
+    lang = cfg.get("sprache", "en")
+    b = wissen.video_szenen(t, lang)
+    zeilen = [sz["vorlage"] for sz in b["szenen"]]
+    fehler = pruefung.pruefen(zeilen, {"fakten": b["fakten"], "szenen": b["szenen"]}, cfg, sperr)
+    ordner.mkdir(parents=True, exist_ok=True)
+    bild_dateien = bilder.zeichnen(dict(b, ts=time.time()), zeilen, ordner / "bilder", cfg)
+    toene, dauern, tonquelle = stimme.sprechen(zeilen, ordner / "ton", cfg, stimme.schluessel(cfg, geheim))
+    video.bauen(bild_dateien, toene, dauern, ordner / "video.mp4", cfg)
+    (ordner / "post_x.txt").write_text(txt["x"], encoding="utf-8")
+    (ordner / "post_telegram.txt").write_text(txt["telegram"], encoding="utf-8")
+    print(f"Lern-Video {t['id']}: {round(sum(dauern), 1)} s, Stimme {tonquelle}, Pruefung", fehler or "bestanden")
+    if args.senden and not fehler:
+        vorschlag(args, geheim, cfg, ordner, f"🎬 Video-Vorschlag Lernen ({t['titel']})\nStimme: {tonquelle}")
+    return fehler
 
 
 def _markt_fuer_news(args, cfg) -> dict | None:

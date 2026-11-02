@@ -107,6 +107,10 @@ Lern-/News-/Coin-Check-Texte, Stimme (englische ElevenLabs-Stimme fehlt). Startk
 - Hörproben: `tools/stimme_probe.py` schickt 4 Stimmen an Tobias. Ohne Schlüssel oder bei Fehler entstehen
   Videos ohne Stimme (Quelle steht im Freigabe-Hinweis), es bricht nichts ab.
 
+## Lern-Video (S28, seit 02.11.2026)
+- `main.py wissen` baut zusätzlich ein 9:16-Video (`_video`-Ordner): große Zahl als Haken, je Punkt eine Szene mit
+  Ergebnis-Zahl und Fortschrittsbalken, Folgen-Abschluss. Gleiche Sätze und Fakten wie das Bild, mit Stimme (S17).
+
 ## Schutzregeln (fest eingebaut)
 Ueberall nur „Keine Anlageberatung“ (kein KI-, Totalverlust- oder Betreiber-Hinweis), keine Einstiegskurse,
 keine Kauf-/Verkaufsaufforderung, keine Zahl ohne Datenquelle, keine Coins von der Sperrliste.
