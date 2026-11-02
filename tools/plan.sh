@@ -10,6 +10,7 @@
 #   17:30 Folge-Liste an Tobias (X per Knopf, Instagram/YouTube per Link; Wunsch 31.10.)
 #   19:00 Wal des Tages (13:00 ET, US-Mittagspause)
 #   21:30 Lern-Beitrag (15:30 ET; spaeter waere fuer die USA besser, ab 22 Uhr ist aber Ruhezeit)
+#   09:00 Gesundheits-Check an Tobias (gestern: Termine, Vorschlaege, Fehler, Update, Daten)
 #   So 18:30 Wochenbericht an Tobias (Follower, Aufrufe je Format, Empfehlung)
 #   Eilmeldungen: eigener Lauf tools/live.sh alle 10 Minuten rund um die Uhr (seit 30.10.2026)
 export TZ=Europe/Berlin
@@ -33,6 +34,8 @@ mkdir -p /opt/volumen-social/oeffentlich && chown redaktion:redaktion /opt/volum
 [ "$SLOT" = "04:00" ] && sudo -u redaktion env $UMGEBUNG python3 tools/instagram_token.py
 # TikTok-Zugang taeglich erneuern (Access-Token 24 Std., Refresh-Token laeuft sonst nach 365 Tagen ab)
 [ "$SLOT" = "04:00" ] && sudo -u redaktion env $UMGEBUNG python3 tools/tiktok_verbinden.py --erneuern
+# Gesundheits-Check taeglich 09:00 (auch waehrend Pause): lief gestern alles, welche Fehler? (Wunsch Tobias 02.11.)
+[ "$SLOT" = "09:00" ] && sudo -u redaktion env $UMGEBUNG python3 tools/gesundheit.py --senden
 # Pause: im Redaktions-Bot /pause schreiben (oder Datei anlegen), weiter mit /weiter
 [ -f /opt/volumen-social/pause ] || [ -f /opt/volumen-social/ausgabe/.pause ] && exit 0
 lauf() { sudo -u redaktion env $UMGEBUNG python3 main.py "$@" --senden; }

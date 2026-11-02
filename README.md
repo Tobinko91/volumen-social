@@ -107,6 +107,11 @@ Lern-/News-/Coin-Check-Texte, Stimme (englische ElevenLabs-Stimme fehlt). Startk
 - Hörproben: `tools/stimme_probe.py` schickt 4 Stimmen an Tobias. Ohne Schlüssel oder bei Fehler entstehen
   Videos ohne Stimme (Quelle steht im Freigabe-Hinweis), es bricht nichts ab.
 
+## Gesundheits-Check (seit 03.11.2026)
+- `tools/gesundheit.py` täglich 09:00 an Tobias: lief gestern jeder Termin, Vorschläge je Format (gepostet/verworfen/offen),
+  Fehler im Plan-Protokoll (Claude, X, Telegram, Absturz, Stimme), dauerhaft kaputte News-Quellen, hängende geplante Posts,
+  Update-Stand, Alter der Bot-Daten, freier Speicher, Stimme. Läuft auch während /pause.
+
 ## Musik (seit 02.11.2026)
 - Eigene lizenzfreie Stücke in `/opt/volumen-social/musik/` (mp3/m4a), jeden Tag ein anderes. Leer = ohne Musik.
   Tobias schickt die mp3 einfach an den Redaktions-Bot; `/musik` zeigt die Liste, `/musik weg 2` löscht.
