@@ -69,6 +69,8 @@ def main(senden=None, schreiber=None, yt_holen=None, yt_schreiber=None) -> int:
     stand.setdefault("heute", {})[datum] = {"x": [k["name"] for k in a["x"]],
                                            "andere": [f"{k['plattform']}:{k['name'].lower()}" for k in a["andere"]]}
     stand["heute"] = dict(list(stand["heute"].items())[-14:])
+    for k in a["andere"]:   # fuer die Reihenfolge der Kommentar-Konten
+        stand.setdefault("gezeigt", {})[f"{k['plattform']}:{k['name'].lower()}"] = datum
     text, knoepfe = folgen.nachricht(a, datum, kommentare)
     print(text)
     if "--senden" in sys.argv or senden:
