@@ -61,6 +61,9 @@ def main() -> int:
             f = Path(d) / f"{name}.mp3"
             try:
                 erzeuger(TEXT, f, dict(cfg, stimme=dict(cfg["stimme"], voice_id=None, **{FELD[anbieter]: name})), key)
+            except stimme.StimmeFehlt as e:   # z. B. Stimme nicht in der Bibliothek: ueberspringen statt abbrechen
+                print("Uebersprungen:", label, e)
+                continue
             except Exception as e:
                 print("Fehler:", e)
                 telegram.text_senden(geheim, f"🎙 Stimme ({anbieter}) geht noch nicht: {e}")
