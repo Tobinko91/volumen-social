@@ -32,7 +32,7 @@ class Antwort:
 class MusikTest(unittest.TestCase):
     def test_musik_einstellungen(self):
         self.assertEqual(CFG["video"]["musik"], "/opt/volumen-social/musik")   # 02.11.: eigene Stuecke statt erzeugt
-        self.assertEqual(CFG["stimme"]["anbieter"], "openai")   # 03.11.: Stimme per OpenAI
+        self.assertEqual(CFG["stimme"]["anbieter"], "elevenlabs")   # 03.11.: ElevenLabs
         self.assertIsNone(musik.pfad({"video": {"musik": None}}, Path("/tmp")))
         self.assertIsNone(musik.pfad({"video": {"musik": "/gibt/es/nicht.mp3"}}, Path("/tmp")))
 

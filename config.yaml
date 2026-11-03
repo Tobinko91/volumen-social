@@ -65,15 +65,15 @@ text:
   max_woerter: 85            # ca. 30 Sekunden
 
 stimme:   # Sobald die Stimme laeuft: Tobias an S30 erinnern (Willkommensvideo bauen und anpinnen, ideen-backlog)
-  aktiv: true                # 01.11.2026 Tobias: Stimme rein. Ohne google_tts_key in secrets.yaml bleibt es still
-  anbieter: openai           # 03.11.2026 Tobias: OpenAI (ca. 1 $/Monat). Weitere: google, elevenlabs
+  aktiv: true                # 01.11.2026 Tobias: Stimme rein. Ohne Schluessel des Anbieters bleibt es still
+  anbieter: elevenlabs       # 03.11.2026 11:45 Tobias: ElevenLabs (OpenAI lehnte die Karte ab). Weitere: openai, google
   openai_modell: gpt-4o-mini-tts   # !! OpenAI schaltet es am 6.1.2027 ab, vorher umstellen (Erinnerung 01.12.)
   openai_stimme: cedar       # laut OpenAI beste Qualitaet: cedar (maennlich), marin (weiblich); Auswahl per Hoerprobe
   google_stimme: "en-US-Chirp3-HD-Charon"   # maennlich, ruhig; Alternative weiblich: en-US-Chirp3-HD-Kore
   tempo: null                # z. B. 1.08 = etwas schneller (Kurzvideos); null = normal
   voice_name: "Brian"             # englische Stimme (seit 26.10.2026); eigene Stimme spaeter z. B. "WhaleSqueeze EN"; ID wird per Name gesucht
   voice_id: null                  # optional: feste ID statt Name
-  modell: eleven_multilingual_v2
+  modell: eleven_flash_v2_5  # halbe Zeichen-Kosten (0,5 Credits je Zeichen): ~25.000/Monat passt in Starter (30.000)
 
 instagram:
   story: true               # jeden Instagram-Beitrag auch als Story teilen (Punkt C, 01.11.2026)

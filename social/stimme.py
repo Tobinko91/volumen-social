@@ -58,8 +58,23 @@ def _elevenlabs(text: str, datei: Path, cfg: dict, key: str) -> None:
               "voice_settings": {"stability": 0.55, "similarity_boost": 0.75, "style": 0.15}},
         timeout=120,
     )
-    r.raise_for_status()
+    if r.status_code >= 300:   # verstaendlicher Grund statt nur „401“ (z. B. Guthaben leer, Tarif ohne API)
+        try:
+            det = r.json().get("detail")
+            msg = det.get("message") if isinstance(det, dict) else str(det)
+        except Exception:
+            msg = r.text[:200]
+        raise StimmeFehlt(f"ElevenLabs: {r.status_code} {msg}")
     datei.write_bytes(r.content)
+
+
+def elevenlabs_guthaben(key: str, get=requests.get) -> dict:
+    """Tarif und verbleibende Credits (fuer Hoerprobe und Gesundheits-Check)."""
+    r = get("https://api.elevenlabs.io/v1/user/subscription", headers={"xi-api-key": key}, timeout=30)
+    if r.status_code >= 300:
+        raise StimmeFehlt(f"ElevenLabs-Konto: {r.status_code}")
+    j = r.json()
+    return {"tarif": j.get("tier"), "verbraucht": j.get("character_count"), "limit": j.get("character_limit")}
 
 
 GOOGLE_TTS = "https://texttospeech.googleapis.com/v1/text:synthesize"
