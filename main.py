@@ -194,7 +194,8 @@ def wissen_beitrag(args, cfg, geheim, sperr) -> int:
 def wissen_video(t, txt, cfg, geheim, sperr, ordner: Path, args) -> list[str]:
     """S28 Lern-Video (9:16): grosse Zahl als Haken, je Punkt eine Szene, Folgen. Mit Stimme, wenn eingerichtet."""
     lang = cfg.get("sprache", "en")
-    b = wissen.video_szenen(t, lang)
+    echt = wissen.echter_chart(t) if (cfg.get("video") or {}).get("echter_chart", True) else None
+    b = wissen.video_szenen(t, lang, echt)
     zeilen = [sz["vorlage"] for sz in b["szenen"]]
     fehler = pruefung.pruefen(zeilen, {"fakten": b["fakten"], "szenen": b["szenen"]}, cfg, sperr)
     ordner.mkdir(parents=True, exist_ok=True)
@@ -203,9 +204,11 @@ def wissen_video(t, txt, cfg, geheim, sperr, ordner: Path, args) -> list[str]:
     video.bauen(bild_dateien, toene, dauern, ordner / "video.mp4", cfg)
     (ordner / "post_x.txt").write_text(txt["x"], encoding="utf-8")
     (ordner / "post_telegram.txt").write_text(txt["telegram"], encoding="utf-8")
-    print(f"Lern-Video {t['id']}: {round(sum(dauern), 1)} s, Stimme {tonquelle}, Pruefung", fehler or "bestanden")
+    print(f"Lern-Video {t['id']}: {round(sum(dauern), 1)} s, Stimme {tonquelle}, Chart "
+          f"{'echt ' + echt['titel'] if echt else 'Illustration'}, Pruefung", fehler or "bestanden")
     if args.senden and not fehler:
-        vorschlag(args, geheim, cfg, ordner, f"🎬 Video-Vorschlag Lernen ({t['titel']})\nStimme: {tonquelle}")
+        vorschlag(args, geheim, cfg, ordner, f"🎬 Video-Vorschlag Lernen ({t['titel']})\nStimme: {tonquelle}"
+                  + (f"\nChart: echter {echt['titel']}-Chart" if echt else ""))
     return fehler
 
 

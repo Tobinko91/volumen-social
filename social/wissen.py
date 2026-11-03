@@ -44,26 +44,50 @@ def texte(t: dict, cfg: dict) -> dict:
 CHART_ART = {"liquiditaetszone": "liquiditaet", "unterstuetzung": "unterstuetzung", "pump-and-dump": "pump"}
 
 
-def video_grafik(img, t: dict, th, box, schritt: int, lang: str = "en") -> bool:
+def video_grafik(img, t: dict, th, box, schritt: int, lang: str = "en", echt: dict | None = None) -> bool:
     """Grafik fuer eine Szene des Lern-Videos (Wunsch Tobias 03.11.2026: Erklaervideos immer mit Grafik).
     Chart-Themen: Kerzen-Schema, das sich je Punkt aufbaut. Zahlen-Themen: dieselbe Grafik wie im Bild-Beitrag."""
     from . import grafik
+    if echt:   # echter BTC-Chart mit gefundenem Muster (03.11.2026)
+        grafik.echt_chart(img, th, box, echt["kerzen"], CHART_ART[t["id"]], echt["info"], schritt, lang, echt["titel"])
+        return True
     if t["id"] in CHART_ART:
         grafik.lern_chart(img, th, box, CHART_ART[t["id"]], schritt, lang)
         return True
     return bool(_grafik(img, t, th, box))
 
 
-def video_szenen(t: dict, lang: str = "en") -> dict:
+ECHT_MOEGLICH = {"liquiditaetszone": "liquiditaet", "unterstuetzung": "unterstuetzung"}   # Pump nie echt!
+
+
+def echter_chart(t: dict, kerzen_holen=None, base: str = "BTC", intervall: str = "4h", anzahl: int = 90) -> dict | None:
+    """Echte Kerzen + gefundenes Muster fuer Chart-Themen, sonst None (dann Illustration)."""
+    from . import kurse, muster
+    art = ECHT_MOEGLICH.get(t["id"])
+    if not art:
+        return None
+    try:
+        k = (kerzen_holen or kurse.kerzen)(base, intervall, anzahl)
+    except Exception:
+        return None
+    if len(k) < 40:
+        return None
+    info = getattr(muster, art)(k)
+    if not info:
+        return None
+    return {"kerzen": k, "info": info, "titel": f"{base} · {intervall}"}
+
+
+def video_szenen(t: dict, lang: str = "en", echt: dict | None = None) -> dict:
     """S28 Lern-Video: Haken (Titel als Frage/Aussage + grosse Zahl), je Punkt eine Szene, Folgen.
     Gleiche Saetze und Fakten wie der Bild-Beitrag, darum gilt dieselbe Zahlen-Pruefung."""
     from .sprache import T as _T
     n = len(t["punkte"])
-    szenen = [{"typ": "lern_haken", "daten": t, "vorlage": t["titel"].rstrip(".") + "."}]
+    szenen = [{"typ": "lern_haken", "daten": dict(t, _echt=echt), "vorlage": t["titel"].rstrip(".") + "."}]
     for i, p in enumerate(t["punkte"], 1):
         szenen.append({"typ": "lern_punkt", "daten": {"nr": i, "von": n, "satz": p,
                                                       "ersatz": "Takeaway" if lang == "en" else "Merke",
-                                                      "thema": t, "schritt": i},   # Grafik je Punkt (03.11.2026)
+                                                      "thema": t, "schritt": i, "echt": echt},   # Grafik je Punkt
                        "vorlage": p})
     szenen.append({"typ": "outro", "daten": {}, "vorlage": _T[lang]["s_outro"]})
     return {"format": "wissen", "sprache": lang, "szenen": szenen, "fakten": t["fakten"], "titel": t["titel"]}
