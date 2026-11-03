@@ -139,6 +139,18 @@ def vorschlag_senden(geheim: dict, ordner: Path, hinweis: str = "") -> bool:
     tg = (ordner / "post_telegram.txt").read_text(encoding="utf-8")
     x = (ordner / "post_x.txt").read_text(encoding="utf-8")
     kopf, rest = teilen(tg)
+    fehler = []
+
+    def senden(methode, **kw):   # jede Antwort pruefen (03.11.2026: Vorschlag kam nicht an, niemand merkte es)
+        try:
+            r = requests.post(API.format(token=token, methode=methode), **kw)
+            j = r.json()
+        except Exception as e:
+            fehler.append(f"{methode}: {e}")
+            return r if "r" in locals() else None
+        if not j.get("ok"):
+            fehler.append(f"{methode}: {j.get('description')}")
+        return r
     video = ordner / "video.mp4"
     if (ordner / "karussell.json").exists() and not video.exists():   # S11: Album als Vorschau, Knoepfe danach
         from . import karussell
@@ -146,41 +158,37 @@ def vorschlag_senden(geheim: dict, ordner: Path, hinweis: str = "") -> bool:
         medien = [{"type": "photo", "media": f"attach://f{i}"} for i in range(len(folien))]
         dateien = {f"f{i}": (f.name, open(f, "rb"), "image/png") for i, f in enumerate(folien)}
         try:
-            requests.post(API.format(token=token, methode="sendMediaGroup"),
-                          data={"chat_id": chat, "media": json.dumps(medien)}, files=dateien, timeout=180)
+            senden("sendMediaGroup", data={"chat_id": chat, "media": json.dumps(medien)}, files=dateien, timeout=180)
         finally:
             for _, fh, _ in dateien.values():
                 fh.close()
-        r = requests.post(API.format(token=token, methode="sendMessage"),
-                          data={"chat_id": chat, "text": tg[:4096], "parse_mode": "HTML",
+        r = senden("sendMessage", data={"chat_id": chat, "text": tg[:4096], "parse_mode": "HTML",
                                 "disable_web_page_preview": "true",
                                 "reply_markup": json.dumps(knoepfe(ordner.name))}, timeout=30)
     elif video.exists():   # Video-Vorschlag (Reels/TikTok/X/Telegram): Video mit Text, Knoepfe darunter
         with open(video, "rb") as fh:
-            r = requests.post(API.format(token=token, methode="sendVideo"),
-                              data={"chat_id": chat, "caption": kopf, "parse_mode": "HTML",
+            r = senden("sendVideo", data={"chat_id": chat, "caption": kopf, "parse_mode": "HTML",
                                     "supports_streaming": "true",
                                     **({} if rest else {"reply_markup": json.dumps(knoepfe(ordner.name))})},
                               files={"video": (video.name, fh, "video/mp4")}, timeout=180)
         if rest:
-            r = requests.post(API.format(token=token, methode="sendMessage"),
-                              data={"chat_id": chat, "text": rest[:4096], "parse_mode": "HTML",
+            r = senden("sendMessage", data={"chat_id": chat, "text": rest[:4096], "parse_mode": "HTML",
                                     "disable_web_page_preview": "true",
                                     "reply_markup": json.dumps(knoepfe(ordner.name))}, timeout=30)
     elif rest:   # langer Beitrag: so, wie er spaeter im Kanal erscheint (Bild + Text darunter), Knoepfe am Ende
         with open(bild, "rb") as fh:
-            requests.post(API.format(token=token, methode="sendPhoto"),
-                          data={"chat_id": chat, "caption": kopf, "parse_mode": "HTML"},
+            senden("sendPhoto", data={"chat_id": chat, "caption": kopf, "parse_mode": "HTML"},
                           files={"photo": (bild.name, fh, "image/png")}, timeout=60)
-        r = requests.post(API.format(token=token, methode="sendMessage"),
-                          data={"chat_id": chat, "text": rest[:4096], "parse_mode": "HTML",
+        r = senden("sendMessage", data={"chat_id": chat, "text": rest[:4096], "parse_mode": "HTML",
                                 "disable_web_page_preview": "true",
                                 "reply_markup": json.dumps(knoepfe(ordner.name))}, timeout=30)
     else:
         with open(bild, "rb") as fh:
-            r = requests.post(API.format(token=token, methode="sendPhoto"),
-                              data={"chat_id": chat, "caption": tg, "parse_mode": "HTML",
+            r = senden("sendPhoto", data={"chat_id": chat, "caption": tg, "parse_mode": "HTML",
                                     "reply_markup": json.dumps(knoepfe(ordner.name))},
                               files={"photo": (bild.name, fh, "image/png")}, timeout=60)
     text_senden(geheim, (hinweis + "\n\n" if hinweis else "") + f"X-Text ({len(x)} Zeichen):\n\n" + x)
-    return r.ok
+    if fehler:
+        print("Telegram hat den Vorschlag (teilweise) abgelehnt:", ordner.name, "; ".join(fehler))
+        return False
+    return True

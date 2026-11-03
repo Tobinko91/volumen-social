@@ -67,9 +67,12 @@ def main() -> int:
         fehler = pruefen(ziel, cfg, sperr)
         hinweis = "💬 Aus dem Redaktions-Chat" + ("\n⚠️ " + "; ".join(fehler) if fehler else "")
         if not (ziel / "post.png").exists():
-            telegram.text_senden(geheim, hinweis)
+            gesendet = telegram.text_senden(geheim, hinweis)
         else:
-            telegram.vorschlag_senden(geheim, ziel, hinweis)
+            gesendet = telegram.vorschlag_senden(geheim, ziel, hinweis)
+        if not gesendet:   # beim naechsten Lauf noch einmal versuchen, statt still zu verschwinden
+            print("Eingang:", o.name, "NICHT zugestellt, neuer Versuch beim naechsten Lauf")
+            continue
         stand.append(o.name)
         print("Eingang:", o.name, fehler or "ok")
     stand_p.write_text(json.dumps(stand[-500:]))

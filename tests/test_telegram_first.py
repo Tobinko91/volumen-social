@@ -36,3 +36,32 @@ class TelegramFirstTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class VorschlagZustellungTest(unittest.TestCase):
+    """03.11.2026: Vorschlag aus der Warteschlange kam nicht an. Jetzt: jede Antwort pruefen, sonst False."""
+
+    def test_abgelehnt_gibt_false(self):
+        import tempfile
+        from pathlib import Path
+        from unittest import mock
+        from social import telegram
+
+        class A:
+            ok = True
+
+            def __init__(self, j):
+                self.j = j
+
+            def json(self):
+                return self.j
+        with tempfile.TemporaryDirectory() as d:
+            o = Path(d)
+            (o / "post.png").write_bytes(b"x")
+            (o / "post_telegram.txt").write_text("<b>T</b>")
+            (o / "post_x.txt").write_text("T")
+            with mock.patch.object(telegram.requests, "post",
+                                   return_value=A({"ok": False, "description": "can't parse entities"})):
+                self.assertFalse(telegram.vorschlag_senden({"telegram_token": "t", "telegram_chat_id": 1}, o))
+            with mock.patch.object(telegram.requests, "post", return_value=A({"ok": True})):
+                self.assertTrue(telegram.vorschlag_senden({"telegram_token": "t", "telegram_chat_id": 1}, o))
