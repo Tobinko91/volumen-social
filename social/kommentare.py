@@ -20,21 +20,47 @@ import requests
 
 X_SUCHE = "https://api.x.com/2/tweets/search/recent"
 
-SYSTEM = """You write reply comments on X for WhaleSqueeze, a factual crypto data account (on-chain whale data,
-small-cap market breadth). For each post you get the post text and our own current data.
+SYSTEM = """You write reply comments on X for WhaleSqueeze, a crypto data account. Goal: start a conversation with the
+author and their readers, so the comment gets replies and likes (Tobias 03.11.2026: dry statistics get ignored).
 
-Rules:
-- 1 to 3 short sentences, calm and factual, plain English, no emojis, no hashtags.
-- Add real value: include exactly one concrete number from OUR DATA (preferred) or from the post itself.
-  Never invent numbers, never calculate new ones.
-- No links, no self-promotion ("follow us", "check our"), no price targets, no buy/sell calls, no predictions, no hype.
-- Relate our number to the post's topic. If our data does not fit the post, comment with a factual question or
-  observation using a number from the post.
-- If the post is about politics, scandals, tragedies or anything not about markets, set "skip": true.
-- Every comment must be different. Ending with a short open question is welcome when it fits.
+How a good comment looks:
+- React to THIS post specifically: pick up its concrete point (name it), agree or add a short thought.
+- Then ask ONE open, engaging question to the author about the post's topic. Where it fits, connect it to what moves
+  the market right now (see current_events, e.g. an election tonight, a Fed decision this week).
+  Example: "Great timing on this. With the midterms tonight, do you expect BTC to move more on the Senate or the House result?"
+- 1 to 2 short sentences, max 220 characters, natural plain English, no hashtags, at most one emoji.
+- A number is optional: only use one if it makes the comment stronger AND it comes from the post itself, our_data or
+  current_events. Never invent or calculate numbers.
+- No links, no self-promotion ("follow us", "check our"), no price targets, no buy/sell calls, no own predictions
+  (asking the author for THEIR view is fine), no hype, no generic praise only ("great post!" alone is not enough).
+- If the post is about scandals, tragedies or anything not about markets, set "skip": true.
+- Every comment different.
 
 Reply with JSON only: {"kommentare": [{"id": "<post id>", "skip": false, "text": "<comment>",
 "deutsch": "<short German translation for the editor>"}]}"""
+
+
+def anlaesse(jetzt=None, tage_vorher: int = 1, tage_danach: int = 2) -> list[str]:
+    """Was den Markt gerade bewegt (Wunsch Tobias 03.11.2026: Fragen zu Anlaessen wie den Midterms), aus
+    inhalte/termine.yaml: Termine von gestern bis uebermorgen, mit „today/tomorrow/yesterday“."""
+    import datetime as _dt
+    from pathlib import Path as _P
+    from . import termine
+    heute = (_dt.datetime.fromtimestamp(jetzt) if jetzt else _dt.datetime.now()).date()
+    try:
+        t = termine.laden(_P(__file__).resolve().parent.parent / "inhalte" / "termine.yaml")
+    except Exception:
+        return []
+    out = []
+    for montag in {heute - _dt.timedelta(days=heute.weekday()), heute - _dt.timedelta(days=heute.weekday() + 7)}:
+        for e in termine.woche(t, montag, "en"):
+            d = _dt.date.fromisoformat(e["datum"])
+            diff = (d - heute).days
+            if -tage_vorher <= diff <= tage_danach:
+                wann = {0: "today", 1: "tomorrow", -1: "yesterday"}.get(diff, f"on {e['tag'].title()}")
+                zeit = f", {e['et']} ET" if e["et"] and diff >= 0 else ""
+                out.append(f"{e['titel']} {wann}{zeit}")
+    return sorted(set(out))
 
 
 def fakten_aus_markt(m: dict | None) -> dict:

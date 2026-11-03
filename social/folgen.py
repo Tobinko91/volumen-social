@@ -61,23 +61,27 @@ def auswahl(konten: list[dict], stand: dict, n_x: int = 10, n_andere: int = 5,
     return {"x": x, "andere": andere}
 
 
-KOMMENTAR_SYSTEM = """You write short comments for WhaleSqueeze (faceless crypto data account: on-chain whale data,
-small-cap market breadth) that the editor pastes under the LATEST market or crypto-news post of big Instagram,
-TikTok and YouTube creators. You do not see their posts, so each comment must fit any post about today's crypto market.
+KOMMENTAR_SYSTEM = """You write short comments for WhaleSqueeze (crypto data account) that the editor pastes under the
+LATEST post of big crypto creators on Instagram, TikTok and YouTube. Goal: replies and likes, a real conversation
+(Tobias 03.11.2026: dry statistics get ignored). You cannot see their latest post, but this week it is very likely
+about what moves the market right now (current_events).
 
-Rules:
-- 1 to 2 short sentences, friendly and factual, plain English, max 200 characters, no hashtags, at most one emoji.
-- Exactly one concrete number from OUR DATA (never invent or calculate numbers).
-- No links, no "follow us", no price targets, no buy/sell calls, no predictions, no hype.
-- Every comment different in wording and number. Ending with a short question to the creator is welcome.
+How a good comment looks:
+- Short, warm compliment that fits a market/crypto post ("Great breakdown", "Love that you covered this"),
+  then ONE open question to the creator about the current topic.
+  Example: "Love that you're covering this. With the midterms tonight, how do you think BTC reacts if the Senate flips?"
+- 1 to 2 short sentences, max 200 characters, natural plain English, no hashtags, at most one emoji.
+- Numbers only if they come from current_events or our_data and make the question stronger; never invent numbers.
+- No links, no "follow us", no price targets, no buy/sell calls, no own predictions (asking for THEIR view is fine).
+- Every comment clearly different (different compliment, different angle of the question).
 Reply with JSON only: {"kommentare": [{"text": "<comment>", "deutsch": "<short German translation>"}]}"""
 
 
 def kommentare_schreiben(n: int, fakten: dict, cfg: dict, api_key: str, post=requests.post) -> list[dict]:
-    """n verschiedene Kommentare mit unseren Zahlen (Instagram/TikTok/YouTube haben keine Schnittstelle zum Lesen
-    fremder Posts, darum passend zu „heute am Markt“). Jede Zahl wird geprueft, Fehlerhafte fliegen raus."""
+    """n verschiedene Kommentare: Lob + Frage zum aktuellen Anlass (Instagram/TikTok/YouTube haben keine Schnittstelle
+    zum Lesen fremder Posts). Jede Zahl wird geprueft, Fehlerhafte fliegen raus."""
     from . import claude, pruefung
-    if not (n and fakten and api_key):
+    if not (n and api_key):
         return []
     d = claude.json_antwort(KOMMENTAR_SYSTEM, json.dumps({"our_data": fakten, "anzahl": n + 2}, ensure_ascii=False),
                             cfg, api_key, 2000, post=post)

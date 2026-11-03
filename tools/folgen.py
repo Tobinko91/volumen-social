@@ -33,7 +33,11 @@ def main(senden=None, schreiber=None) -> int:
         try:
             from social import daten
             from social import kommentare as km
-            fakten = km.fakten_aus_markt(daten.marktlage(daten.laden(cfg["daten"]["dir"], cfg["daten"]["max_alter_min"])))
+            try:
+                markt = daten.marktlage(daten.laden(cfg["daten"]["dir"], cfg["daten"]["max_alter_min"]))
+            except Exception:
+                markt = None   # ohne Marktdaten trotzdem Kommentare zum aktuellen Anlass
+            fakten = dict(km.fakten_aus_markt(markt), current_events=km.anlaesse())
             kommentare = (schreiber or folgen.kommentare_schreiben)(len(a["andere"]), fakten, cfg,
                                                                      g.get("anthropic_api_key"))
         except Exception as e:

@@ -45,7 +45,7 @@ def main(posts_holen=None, schreiber=None, markt="auto", senden=None) -> int:
             markt = daten.marktlage(daten.laden(cfg["daten"]["dir"], cfg["daten"]["max_alter_min"]))
         except Exception:
             markt = None
-    fakten = kommentare.fakten_aus_markt(markt)
+    fakten = dict(kommentare.fakten_aus_markt(markt), current_events=kommentare.anlaesse())
     try:
         posts = (posts_holen or (lambda: kommentare.posts_holen(g, k["konten"], k.get("stunden", 3),
                                                                 k.get("max_posts", 30))))()
