@@ -33,6 +33,21 @@
 - {plattform: youtube, name: AltcoinDaily, warum: "Altcoin-News, aktive Kommentare"}
 - {plattform: youtube, name: JasonPizzinoOfficial, warum: "Marktzyklen"}
 - {plattform: youtube, name: cryptocasey, warum: "Einsteiger-Publikum"}
+- {plattform: youtube, name: DataDash, warum: "Makro + Krypto, 550.000 Abos"}
+- {plattform: youtube, name: InvestAnswers, warum: "Daten und Bewertungen"}
+- {plattform: youtube, name: CryptosRUs, warum: "Tägliche Markt-Updates"}
+- {plattform: youtube, name: CoinSkid, warum: "Tägliche Chartanalyse"}
+- {plattform: youtube, name: CryptoCrewUniversity, warum: "Chart-Bildung, passt zu Lern-Videos"}
+- {plattform: youtube, name: CryptoCapitalVenture, warum: "Tägliche Analyse"}
+- {plattform: youtube, name: EllioTrades, warum: "Altcoins, junges Publikum"}
+- {plattform: youtube, name: Uncomplication, warum: "Makro, Regulierung"}
+- {plattform: youtube, name: CryptoJebb, warum: "Charts und Risiko"}
+- {plattform: youtube, name: PaulBarronNetwork, warum: "Branche und Interviews"}
+- {plattform: youtube, name: Cointelegraph, warum: "News"}
+- {plattform: youtube, name: CryptoWendyO, warum: "Trading-Psychologie"}
+- {plattform: youtube, name: AlessioRastani, warum: "Makro und Zentralbanken"}
+- {plattform: youtube, name: ChicoCrypto, warum: "Recherchen zu Projekten"}
+- {plattform: youtube, name: K-DUB, warum: "Crypto Zombie, Chartanalyse"}
 # --- Instagram (nur Link) ---
 - {plattform: instagram, name: watcher.guru, warum: "Krypto-Eilmeldungen"}
 - {plattform: instagram, name: cointelegraph, warum: "Krypto-News"}
@@ -44,6 +59,14 @@
 - {plattform: instagram, name: thecryptograph, warum: "Märkte, Regulierung, Sicherheit"}
 - {plattform: instagram, name: ethereum_updates, warum: "Ethereum-News"}
 - {plattform: instagram, name: coinbureau, warum: "Bildung, großes sachliches Publikum"}
+- {plattform: instagram, name: binance, warum: "größte Börse, sehr viele Kommentare"}
+- {plattform: instagram, name: coinbase, warum: "große US-Börse"}
+- {plattform: instagram, name: krakenfx, warum: "Börse, US-Publikum"}
+- {plattform: instagram, name: cryptocom, warum: "Börse, großes Publikum"}
+- {plattform: instagram, name: decryptmedia, warum: "Krypto-News"}
+- {plattform: instagram, name: altcoindaily, warum: "Altcoin-News"}
+- {plattform: instagram, name: cryptocasey, warum: "Einsteiger-Bildung"}
+- {plattform: instagram, name: investanswers, warum: "Daten und Bewertungen"}
 # --- TikTok (nur Link; Auswahl nach Thema, nicht nur nach Größe; 02.11.2026) ---
 - {plattform: tiktok, name: understandingcrypto, warum: "Erklärvideos, passt zu unseren Lern-Videos"}
 - {plattform: tiktok, name: cryptomasun, warum: "1,5 Mio. Follower, Markt-Updates"}
@@ -53,3 +76,11 @@
 - {plattform: tiktok, name: cryptowendyo, warum: "Krypto-Bildung, aktive Community"}
 - {plattform: tiktok, name: brightchuksm, warum: "Markt-Kommentare, 880.000 Follower"}
 - {plattform: tiktok, name: cryptofronts, warum: "Krypto-News, hohe Interaktion"}
+- {plattform: tiktok, name: crypto.lucho, warum: "2,7 Mio. Follower"}
+- {plattform: tiktok, name: thelukebelmarr, warum: "690.000 Follower, viele Kommentare"}
+- {plattform: tiktok, name: pedroarenas_, warum: "460.000 Follower"}
+- {plattform: tiktok, name: szymansk_i, warum: "310.000 Follower, hohe Interaktion"}
+- {plattform: tiktok, name: onlyonecrisy, warum: "280.000 Follower, sehr hohe Interaktion"}
+- {plattform: tiktok, name: cryptocasey, warum: "Einsteiger-Bildung"}
+- {plattform: tiktok, name: coinbureau, warum: "Bildung"}
+- {plattform: tiktok, name: altcoindaily, warum: "Altcoin-News"}

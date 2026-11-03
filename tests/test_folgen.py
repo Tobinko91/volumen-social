@@ -103,13 +103,13 @@ class KnopfTest(unittest.TestCase):
                 gesendet = []
                 (Path(d) / "secrets.yaml").write_text(yaml.safe_dump({"telegram_token": "t", "telegram_chat_id": 1}))
                 werkzeug.main(senden=lambda url, data=None, timeout=None: gesendet.append(data))
-                self.assertIn("reply_markup", gesendet[0])
+                self.assertIn("reply_markup", gesendet[-1])   # lange Liste: Knoepfe an der letzten Nachricht
                 datum = folgen.heute()
                 stand = folgen.stand_laden(Path(d) / "folgen_stand.json")
                 self.assertEqual(len(stand["heute"][datum]["x"]), 10)
                 self.assertIn("erledigt", freigabe.folge_knopf({}, "ok", datum))
                 stand = folgen.stand_laden(Path(d) / "folgen_stand.json")
-                self.assertEqual(len(stand["erledigt"]), 10)   # 4 Instagram + 4 TikTok + 2 YouTube (02.11.2026)
+                self.assertEqual(len(stand["erledigt"]), 30)   # je 10 Instagram, TikTok, YouTube (03.11.2026)
                 self.assertIn("X-Schlüssel fehlen", freigabe.folge_knopf({}, "x", datum))
                 self.assertIn("zu alt", freigabe.folge_knopf({}, "x", "2020-01-01"))
             finally:
@@ -209,3 +209,36 @@ class YouTubeVideoTest(unittest.TestCase):
         self.assertIn("watch?v=abc", text)
         self.assertIn("<code>Great timing.", text)
         self.assertIn("<code>Love this.", text)
+
+
+class ZehnJePlattformTest(unittest.TestCase):
+    """Tobias 03.11.2026: je 10; sind alle gefolgt, weiter kommentieren (am laengsten nicht gezeigt zuerst)."""
+
+    def test_auffuellen_mit_schon_gefolgten(self):
+        konten = [{"plattform": "tiktok", "name": f"t{i}"} for i in range(4)]
+        stand = {"erledigt": {"tiktok:t0": 1, "tiktok:t1": 1}, "gezeigt": {"tiktok:t0": "2026-11-03", "tiktok:t1": "2026-11-01"}}
+        a = folgen.auswahl(konten, stand, 0, 0, {"tiktok": 3})
+        self.assertEqual([k["name"] for k in a["andere"]], ["t2", "t3", "t1"])   # neue zuerst, dann t1 (aelter gezeigt)
+        self.assertTrue(a["andere"][2]["schon"])
+        text, _ = folgen.nachricht(a, "2026-11-04")
+        self.assertIn("folgst du schon", text)
+
+
+class LangeNachrichtTest(unittest.TestCase):
+    def test_wird_geteilt_knoepfe_am_ende(self):
+        from social import telegram
+        gesehen = []
+
+        class A:
+            def json(self):
+                return {"ok": True}
+
+        def post(url, data=None, timeout=None):
+            gesehen.append(data)
+            return A()
+        text = "\n".join(f"<code>Kommentar Nummer {i} mit etwas Text, damit es lang wird.</code>" for i in range(200))
+        self.assertEqual(telegram.an_tobias({"telegram_token": "t", "telegram_chat_id": 1}, text, {"k": 1}, post=post), "ok")
+        self.assertGreater(len(gesehen), 1)
+        self.assertTrue(all(len(d["text"]) <= 4096 for d in gesehen))
+        self.assertIn("reply_markup", gesehen[-1])
+        self.assertNotIn("reply_markup", gesehen[0])

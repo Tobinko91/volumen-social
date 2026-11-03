@@ -62,6 +62,21 @@ def bild_senden(geheim: dict, datei: Path, text: str) -> bool:
     return r.ok
 
 
+def teile_4096(text: str, grenze: int = 3900) -> list[str]:
+    """Lange Nachricht an Zeilengrenzen teilen (Telegram: max. 4096 Zeichen; jede Zeile bleibt ganz, damit HTML-Tags
+    nicht zerreissen). Noetig seit 03.11.2026: Folge-Liste mit je 10 Konten und Kommentaren."""
+    teile, akt = [], ""
+    for z in text.split("\n"):
+        if akt and len(akt) + len(z) + 1 > grenze:
+            teile.append(akt)
+            akt = z
+        else:
+            akt = f"{akt}\n{z}" if akt else z
+    if akt:
+        teile.append(akt)
+    return teile or [""]
+
+
 def an_tobias(geheim: dict, text: str, knoepfe: dict | None = None, post=requests.post) -> str:
     """Nachricht an Tobias mit Pruefung der Antwort (Fehler 02.11.2026: Folge-Liste/Kommentare kamen nie an,
     Fehler blieben unbemerkt). HTML zuerst; lehnt Telegram ab, ohne Formatierung noch einmal. Rueckgabe: 'ok' oder Grund."""
@@ -69,6 +84,11 @@ def an_tobias(geheim: dict, text: str, knoepfe: dict | None = None, post=request
     token, chat = geheim.get("telegram_token"), geheim.get("telegram_chat_id")
     if not (token and chat):
         return "telegram_token oder telegram_chat_id fehlt"
+    teile = teile_4096(text)
+    if len(teile) > 1:   # mehrere Nachrichten, Knoepfe an der letzten
+        ergebnisse = [an_tobias(geheim, t, knoepfe if i == len(teile) - 1 else None, post) for i, t in enumerate(teile)]
+        schlecht = [e for e in ergebnisse if e != "ok"]
+        return schlecht[0] if schlecht else "ok"
     grund = ""
     for html in (True, False):
         daten = {"chat_id": chat, "text": text[:4096], "disable_web_page_preview": "true"}

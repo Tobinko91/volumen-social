@@ -53,9 +53,14 @@ def auswahl(konten: list[dict], stand: dict, n_x: int = 10, n_andere: int = 5,
     offen = [k for k in konten if _schluessel(k) not in stand.get("erledigt", {})]
     x = [k for k in offen if k["plattform"] == "x"][:n_x]
     if je_plattform:
-        andere = []
+        # Je Plattform zuerst neue Konten (folgen + kommentieren), Rest auffuellen mit Konten, denen wir schon
+        # folgen (nur kommentieren), am laengsten nicht gezeigt zuerst (Wunsch Tobias 03.11.2026: 10 je Plattform)
+        andere, gezeigt = [], stand.get("gezeigt", {})
         for pl, n in je_plattform.items():
-            andere += [k for k in offen if k["plattform"] == pl][:int(n)]
+            neu = [k for k in offen if k["plattform"] == pl][:int(n)]
+            alt = sorted((k for k in konten if k["plattform"] == pl and k not in offen),
+                         key=lambda k: gezeigt.get(_schluessel(k), ""))[:max(0, int(n) - len(neu))]
+            andere += neu + [dict(k, schon=True) for k in alt]
     else:
         andere = [k for k in offen if k["plattform"] != "x"][:n_andere]
     return {"x": x, "andere": andere}
@@ -142,7 +147,8 @@ def nachricht(a: dict, datum: str, kommentare: list[dict] | None = None) -> tupl
                  "kommentieren (Kommentar antippen = kopiert):")
         for k in a["andere"]:
             z.append(f"• {NAMEN[k['plattform']]}: <a href=\"{LINKS[k['plattform']].format(n=k['name'])}\">"
-                     f"{e(k['name'])}</a> – {e(k.get('warum', ''))}")
+                     f"{e(k['name'])}</a> – {e(k.get('warum', ''))}" + (" · <i>folgst du schon, nur kommentieren</i>"
+                                                                         if k.get("schon") else ""))
             if k.get("video") and k.get("kommentar"):   # YouTube: Kommentar passend zum neuesten Video
                 z.append(f"  🎬 Neuestes Video: <a href=\"{e(k['video']['link'])}\">{e(k['video']['titel'][:90])}</a>")
                 z.append(f"<code>{e(k['kommentar'])}</code>")
