@@ -310,6 +310,40 @@ class Leinwand:
         self.untertitel(d, text)
         return self.img
 
+    # ---------- Willkommensvideo (S30, Wunsch Tobias 03.11.2026) ----------
+    WILLKOMMEN = [("W", "Whale of the day", "Who is buying, who is leaving"),
+                  ("!", "Live crypto alerts", "In minutes, not hours"),
+                  ("%", "Market in 30 seconds", "Biggest moves, every day"),
+                  ("?", "Crypto explained", "Short and clear")]
+
+    def willkommen(self, daten, text):
+        """schritt 0: Logo + Leitsatz; 1-4: die vier Formate, das aktuelle leuchtet."""
+        img, d = self.neu()
+        self.kopf(d)
+        s = daten.get("schritt", 0)
+        if s == 0:
+            self.logo(d, (self.W - 32 * 8) / 2, 430, 8)
+            d = ImageDraw.Draw(self.img)
+            self.mitte(d, 720, "WhaleSqueeze", _font("Black", 110), self.f["text"])
+            self.mitte(d, 860, "We watch while", _font("Bold", 62), self.f["plus"])
+            self.mitte(d, 940, "the market sleeps.", _font("Bold", 62), self.f["plus"])
+        else:
+            y = 420
+            for i, (zeichen, titel, unter) in enumerate(self.WILLKOMMEN, 1):
+                an = i == s
+                fl = self.f["flaeche"]
+                d.rounded_rectangle([70, y, self.W - 70, y + 170], radius=30, fill=fl,
+                                    outline=self.f["plus"] if an else self.f["linie"], width=5 if an else 2)
+                d.rounded_rectangle([100, y + 35, 200, y + 135], radius=22,
+                                    fill=self.f["plus"] if an else self.f["linie"])
+                fz = _font("Black", 64)
+                d.text((150 - d.textlength(zeichen, font=fz) / 2, y + 42), zeichen, font=fz, fill=self.f["grund"])
+                d.text((235, y + 32), titel, font=_font("Bold", 52), fill=self.f["text"] if an else self.f["neben"])
+                d.text((235, y + 100), unter, font=_font("Medium", 36), fill=self.f["neben"])
+                y += 195
+        self.untertitel(d, text)
+        return self.img
+
     def outro(self, daten, text):
         img, d = self.neu()
         self.kopf(d)

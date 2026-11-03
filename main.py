@@ -63,9 +63,10 @@ def lade_sperrliste() -> set[str]:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("format", choices=sorted(formate.FORMATE) + ["wissen", "news", "coincheck", "wal", "karussell", "termine"])
+    ap.add_argument("format", choices=sorted(formate.FORMATE) + ["wissen", "news", "coincheck", "wal", "karussell", "termine", "willkommen"])
     ap.add_argument("--thema", help="nur bei wissen: bestimmtes Thema (id aus inhalte/wissen.yaml)")
     ap.add_argument("--eil", action="store_true", help="nur bei news: nur senden, wenn es eine Eilmeldung gibt")
+    ap.add_argument("--nur-mit-stimme", action="store_true", help="nur bei willkommen: ohne Stimme nicht senden")
     ap.add_argument("--datum", help="nur bei termine: ab diesem Datum die kommende Woche (JJJJ-MM-TT), Standard heute")
     ap.add_argument("--coin", help="nur bei coincheck: bestimmter Coin, z. B. AKE")
     ap.add_argument("--sprache", choices=["de", "en"], default=None,
@@ -97,6 +98,8 @@ def main() -> int:
         return karussell_beitrag(args, cfg, geheim, sperr)
     if args.format == "termine":
         return termine_beitrag(args, cfg, geheim, sperr)
+    if args.format == "willkommen":
+        return willkommen_video(args, cfg, geheim, sperr)
     probe = bool(args.daten)
     d = daten.laden(args.daten or cfg["daten"]["dir"],
                     None if probe else cfg["daten"]["max_alter_min"])
@@ -363,6 +366,29 @@ def karussell_beitrag(args, cfg, geheim, sperr) -> int:
     if args.senden:
         vorschlag(args, geheim, cfg, ordner, "🎠 Karussell-Vorschlag Whales of the week (YouTube: nicht möglich)"
                   + ("\n⚠️ " + "; ".join(fehler) if fehler else ""), fehler)
+    return 1 if fehler else 0
+
+
+def willkommen_video(args, cfg, geheim, sperr) -> int:
+    """S30 Willkommensvideo mit Stimme zum Anpinnen (Wunsch Tobias 03.11.2026)."""
+    from social import willkommen
+    b = willkommen.szenen()
+    zeilen = [sz["vorlage"] for sz in b["szenen"]]
+    fehler = pruefung.pruefen(zeilen, {"fakten": b["fakten"], "szenen": b["szenen"]}, cfg, sperr)
+    ordner = Path(args.out) / f"{time.strftime('%Y%m%d-%H%M')}_willkommen_video"
+    ordner.mkdir(parents=True, exist_ok=True)
+    bild_dateien = bilder.zeichnen(dict(b, ts=time.time()), zeilen, ordner / "bilder", cfg)
+    toene, dauern, tonquelle = stimme.sprechen(zeilen, ordner / "ton", cfg, stimme.schluessel(cfg, geheim))
+    video.bauen(bild_dateien, toene, dauern, ordner / "video.mp4", cfg)
+    (ordner / "post_x.txt").write_text(willkommen.X, encoding="utf-8")
+    (ordner / "post_telegram.txt").write_text(willkommen.TELEGRAM, encoding="utf-8")
+    print(f"Willkommensvideo: {round(sum(dauern), 1)} s, Stimme {tonquelle}, Pruefung", fehler or "bestanden")
+    if getattr(args, "nur_mit_stimme", False) and tonquelle.startswith("stille"):
+        print("Ohne Stimme nicht gesendet, naechster Versuch spaeter.")
+        return 2
+    if args.senden and not fehler:
+        telegram.vorschlag_senden(geheim, ordner, "🎬 Willkommensvideo zum Anpinnen (S30). Nach dem Posten auf TikTok, "
+                                  f"Instagram und X oben anpinnen.\nStimme: {tonquelle}")
     return 1 if fehler else 0
 
 

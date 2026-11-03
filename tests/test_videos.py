@@ -234,3 +234,17 @@ class VorschlagTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class WillkommenTest(unittest.TestCase):
+    """S30: Willkommensvideo, einmal, nur mit Stimme."""
+
+    def test_texte_bestehen_pruefung_und_plan(self):
+        from social import pruefung, willkommen
+        b = willkommen.szenen()
+        self.assertEqual(len(b["szenen"]), 6)
+        self.assertEqual(pruefung.pruefen([s["vorlage"] for s in b["szenen"]], {"fakten": b["fakten"], "szenen": b["szenen"]},
+                                          CFG, set()), [])
+        self.assertLessEqual(len(willkommen.X), 280)
+        plan = (Path(__file__).resolve().parent.parent / "tools/plan.sh").read_text()
+        self.assertIn("lauf willkommen --nur-mit-stimme && sudo -u redaktion touch", plan)
