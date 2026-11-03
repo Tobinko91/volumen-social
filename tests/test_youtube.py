@@ -112,5 +112,24 @@ class YouTubeTest(unittest.TestCase):
             shutil.rmtree(tmp)
 
 
+    def test_tiktok_entwurf_zaehler(self):
+        import json
+        import sys
+        import tempfile
+        import time as _t
+        from unittest import mock
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
+        import freigabe
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "p.jsonl"
+            jetzt = _t.time()
+            p.write_text("".join(json.dumps({"ts": int(jetzt - 3600 * i), "ordner": f"o{i}", "format": "news",
+                                             "ereignis": "gepostet", "kanal": "tiktok", "link": "Entwurf in der TikTok-App"}) + "\n"
+                                 for i in range(6)) + json.dumps({"ts": int(jetzt - 90000), "kanal": "tiktok",
+                                                                  "ereignis": "gepostet", "link": "Entwurf"}) + "\n")
+            with mock.patch.object(freigabe, "PROTOKOLL", p):
+                self.assertEqual(freigabe.tiktok_entwuerfe_24h(jetzt), 6)
+
+
 if __name__ == "__main__":
     unittest.main()

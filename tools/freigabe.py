@@ -36,6 +36,14 @@ def tg(g: dict, methode: str, **daten):
     return r.json()
 
 
+def tiktok_entwuerfe_24h(jetzt: float | None = None) -> int:
+    """Wie viele TikTok-Entwuerfe in den letzten 24 Std. geschickt wurden (TikTok-Regel: hoechstens 5 offene)."""
+    from social import bericht
+    seit = (jetzt or time.time()) - 86400
+    return sum(1 for e in bericht.protokoll_laden(PROTOKOLL, seit)
+               if e.get("kanal") == "tiktok" and e.get("ereignis") == "gepostet" and "Entwurf" in str(e.get("link", "")))
+
+
 def posten(g: dict, beitrag_id: str, ziel: str) -> str:
     ordner = AUSGABE / Path(beitrag_id).name          # nur Ordnername, kein Pfad von aussen
     video = ordner / "video.mp4"
@@ -84,6 +92,9 @@ def posten(g: dict, beitrag_id: str, ziel: str) -> str:
             else:
                 zeilen.append(f"{z}: schon gepostet ({status[z]})")
             continue
+        if z == "tiktok" and tiktok_entwuerfe_24h() >= 5:   # TikTok: max. 5 OFFENE Entwuerfe in 24 Std.
+            zeilen.append("⚠️ tiktok: schon 5 Entwürfe in 24 Std. geschickt. TikTok nimmt nur 5 OFFENE an – sind die "
+                          "alten noch nicht gepostet, kommt dieser nicht an. Erst alte Entwürfe in der App posten.")
         try:
             from social import design
             text = kanaele.telegram_hinweis(texte[z], z, g, design.SPRACHE)   # „First on Telegram“
