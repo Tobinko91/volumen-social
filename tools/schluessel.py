@@ -25,6 +25,7 @@ FELDER = [
     ("tiktok_client_secret", "TikTok: Client secret"),
     ("youtube_client_id", "YouTube: OAuth-Client-ID (Google Cloud -> APIs & Dienste -> Anmeldedaten)"),
     ("youtube_client_secret", "YouTube: OAuth-Clientschluessel (Client secret)"),
+    ("youtube_api_key", "YouTube-Lesen: API-Schluessel (Google Cloud -> Anmeldedaten -> API-Schluessel, beginnt mit AIza)"),
     ("openai_api_key", "OpenAI-Stimme: API-Schluessel (platform.openai.com -> API keys, beginnt mit sk-)"),
     ("google_tts_key", "Google-Stimme: API-Schluessel (Google Cloud -> Anmeldedaten -> API-Schluessel, beginnt mit AIza)"),
 ]

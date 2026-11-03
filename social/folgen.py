@@ -99,6 +99,34 @@ def kommentare_schreiben(n: int, fakten: dict, cfg: dict, api_key: str, post=req
     return out
 
 
+YT_API = "https://www.googleapis.com/youtube/v3"
+
+
+def youtube_neuestes(handle: str, key: str, get=requests.get, max_tage: float = 7, jetzt: float | None = None) -> dict | None:
+    """Neuestes Video eines YouTube-Kanals (Wunsch Tobias 03.11.2026: Kommentar passend zum Video).
+    YouTube Data API mit einfachem Schluessel (2 Einheiten von 10.000 am Tag). None, wenn nichts Frisches da ist."""
+    import datetime as _dt
+    j = get(f"{YT_API}/channels", params={"part": "contentDetails", "forHandle": f"@{handle}", "key": key},
+            timeout=20).json()
+    items = j.get("items") or []
+    if not items:
+        return None
+    uploads = items[0]["contentDetails"]["relatedPlaylists"]["uploads"]
+    j = get(f"{YT_API}/playlistItems", params={"part": "snippet", "playlistId": uploads, "maxResults": 1, "key": key},
+            timeout=20).json()
+    items = j.get("items") or []
+    if not items:
+        return None
+    sn = items[0]["snippet"]
+    zeit = _dt.datetime.fromisoformat(sn["publishedAt"].replace("Z", "+00:00")).timestamp()
+    if (jetzt or time.time()) - zeit > max_tage * 86400:
+        return None
+    vid = sn["resourceId"]["videoId"]
+    return {"id": vid, "konto": handle, "titel": sn.get("title", ""), "text": f"{sn.get('title', '')}\n\n"
+            f"{(sn.get('description') or '')[:500]}", "link": f"https://www.youtube.com/watch?v={vid}", "zeit": zeit,
+            "likes": 0, "punkte": 0}
+
+
 def nachricht(a: dict, datum: str, kommentare: list[dict] | None = None) -> tuple[str, dict | None]:
     """Text (HTML) + Knoepfe fuer den Redaktions-Bot. kommentare: je Instagram/TikTok/YouTube-Konto einer zum Kopieren."""
     e = html.escape
@@ -112,11 +140,14 @@ def nachricht(a: dict, datum: str, kommentare: list[dict] | None = None) -> tupl
     if a["andere"]:
         z.append("<b>Instagram / TikTok / YouTube</b> – selbst antippen, folgen und unter den neuesten Markt-Post "
                  "kommentieren (Kommentar antippen = kopiert):")
-        for i, k in enumerate(a["andere"]):
+        for k in a["andere"]:
             z.append(f"• {NAMEN[k['plattform']]}: <a href=\"{LINKS[k['plattform']].format(n=k['name'])}\">"
                      f"{e(k['name'])}</a> – {e(k.get('warum', ''))}")
-            if i < len(kommentare):
-                z.append(f"<code>{e(kommentare[i]['text'])}</code>")
+            if k.get("video") and k.get("kommentar"):   # YouTube: Kommentar passend zum neuesten Video
+                z.append(f"  🎬 Neuestes Video: <a href=\"{e(k['video']['link'])}\">{e(k['video']['titel'][:90])}</a>")
+                z.append(f"<code>{e(k['kommentar'])}</code>")
+            elif kommentare:
+                z.append(f"<code>{e(kommentare.pop(0)['text'])}</code>")
         if kommentare:
             z.append("<i>Passt der neueste Post nicht zum Markt (Meme, Werbung), Kommentar weglassen. "
                      "Jeden Text nur einmal verwenden.</i>")

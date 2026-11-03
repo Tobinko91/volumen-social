@@ -174,3 +174,38 @@ class InstaTikTokTest(unittest.TestCase):
         text, _ = folgen.nachricht(a, "2026-11-03", k)
         self.assertIn("<code>Only 38.5% of 412 small caps", text)
         self.assertIn("instagram.com", text)
+
+
+class YouTubeVideoTest(unittest.TestCase):
+    """Wunsch Tobias 03.11.2026: YouTube-Kommentar passend zum neuesten Video."""
+
+    def test_neuestes_video(self):
+        class A:
+            def __init__(self, j):
+                self.j = j
+
+            def json(self):
+                return self.j
+
+        def get(url, params=None, timeout=None):
+            if url.endswith("/channels"):
+                self.assertEqual(params["forHandle"], "@CoinBureau")
+                return A({"items": [{"contentDetails": {"relatedPlaylists": {"uploads": "UU1"}}}]})
+            return A({"items": [{"snippet": {"title": "Midterms and crypto: what to expect", "description": "We look at...",
+                                             "publishedAt": "2026-11-03T12:00:00Z", "resourceId": {"videoId": "abc"}}}]})
+        import datetime as dt
+        jetzt = dt.datetime(2026, 11, 3, 18, tzinfo=dt.timezone.utc).timestamp()
+        v = folgen.youtube_neuestes("CoinBureau", "k", get=get, jetzt=jetzt)
+        self.assertEqual(v["link"], "https://www.youtube.com/watch?v=abc")
+        self.assertIn("Midterms", v["text"])
+        self.assertIsNone(folgen.youtube_neuestes("CoinBureau", "k", get=get, jetzt=jetzt + 30 * 86400))   # zu alt
+
+    def test_nachricht_mit_video_kommentar(self):
+        a = {"x": [], "andere": [{"plattform": "youtube", "name": "CoinBureau", "warum": "Bildung",
+                                  "video": {"link": "https://www.youtube.com/watch?v=abc", "titel": "Midterms and crypto"},
+                                  "kommentar": "Great timing. Which result matters most for BTC tonight?"},
+                                 {"plattform": "tiktok", "name": "x", "warum": "y"}]}
+        text, _ = folgen.nachricht(a, "2026-11-03", [{"text": "Love this. How do you see the midterms for BTC?"}])
+        self.assertIn("watch?v=abc", text)
+        self.assertIn("<code>Great timing.", text)
+        self.assertIn("<code>Love this.", text)

@@ -20,7 +20,7 @@ AUSGABE = Path(os.environ.get("SOCIAL_AUSGABE", BASIS / "ausgabe"))
 STAND = AUSGABE / "folgen_stand.json"
 
 
-def main(senden=None, schreiber=None) -> int:
+def main(senden=None, schreiber=None, yt_holen=None, yt_schreiber=None) -> int:
     cfg = yaml.safe_load((Path(__file__).resolve().parent.parent / "config.yaml").read_text(encoding="utf-8"))
     f = cfg.get("folgen") or {}
     stand = folgen.stand_laden(STAND)
@@ -38,8 +38,31 @@ def main(senden=None, schreiber=None) -> int:
             except Exception:
                 markt = None   # ohne Marktdaten trotzdem Kommentare zum aktuellen Anlass
             fakten = dict(km.fakten_aus_markt(markt), current_events=km.anlaesse())
-            kommentare = (schreiber or folgen.kommentare_schreiben)(len(a["andere"]), fakten, cfg,
-                                                                     g.get("anthropic_api_key"))
+            # YouTube: neuestes Video lesen und den Kommentar genau dazu schreiben (wie bei X)
+            videos = []
+            if g.get("youtube_api_key"):
+                for k in a["andere"]:
+                    if k["plattform"] == "youtube":
+                        try:
+                            v = (yt_holen or folgen.youtube_neuestes)(k["name"], g["youtube_api_key"])
+                        except Exception as e:
+                            print("YouTube-Video nicht gelesen:", k["name"], e)
+                            v = None
+                        if v:
+                            k["video"] = v
+                            videos.append(v)
+            if videos:
+                try:
+                    vs = (yt_schreiber or (lambda ps: km.schreiben(ps, fakten, cfg, g["anthropic_api_key"])))(videos)
+                    nach_id = {v["id"]: v for v in videos}
+                    for vor in vs:
+                        v = nach_id.get(str(vor.get("id")))
+                        if v and not km.pruefen(vor["text"], v["text"], fakten, cfg, set()):
+                            next(k for k in a["andere"] if k.get("video") is v)["kommentar"] = vor["text"]
+                except Exception as e:
+                    print("YouTube-Kommentare nicht geschrieben:", e)
+            rest = sum(1 for k in a["andere"] if not k.get("kommentar"))
+            kommentare = (schreiber or folgen.kommentare_schreiben)(rest, fakten, cfg, g.get("anthropic_api_key"))
         except Exception as e:
             print("Kommentare für die Folge-Liste nicht geschrieben:", e)
     datum = folgen.heute()
