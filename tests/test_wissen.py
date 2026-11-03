@@ -67,3 +67,26 @@ class LernVideoTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class LernGrafikTest(unittest.TestCase):
+    """Wunsch Tobias 03.11.2026: Erklaervideos immer mit Grafik; Chart-Themen bauen ein Kerzen-Schema Schritt fuer Schritt."""
+
+    def test_jedes_thema_hat_grafik_in_jeder_szene(self):
+        from social import design
+        img0 = design.hintergrund(design.THEMEN["nacht"], 1080, 700).convert("RGBA")
+        for t in wissen.themen():
+            for schritt in (1, 2, 3):
+                img = img0.copy()
+                self.assertTrue(wissen.video_grafik(img, t, design.THEMEN["nacht"], (60, 40, 1020, 660), schritt), t["id"])
+                self.assertNotEqual(img.tobytes(), img0.tobytes(), t["id"])
+
+    def test_liquiditaet_baut_sich_auf(self):
+        from social import design, grafik
+        th = design.THEMEN["nacht"]
+        bilder = []
+        for schritt in (1, 2, 3):
+            img = design.hintergrund(th, 1080, 700).convert("RGBA")
+            grafik.lern_chart(img, th, (60, 40, 1020, 660), "liquiditaet", schritt)
+            bilder.append(img.tobytes())
+        self.assertEqual(len(set(bilder)), 3)
