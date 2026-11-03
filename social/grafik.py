@@ -336,3 +336,105 @@ def lern_chart(img: Image.Image, t: Thema, box, art: str, schritt: int, lang: st
             d.line([(X(a) - bw * 0.4, y1 - 72), (X(b) + bw * 0.4, y1 - 72)], fill=farben[k], width=4)
     sch = tx["schema"]
     d.text((x1 - 30 - d.textlength(sch, font=font("Medium", 24)), y0 + 20), sch, font=font("Medium", 24), fill=t.neben)
+
+
+ECHT_TEXTE = {
+    "en": {"tief": "obvious low", "stops": "Stops sit below", "zone": "Liquidity zone", "geholt": "Stops taken → reversal",
+           "support": "Support", "resistance": "Resistance", "gebrochen": "Support broken", "haelt": "Support held so far",
+           "echt": "Real chart"},
+    "de": {"tief": "auffälliges Tief", "stops": "Darunter liegen Stops", "zone": "Liquiditätszone",
+           "geholt": "Stops geholt → Wende", "support": "Unterstützung", "resistance": "Widerstand",
+           "gebrochen": "Unterstützung gebrochen", "haelt": "Unterstützung hielt bisher", "echt": "Echter Chart"},
+}
+
+
+def _preis(x: float) -> str:
+    return f"${x:,.0f}" if x >= 100 else f"${x:,.4g}"
+
+
+def echt_chart(img: Image.Image, t: Thema, box, kerzen: list[dict], art: str, info: dict, schritt: int,
+               lang: str = "en", titel: str = ""):
+    """Echter Kerzen-Chart (z. B. BTC 4h) mit markiertem Muster aus social/muster.py, Schritt fuer Schritt."""
+    import datetime as _dt
+    tx = ECHT_TEXTE[lang]
+    x0, y0, x1, y1 = box
+    karte(img, t, box)
+    sk = max(1.0, (x1 - x0) / 820)
+    fl, fk, fs = font("Bold", int(30 * sk)), font("SemiBold", int(25 * sk)), font("Medium", int(21 * sk))
+    sichtbar = len(kerzen)
+    if art == "liquiditaet" and schritt < 3:
+        sichtbar = info["docht_index"]            # Docht und Wende erst im 3. Schritt
+    if art == "unterstuetzung" and schritt < 3 and info.get("bruch_index"):
+        sichtbar = info["bruch_index"]
+    k = kerzen[:sichtbar]
+    tief_, hoch_ = min(x["l"] for x in kerzen), max(x["h"] for x in kerzen)
+    lo = tief_ - (hoch_ - tief_) * 0.30     # Platz unten fuer Zone und Beschriftung
+    hi = hoch_ + (hoch_ - tief_) * 0.08
+    innen = (x0 + 30, y0 + 70, x1 - 150, y1 - 60)
+    n = len(kerzen)
+    bw = (innen[2] - innen[0]) / n
+
+    def X(i):
+        return innen[0] + bw * (i + 0.5)
+
+    def Y(v):
+        return innen[3] - (innen[3] - innen[1]) * (v - lo) / (hi - lo)
+
+    ebene = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    e = ImageDraw.Draw(ebene)
+    if art == "liquiditaet" and schritt >= 2:
+        e.rectangle([innen[0], Y(info["tief"]), innen[2], Y(info["docht"] * 0.997)], fill=rgb(t.akzent2, 75))
+    if art == "unterstuetzung":
+        for z, farbe, ab in ((info["support"], t.plus, 1), (info["resistance"], t.minus, 2)):
+            if schritt >= ab:
+                e.rectangle([innen[0], Y(z["oben"] * 1.002), innen[2], Y(z["unten"] * 0.998)], fill=rgb(farbe, 60))
+    img.alpha_composite(ebene)
+    d = ImageDraw.Draw(img)
+    for v in (lo + (hi - lo) * f for f in (0.1, 0.5, 0.9)):     # Preisachse rechts
+        d.text((innen[2] + 16, Y(v) - fs.size / 2), _preis(v), font=fs, fill=t.neben)
+    dicke = max(2, int(bw * 0.15))
+    for i, x in enumerate(k):
+        farbe = t.plus if x["c"] >= x["o"] else t.minus
+        d.line([(X(i), Y(x["h"])), (X(i), Y(x["l"]))], fill=farbe, width=dicke)
+        top, unten = Y(max(x["o"], x["c"])), Y(min(x["o"], x["c"]))
+        d.rectangle([X(i) - bw * 0.32, top, X(i) + bw * 0.32, max(unten, top + 2)], fill=farbe)
+    if art == "liquiditaet":
+        ly, i = Y(info["tief"]), info["tief_index"]
+        for xx in range(int(X(i)), int(innen[2]), 22):
+            d.line([(xx, ly), (xx + 12, ly)], fill=t.text, width=3)
+        lab = f"{tx['tief']} {_preis(info['tief'])}"
+        d.text((innen[2] - d.textlength(lab, font=fk), ly - fk.size - 12), lab, font=fk, fill=t.text)
+        if schritt == 1:
+            d.text((X(i), ly + 10), tx["stops"], font=fl, fill=t.minus)
+        if schritt >= 2:
+            d.text((X(i), ly + 8), tx["zone"], font=fk, fill=t.text)
+        if schritt >= 3:
+            j = info["docht_index"]
+            sx, sy = X(j), Y(info["docht"])
+            d.ellipse([sx - 14, sy - 14, sx + 14, sy + 14], outline=t.akzent, width=5)
+            w_ = d.textlength(tx["geholt"], font=fl)
+            d.text((max(innen[0], min(sx - w_ / 2, innen[2] - w_)), sy + 22), tx["geholt"], font=fl, fill=t.akzent)
+    if art == "unterstuetzung":
+        s, r = info["support"], info["resistance"]
+        for j in s["beruehrungen"]:
+            if j < sichtbar:
+                d.ellipse([X(j) - 12, Y(kerzen[j]["l"]) - 12, X(j) + 12, Y(kerzen[j]["l"]) + 12], outline=t.plus, width=4)
+        d.text((innen[0] + 8, Y(s["unten"] * 0.998) + 6), tx["support"], font=fl, fill=t.plus)
+        if schritt >= 2:
+            for j in r["beruehrungen"]:
+                if j < sichtbar:
+                    d.ellipse([X(j) - 12, Y(kerzen[j]["h"]) - 12, X(j) + 12, Y(kerzen[j]["h"]) + 12], outline=t.minus,
+                              width=4)
+            d.text((innen[0] + 8, Y(r["oben"] * 1.002) - fl.size - 8), tx["resistance"], font=fl, fill=t.minus)
+        if schritt >= 3:
+            b = info.get("bruch_index")
+            txt = tx["gebrochen"] if b is not None else tx["haelt"]
+            if b is not None:
+                d.ellipse([X(b) - 14, Y(kerzen[b]["c"]) - 14, X(b) + 14, Y(kerzen[b]["c"]) + 14], outline=t.akzent, width=5)
+            w_ = d.textlength(txt, font=fl)
+            d.text((innen[2] - w_, y1 - fl.size - 20), txt, font=fl, fill=t.akzent)
+    d.text((x0 + 30, y0 + 20), titel, font=fk, fill=t.text)
+    utc = _dt.timezone.utc
+    a, b = (_dt.datetime.fromtimestamp(kerzen[0]["t"] / 1000, utc), _dt.datetime.fromtimestamp(kerzen[-1]["t"] / 1000, utc))
+    zeit = f"{a:%b %-d} – {b:%b %-d}" if lang == "en" else f"{a.day}.{a.month}. – {b.day}.{b.month}."
+    d.text((x1 - 24 - d.textlength(zeit, font=fs), y0 + 24), zeit, font=fs, fill=t.neben)

@@ -122,6 +122,9 @@ Lern-/News-/Coin-Check-Texte, Stimme (englische ElevenLabs-Stimme fehlt). Startk
   Ergebnis-Zahl und Fortschrittsbalken, Folgen-Abschluss. Gleiche Sätze und Fakten wie das Bild, mit Stimme (S17).
 - Jede Szene hat eine Grafik: Chart-Themen (Liquidität, Unterstützung, Pump-and-dump) als Kerzen-Schema, das sich je
   Punkt aufbaut (`grafik.lern_chart`, „Illustration“); Zahlen-Themen mit dem Diagramm aus dem Bild-Beitrag.
+- Echter Chart (03.11.2026): Liquidität und Unterstützung zeigen, wenn möglich, echte BTC-4h-Kerzen mit dem gefundenen
+  Muster (`social/muster.py`). Kein Muster oder Börse nicht erreichbar = Illustration. Pump-and-dump nie mit echtem Coin.
+  Abschalten: `video.echter_chart: false`.
 
 ## Schutzregeln (fest eingebaut)
 Ueberall nur „Keine Anlageberatung“ (kein KI-, Totalverlust- oder Betreiber-Hinweis), keine Einstiegskurse,

@@ -267,7 +267,7 @@ class Leinwand:
             y += 64
         rgba = self.img.convert("RGBA")   # Vorschau: das fertige Bild (letzter Schritt) als Haken
         if wissen.video_grafik(rgba, t, self.th, (60, y + 30 if chart else max(y + 30, 820), self.W - 60, 1200), 3,
-                               self.lang):
+                               self.lang, t.get("_echt")):
             self.img.paste(rgba.convert("RGB"))
         d = ImageDraw.Draw(self.img)
         self.untertitel(d, text)
@@ -303,7 +303,8 @@ class Leinwand:
         t = daten.get("thema")
         if t:
             rgba = self.img.convert("RGBA")
-            if wissen.video_grafik(rgba, t, self.th, (60, oben, self.W - 60, 1200), daten.get("schritt", nr), self.lang):
+            if wissen.video_grafik(rgba, t, self.th, (60, oben, self.W - 60, 1200), daten.get("schritt", nr), self.lang,
+                                   daten.get("echt")):
                 self.img.paste(rgba.convert("RGB"))
             d = ImageDraw.Draw(self.img)
         self.untertitel(d, text)
