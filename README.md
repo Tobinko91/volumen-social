@@ -117,9 +117,11 @@ Lern-/News-/Coin-Check-Texte, Stimme (englische ElevenLabs-Stimme fehlt). Startk
   Tobias schickt die mp3 einfach an den Redaktions-Bot; `/musik` zeigt die Liste, `/musik weg 2` löscht.
   Die erzeugte Musik ist abgeschaltet (Tobias mochte sie nicht), mit `video.musik: generiert` wieder an.
 
-## Lern-Video (S28, seit 02.11.2026)
+## Lern-Video (S28, seit 02.11.2026; Grafiken seit 03.11.2026)
 - `main.py wissen` baut zusätzlich ein 9:16-Video (`_video`-Ordner): große Zahl als Haken, je Punkt eine Szene mit
   Ergebnis-Zahl und Fortschrittsbalken, Folgen-Abschluss. Gleiche Sätze und Fakten wie das Bild, mit Stimme (S17).
+- Jede Szene hat eine Grafik: Chart-Themen (Liquidität, Unterstützung, Pump-and-dump) als Kerzen-Schema, das sich je
+  Punkt aufbaut (`grafik.lern_chart`, „Illustration“); Zahlen-Themen mit dem Diagramm aus dem Bild-Beitrag.
 
 ## Schutzregeln (fest eingebaut)
 Ueberall nur „Keine Anlageberatung“ (kein KI-, Totalverlust- oder Betreiber-Hinweis), keine Einstiegskurse,

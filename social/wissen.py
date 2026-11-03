@@ -41,6 +41,19 @@ def texte(t: dict, cfg: dict) -> dict:
     return {"x": t["x"], "telegram": "\n".join(tg)}
 
 
+CHART_ART = {"liquiditaetszone": "liquiditaet", "unterstuetzung": "unterstuetzung", "pump-and-dump": "pump"}
+
+
+def video_grafik(img, t: dict, th, box, schritt: int, lang: str = "en") -> bool:
+    """Grafik fuer eine Szene des Lern-Videos (Wunsch Tobias 03.11.2026: Erklaervideos immer mit Grafik).
+    Chart-Themen: Kerzen-Schema, das sich je Punkt aufbaut. Zahlen-Themen: dieselbe Grafik wie im Bild-Beitrag."""
+    from . import grafik
+    if t["id"] in CHART_ART:
+        grafik.lern_chart(img, th, box, CHART_ART[t["id"]], schritt, lang)
+        return True
+    return bool(_grafik(img, t, th, box))
+
+
 def video_szenen(t: dict, lang: str = "en") -> dict:
     """S28 Lern-Video: Haken (Titel als Frage/Aussage + grosse Zahl), je Punkt eine Szene, Folgen.
     Gleiche Saetze und Fakten wie der Bild-Beitrag, darum gilt dieselbe Zahlen-Pruefung."""
@@ -48,7 +61,9 @@ def video_szenen(t: dict, lang: str = "en") -> dict:
     n = len(t["punkte"])
     szenen = [{"typ": "lern_haken", "daten": t, "vorlage": t["titel"].rstrip(".") + "."}]
     for i, p in enumerate(t["punkte"], 1):
-        szenen.append({"typ": "lern_punkt", "daten": {"nr": i, "von": n, "satz": p, "ersatz": "Takeaway" if lang == "en" else "Merke"},
+        szenen.append({"typ": "lern_punkt", "daten": {"nr": i, "von": n, "satz": p,
+                                                      "ersatz": "Takeaway" if lang == "en" else "Merke",
+                                                      "thema": t, "schritt": i},   # Grafik je Punkt (03.11.2026)
                        "vorlage": p})
     szenen.append({"typ": "outro", "daten": {}, "vorlage": _T[lang]["s_outro"]})
     return {"format": "wissen", "sprache": lang, "szenen": szenen, "fakten": t["fakten"], "titel": t["titel"]}

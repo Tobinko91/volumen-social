@@ -252,48 +252,62 @@ class Leinwand:
         img, d = self.neu()
         self.kopf(d)
         etikett = "LEARN IN 20 SECONDS" if self.lang == "en" else "IN 20 SEKUNDEN ERKLÄRT"
-        self.mitte(d, 440, etikett, _font("Bold", 46), self.f["amber"])
+        from . import wissen
         wert = str(t["gross"])
-        gr = 230
-        while d.textlength(wert, font=_font("Black", gr)) > self.W - 140 and gr > 110:
+        chart = t["id"] in wissen.CHART_ART   # Kerzen-Schema braucht mehr Hoehe
+        gr, y0 = (130, 460) if chart else (180, 500)   # darunter kommt die Grafik (Wunsch Tobias 03.11.2026)
+        while d.textlength(wert, font=_font("Black", gr)) > self.W - 140 and gr > 90:
             gr -= 10
         farbe = self.f["minus"] if wert.startswith(("-", "−")) else self.f["plus"]
-        self.mitte(d, 520, wert, _font("Black", gr), farbe)
-        y = 520 + gr + 40
-        for z in textwrap.wrap(t.get("gross_text", ""), width=24)[:3]:
-            self.mitte(d, y, z, _font("Bold", 58), self.f["text"])
-            y += 74
+        self.mitte(d, y0 - 62 if chart else 440, etikett, _font("Bold", 42 if chart else 46), self.f["amber"])
+        self.mitte(d, y0, wert, _font("Black", gr), farbe)
+        y = y0 + gr + 30
+        for z in textwrap.wrap(t.get("gross_text", ""), width=30)[:2]:
+            self.mitte(d, y, z, _font("Bold", 50), self.f["text"])
+            y += 64
+        rgba = self.img.convert("RGBA")   # Vorschau: das fertige Bild (letzter Schritt) als Haken
+        if wissen.video_grafik(rgba, t, self.th, (60, y + 30 if chart else max(y + 30, 820), self.W - 60, 1200), 3,
+                               self.lang):
+            self.img.paste(rgba.convert("RGB"))
+        d = ImageDraw.Draw(self.img)
         self.untertitel(d, text)
-        return img
+        return self.img
 
     def lern_punkt(self, daten, text):
-        """Ein Punkt des Themas: Schritt-Nummer + wichtigste Zahl des Satzes gross, der Satz als Untertitel."""
+        """Ein Punkt des Themas: Schritt + Fortschritt oben, Ergebnis-Zahl, darunter die GRAFIK (Kerzen-Schema, das
+        sich je Punkt aufbaut, oder das Diagramm des Themas; Wunsch Tobias 03.11.2026), der Satz als Untertitel."""
         import re as _re
+        from . import wissen
         img, d = self.neu()
         self.kopf(d)
         nr, von = daten["nr"], daten["von"]
-        self.mitte(d, 430, f"{nr}/{von}", _font("Bold", 52), self.f["neben"])
+        f_nr = _font("Bold", 40)
+        d.text((90, 378), f"{nr}/{von}", font=f_nr, fill=self.f["neben"])
+        x0, x1, y = 200, self.W - 90, 398
+        d.rounded_rectangle([x0, y, x1, y + 12], radius=6, fill=self.f["flaeche"])
+        d.rounded_rectangle([x0, y, x0 + (x1 - x0) * nr / von, y + 12], radius=6, fill=self.f["plus"])
         # Ergebnis-Zahl = letzte Zahl im Satz („Risk 1% ... you still have 90.4%“ -> 90.4%)
         treffer = _re.findall(r"[-−+]?\$?\d[\d,.]*\d%?|[-−+]?\$?\d%?(?:x)?", daten["satz"])
         gross = treffer[-1].rstrip(".,") if treffer else ""
-        if not gross:   # ohne Zahl: Stichwort vor dem Doppelpunkt („Resistance:“) oder Stichwort des Themas
-            kopf = daten["satz"].split(":")[0] if ":" in daten["satz"][:30] else daten.get("ersatz", "")
-            y = 600
-            for z in textwrap.wrap(kopf, width=14)[:2]:
-                self.mitte(d, y, z, _font("Black", 120), self.f["amber"])
-                y += 140
+        if not gross and ":" in daten["satz"][:30]:
+            gross = daten["satz"].split(":")[0]
+        oben = 450
         if gross:
-            gr = 250
-            while d.textlength(gross, font=_font("Black", gr)) > self.W - 140 and gr > 110:
+            gr = 130
+            while d.textlength(gross, font=_font("Black", gr)) > self.W - 160 and gr > 70:
                 gr -= 10
-            self.mitte(d, 560, gross, _font("Black", gr),
-                       self.f["minus"] if gross.startswith(("-", "−")) else self.f["plus"])
-        # Fortschrittsbalken (zeigt: es kommt noch was -> laenger zuschauen)
-        x0, x1, y = 160, self.W - 160, 1080
-        d.rounded_rectangle([x0, y, x1, y + 14], radius=7, fill=self.f["flaeche"])
-        d.rounded_rectangle([x0, y, x0 + (x1 - x0) * nr / von, y + 14], radius=7, fill=self.f["plus"])
+            farbe = self.f["minus"] if gross.startswith(("-", "−")) else (
+                self.f["plus"] if any(c.isdigit() for c in gross) else self.f["amber"])
+            self.mitte(d, oben, gross, _font("Black", gr), farbe)
+            oben += gr + 40
+        t = daten.get("thema")
+        if t:
+            rgba = self.img.convert("RGBA")
+            if wissen.video_grafik(rgba, t, self.th, (60, oben, self.W - 60, 1200), daten.get("schritt", nr), self.lang):
+                self.img.paste(rgba.convert("RGB"))
+            d = ImageDraw.Draw(self.img)
         self.untertitel(d, text)
-        return img
+        return self.img
 
     def outro(self, daten, text):
         img, d = self.neu()

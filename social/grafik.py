@@ -205,3 +205,134 @@ def mover_linien(img: Image.Image, t: Thema, box, mover: list[dict], titel: str 
             d.ellipse([pts[-1][0] - 7, pts[-1][1] - 7, pts[-1][0] + 7, pts[-1][1] + 7], fill=farbe)
         if i < len(mover) - 1:
             d.line([(x0 + 36, top + hoehe), (x1 - 36, top + hoehe)], fill=t.linie, width=1)
+
+
+# ---------------------------------------------------------------- Lern-Videos: Kerzen-Schema Schritt fuer Schritt
+# Wunsch Tobias 03.11.2026: Erklaervideos (z. B. Liquiditaetszone) muessen zeigen, wo das im Chart liegt.
+# Schematische Kerzen (keine echten Kurse, darum „Illustration“), je Punkt des Themas ein weiterer Schritt.
+
+def _kerzen(pfad: list[float]) -> list[tuple[float, float, float, float]]:
+    """Schlusskurse -> Kerzen (open, high, low, close), alles 0..1 (1 = oben)."""
+    out, vorher = [], pfad[0]
+    for c in pfad:
+        o = vorher
+        out.append((o, max(o, c) + 0.02, min(o, c) - 0.02, c))
+        vorher = c
+    return out
+
+
+LERN_CHARTS = {
+    # Liquiditaet: zwei gleiche Tiefs (Stops darunter), Docht holt die Stops, dann Wende nach oben
+    "liquiditaet": {"pfad": [0.62, 0.58, 0.50, 0.42, 0.47, 0.56, 0.52, 0.43, 0.48, 0.46, 0.45, 0.57, 0.67, 0.75],
+                    "tiefs": [3, 7], "linie": 0.40, "docht": 10, "docht_tief": 0.24},
+    # Unterstuetzung/Widerstand: Pendeln zwischen 0.30 und 0.72, dann Bruch nach unten und Test von unten
+    "unterstuetzung": {"pfad": [0.50, 0.62, 0.71, 0.60, 0.45, 0.32, 0.42, 0.55, 0.70, 0.58, 0.40, 0.31, 0.43, 0.36,
+                                0.22, 0.17, 0.25, 0.30, 0.21, 0.14],
+                       "unten": 0.31, "oben": 0.71, "tests_unten": [5, 11], "tests_oben": [2, 8], "retest": 17},
+    # Pump-and-dump: sammeln (flach), bewerben (steil hoch), verkaufen (Absturz)
+    "pump": {"pfad": [0.20, 0.21, 0.19, 0.20, 0.22, 0.21, 0.27, 0.35, 0.45, 0.58, 0.72, 0.86, 0.80, 0.56, 0.36, 0.22,
+                      0.15, 0.12],
+             "phasen": [(0, 5), (6, 11), (12, 17)]},
+}
+LERN_TEXTE = {
+    "en": {"stops": "Stops sit here", "zone": "Liquidity zone: many orders", "geholt": "Stops taken → reversal",
+           "tief": "obvious lows", "support": "Support", "resistance": "Resistance",
+           "neu": "Old support = new resistance", "phasen": ["1 Accumulate", "2 Promote", "3 Sell"],
+           "schema": "Illustration"},
+    "de": {"stops": "Hier liegen Stops", "zone": "Liquiditätszone: viele Orders", "geholt": "Stops geholt → Wende",
+           "tief": "auffällige Tiefs", "support": "Unterstützung", "resistance": "Widerstand",
+           "neu": "Alte Unterstützung = neuer Widerstand", "phasen": ["1 Sammeln", "2 Bewerben", "3 Verkaufen"],
+           "schema": "Schema"},
+}
+
+
+def lern_chart(img: Image.Image, t: Thema, box, art: str, schritt: int, lang: str = "en"):
+    """Kerzen-Schema fuer Lern-Videos. schritt 1..3 baut das Bild auf (je Punkt des Themas ein Schritt)."""
+    spec, tx = LERN_CHARTS[art], LERN_TEXTE[lang]
+    x0, y0, x1, y1 = box
+    karte(img, t, box)
+    pfad = spec["pfad"]
+    sichtbar = len(pfad)
+    if art == "liquiditaet" and schritt < 3:
+        sichtbar = spec["docht"]          # Docht und Wende erst im 3. Schritt
+    if art == "unterstuetzung" and schritt < 3:
+        sichtbar = 13
+    if art == "pump":
+        sichtbar = spec["phasen"][min(schritt, 3) - 1][1] + 1
+    kerzen = _kerzen(pfad)[:sichtbar]
+    if art == "liquiditaet" and schritt >= 3:
+        o, h, l, c = kerzen[spec["docht"]]
+        kerzen[spec["docht"]] = (o, h, spec["docht_tief"], c)
+    n = len(pfad)
+    innen = (x0 + 50, y0 + (110 if art == "unterstuetzung" else 70), x1 - 50, y1 - 80)
+    bw = (innen[2] - innen[0]) / n
+
+    def X(i):
+        return innen[0] + bw * (i + 0.5)
+
+    def Y(v):
+        return innen[3] - (innen[3] - innen[1]) * (v - 0.05) / 0.9
+
+    ebene = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    e = ImageDraw.Draw(ebene)
+    sk = max(1.0, (x1 - x0) / 820)          # im Video groessere Schrift (Handy)
+    fl, fk = font("Bold", int(30 * sk)), font("SemiBold", int(26 * sk))
+    if art == "liquiditaet":
+        ly = Y(spec["linie"])
+        if schritt >= 2:
+            e.rectangle([innen[0], ly, innen[2], Y(spec["linie"] - 0.13)], fill=rgb(t.akzent2, 70))
+        for xx in range(int(innen[0]), int(innen[2]), 26):     # gestrichelte Linie unter den Tiefs
+            e.line([(xx, ly), (xx + 14, ly)], fill=rgb(t.text, 200), width=3)
+    if art == "unterstuetzung":
+        for wert, farbe, ab in ((spec["unten"], t.plus if schritt < 3 else t.minus, 1), (spec["oben"], t.minus, 2)):
+            if schritt >= ab:
+                e.rectangle([innen[0], Y(wert + 0.035), innen[2], Y(wert - 0.035)], fill=rgb(farbe, 60))
+    img.alpha_composite(ebene)
+    d = ImageDraw.Draw(img)
+    for i, (o, h, l, c) in enumerate(kerzen):     # Kerzen
+        farbe = t.plus if c >= o else t.minus
+        d.line([(X(i), Y(h)), (X(i), Y(l))], fill=farbe, width=4)
+        top, unten = Y(max(o, c)), Y(min(o, c))
+        d.rectangle([X(i) - bw * 0.3, top, X(i) + bw * 0.3, max(unten, top + 4)], fill=farbe)
+    if art == "liquiditaet":
+        ly = Y(spec["linie"])
+        d.text((innen[0], ly - 40), tx["tief"], font=fk, fill=t.text)
+        for i in spec["tiefs"]:                   # Stops als kleine x unter den Tiefs
+            for k in (-1, 0, 1):
+                sx, sy = X(i) + k * 22, ly + 22
+                d.line([(sx - 7, sy - 7), (sx + 7, sy + 7)], fill=t.minus, width=4)
+                d.line([(sx - 7, sy + 7), (sx + 7, sy - 7)], fill=t.minus, width=4)
+        if schritt >= 2:   # Beschriftung IN der Zone (kollidiert nicht mit „Stops geholt“)
+            zy = (Y(spec["linie"]) + Y(spec["linie"] - 0.13)) / 2 - fl.size / 2 + 6
+            d.text((innen[0] + 12, zy), tx["zone"], font=fl, fill=t.text)
+        else:
+            d.text((innen[0], Y(spec["linie"] - 0.13) + 8), tx["stops"], font=fl, fill=t.minus)
+        if schritt >= 3:
+            sx, sy = X(spec["docht"]), Y(spec["docht_tief"])
+            d.ellipse([sx - 14, sy - 14, sx + 14, sy + 14], outline=t.akzent, width=5)
+            w_ = d.textlength(tx["geholt"], font=fl)
+            d.text((innen[2] - w_, sy + 22), tx["geholt"], font=fl, fill=t.akzent)
+    if art == "unterstuetzung":
+        for i in spec["tests_unten"]:
+            d.ellipse([X(i) - 12, Y(spec["unten"]) - 12, X(i) + 12, Y(spec["unten"]) + 12], outline=t.plus, width=5)
+        d.text((innen[0], Y(spec["unten"] - 0.035) + 6), tx["support"], font=fl, fill=t.plus if schritt < 3 else t.minus)
+        if schritt >= 2:
+            for i in spec["tests_oben"]:
+                d.ellipse([X(i) - 12, Y(spec["oben"]) - 12, X(i) + 12, Y(spec["oben"]) + 12], outline=t.minus, width=5)
+            d.text((innen[0], Y(spec["oben"] + 0.035) - 40), tx["resistance"], font=fl, fill=t.minus)
+        if schritt >= 3:
+            i = spec["retest"]
+            d.ellipse([X(i) - 14, Y(spec["unten"]) - 14, X(i) + 14, Y(spec["unten"]) + 14], outline=t.akzent, width=5)
+            w_ = d.textlength(tx["neu"], font=fk)
+            ty = y0 + 56        # oben rechts, freie Flaeche; Linie zum Test von unten
+            d.text((innen[2] - w_, ty), tx["neu"], font=fk, fill=t.akzent)
+            d.line([(X(i), ty + fk.size + 10), (X(i), Y(spec["unten"]) - 18)], fill=t.akzent, width=3)
+    if art == "pump":
+        farben = [t.akzent2, t.akzent, t.minus]
+        for k, (a, b) in enumerate(spec["phasen"][:min(schritt, 3)]):
+            mx = (X(a) + X(b)) / 2
+            name = tx["phasen"][k]
+            d.text((mx - d.textlength(name, font=fk) / 2, y1 - 62), name, font=fk, fill=farben[k])
+            d.line([(X(a) - bw * 0.4, y1 - 72), (X(b) + bw * 0.4, y1 - 72)], fill=farben[k], width=4)
+    sch = tx["schema"]
+    d.text((x1 - 30 - d.textlength(sch, font=font("Medium", 24)), y0 + 20), sch, font=font("Medium", 24), fill=t.neben)
