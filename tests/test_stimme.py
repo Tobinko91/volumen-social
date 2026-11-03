@@ -113,7 +113,33 @@ class OpenAIStimmeTest(unittest.TestCase):
         import yaml
         from pathlib import Path
         cfg = yaml.safe_load((Path(__file__).resolve().parent.parent / "config.yaml").read_text(encoding="utf-8"))
-        self.assertEqual(cfg["stimme"]["anbieter"], "openai")
+        self.assertEqual(cfg["stimme"]["anbieter"], "elevenlabs")   # 03.11. 11:45: ElevenLabs
+        self.assertEqual(cfg["stimme"]["modell"], "eleven_flash_v2_5")
+
+
+class ElevenLabsTest(unittest.TestCase):
+    def test_fehlertext_und_guthaben(self):
+        import tempfile
+        from pathlib import Path
+
+        class R:
+            status_code = 401
+
+            def json(self):
+                return {"detail": {"status": "quota_exceeded", "message": "This request exceeds your quota."}}
+        cfg = {"stimme": {"voice_id": "v1", "modell": "eleven_flash_v2_5"}}
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(stimme.requests, "post", return_value=R()):
+            with self.assertRaises(stimme.StimmeFehlt) as e:
+                stimme._elevenlabs("x", Path(d) / "a.mp3", cfg, "k")
+        self.assertIn("exceeds your quota", str(e.exception))
+
+        class G:
+            status_code = 200
+
+            def json(self):
+                return {"tier": "starter", "character_count": 1200, "character_limit": 30000}
+        self.assertEqual(stimme.elevenlabs_guthaben("k", get=lambda *a, **k: G()),
+                         {"tarif": "starter", "verbraucht": 1200, "limit": 30000})
 
 
 if __name__ == "__main__":

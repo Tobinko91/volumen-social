@@ -102,7 +102,8 @@ Lern-/News-/Coin-Check-Texte, Stimme (englische ElevenLabs-Stimme fehlt). Startk
 - Ein einzelner Kanal-Knopf postet immer sofort. 🗑 Verwerfen stoppt geplante Posts. Einstellungen: `config.yaml zeitplan`.
 
 ## Stimme (S17, seit 01.11.2026)
-- Seit 03.11.2026 OpenAI (`stimme.anbieter: openai`, `openai_stimme`, Schlüssel `openai_api_key`), ca. 1 $/Monat.
+- Seit 03.11.2026 11:45 ElevenLabs (`stimme.anbieter: elevenlabs`, Stimme `voice_name: Brian`, Modell `eleven_flash_v2_5`,
+  halbe Credits), Tarif Starter 5 $ reicht. Davor kurz OpenAI (`stimme.anbieter: openai`, `openai_stimme`, Schlüssel `openai_api_key`), ca. 1 $/Monat.
   !! OpenAI schaltet `gpt-4o-mini-tts` am 6.1.2027 ab, vorher auf google oder elevenlabs umstellen.
 - Alternative: Google Cloud Text-to-Speech, Stimme „Chirp 3 HD“ (`stimme.anbieter: google`, `stimme.google_stimme`).
   1 Mio Zeichen/Monat gratis, Bedarf ca. 50.000. Schlüssel `google_tts_key` über `tools/schluessel.py`.
