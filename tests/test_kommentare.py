@@ -115,5 +115,24 @@ class KommentarTest(unittest.TestCase):
                       (HIER / "tools/plan.sh").read_text())
 
 
+class AnlassTest(unittest.TestCase):
+    """Tobias 03.11.2026: Kommentare mit Frage zum aktuellen Anlass (z. B. Midterms), nicht nur Statistik."""
+
+    def test_anlaesse_heute_morgen(self):
+        import datetime as dt
+        from social import kommentare as km
+        a = km.anlaesse(dt.datetime(2026, 11, 3, 18).timestamp())
+        self.assertIn("US midterm elections today", a)
+        self.assertTrue(any("tomorrow" in x for x in a))
+        self.assertIn("US midterm elections yesterday", km.anlaesse(dt.datetime(2026, 11, 4, 8).timestamp()))
+
+    def test_prompt_will_gespraech(self):
+        from social import folgen, kommentare as km
+        for system in (km.SYSTEM, folgen.KOMMENTAR_SYSTEM):
+            self.assertIn("current_events", system)
+            self.assertIn("question", system)
+            self.assertNotIn("Exactly one concrete number", system)
+
+
 if __name__ == "__main__":
     unittest.main()
