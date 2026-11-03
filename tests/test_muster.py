@@ -72,5 +72,18 @@ class MusterTest(unittest.TestCase):
         self.assertEqual(len(set(bilder)), 3)
 
 
+    def test_bild_beitrag_mit_echtem_chart(self):
+        import tempfile
+        from pathlib import Path
+        import yaml
+        cfg = yaml.safe_load((Path(__file__).resolve().parent.parent / "config.yaml").read_text(encoding="utf-8"))
+        t = next(t for t in wissen.themen() if t["id"] == "liquiditaetszone")
+        echt = wissen.echter_chart(t, kerzen_holen=lambda *a: liqui_kerzen())
+        with tempfile.TemporaryDirectory() as d:
+            a = wissen.bild(t, cfg, Path(d) / "a.png", "2026-11-03")
+            b = wissen.bild(t, cfg, Path(d) / "b.png", "2026-11-03", echt=echt)
+            self.assertNotEqual(a.read_bytes(), b.read_bytes())
+
+
 if __name__ == "__main__":
     unittest.main()

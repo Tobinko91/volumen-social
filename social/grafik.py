@@ -406,8 +406,10 @@ def echt_chart(img: Image.Image, t: Thema, box, kerzen: list[dict], art: str, in
         d.text((innen[2] - d.textlength(lab, font=fk), ly - fk.size - 12), lab, font=fk, fill=t.text)
         if schritt == 1:
             d.text((X(i), ly + 10), tx["stops"], font=fl, fill=t.minus)
-        if schritt >= 2:
-            d.text((X(i), ly + 8), tx["zone"], font=fk, fill=t.text)
+        if schritt >= 2:   # Zonen-Text auf der Seite, wo der Docht NICHT ist
+            wz = d.textlength(tx["zone"], font=fk)
+            links = X(info["docht_index"]) > (innen[0] + innen[2]) / 2
+            d.text((innen[0] + 10 if links else innen[2] - wz - 10, ly + 8), tx["zone"], font=fk, fill=t.text)
         if schritt >= 3:
             j = info["docht_index"]
             sx, sy = X(j), Y(info["docht"])

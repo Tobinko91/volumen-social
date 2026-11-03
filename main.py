@@ -178,23 +178,24 @@ def wissen_beitrag(args, cfg, geheim, sperr) -> int:
     txt["telegram"] = links.mit_telegram_link(txt["telegram"], "wissen", ordner.name)
     pseudo = {"fakten": t["fakten"], "szenen": [0, 0]}
     fehler = pruefung.pruefen([txt["x"], txt["telegram"]], pseudo, cfg, sperr, erlaubt_fusszeile=True)
-    b = wissen.bild(t, cfg, ordner / "post.png")
+    # Echter BTC-Chart einmal holen, fuer Bild UND Video (Wunsch Tobias 03.11.2026: überall)
+    echt = wissen.echter_chart(t) if (cfg.get("video") or {}).get("echter_chart", True) else None
+    b = wissen.bild(t, cfg, ordner / "post.png", echt=echt)
     (ordner / "post_x.txt").write_text(txt["x"], encoding="utf-8")
     (ordner / "post_telegram.txt").write_text(txt["telegram"], encoding="utf-8")
     print(f"Wissen: {t['id']}, X {len(txt['x'])} Zeichen, Pruefung:", fehler or "bestanden")
     if args.senden and not fehler:
-        vorschlag(args, geheim, cfg, ordner)
+        vorschlag(args, geheim, cfg, ordner, f"Chart: echter {echt['titel']}-Chart" if echt else "")
     if getattr(args, "art", "beides") in ("video", "beides"):   # S28: Lernen auch als Reel/TikTok/Short
-        fehler += wissen_video(t, txt, cfg, geheim, sperr, Path(f"{ordner}_video"), args)
+        fehler += wissen_video(t, txt, cfg, geheim, sperr, Path(f"{ordner}_video"), args, echt)
     if not args.thema:
         wissen.merken(stand, t["id"], time.time())
     return 1 if fehler else 0
 
 
-def wissen_video(t, txt, cfg, geheim, sperr, ordner: Path, args) -> list[str]:
+def wissen_video(t, txt, cfg, geheim, sperr, ordner: Path, args, echt=None) -> list[str]:
     """S28 Lern-Video (9:16): grosse Zahl als Haken, je Punkt eine Szene, Folgen. Mit Stimme, wenn eingerichtet."""
     lang = cfg.get("sprache", "en")
-    echt = wissen.echter_chart(t) if (cfg.get("video") or {}).get("echter_chart", True) else None
     b = wissen.video_szenen(t, lang, echt)
     zeilen = [sz["vorlage"] for sz in b["szenen"]]
     fehler = pruefung.pruefen(zeilen, {"fakten": b["fakten"], "szenen": b["szenen"]}, cfg, sperr)

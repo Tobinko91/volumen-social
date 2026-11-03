@@ -41,6 +41,11 @@ def texte(t: dict, cfg: dict) -> dict:
     return {"x": t["x"], "telegram": "\n".join(tg)}
 
 
+def SPRACHE_BILD() -> str:
+    from . import design
+    return "de" if design.SPRACHE == "de" else "en"
+
+
 CHART_ART = {"liquiditaetszone": "liquiditaet", "unterstuetzung": "unterstuetzung", "pump-and-dump": "pump"}
 
 
@@ -207,7 +212,7 @@ def _grafik_de(img, t, th, box):
     return True
 
 
-def bild(t: dict, cfg: dict, ziel: Path, tag: str | None = None) -> Path:
+def bild(t: dict, cfg: dict, ziel: Path, tag: str | None = None, echt: dict | None = None) -> Path:
     import datetime as _dt
     from PIL import ImageDraw
     from .design import absatz, etikett, fuss, hintergrund, marke, punkte, thema_waehlen, ueberschrift
@@ -220,7 +225,11 @@ def bild(t: dict, cfg: dict, ziel: Path, tag: str | None = None) -> Path:
     etikett(d, th, 80, 170, t["saeule"].upper())
     y = ueberschrift(d, th, 80, 252, t["titel"], W - 160, groesse=66, max_zeilen=3) + 26
     box = (80, y, W - 80, y + 470)
-    if _grafik(img, t, th, box):
+    if echt:   # echter BTC-Chart, fertiges Bild (alle Schritte), Wunsch Tobias 03.11.2026: „überall“
+        from . import grafik
+        grafik.echt_chart(img, th, box, echt["kerzen"], CHART_ART[t["id"]], echt["info"], 3, SPRACHE_BILD(), echt["titel"])
+        y = box[3] + 34
+    elif _grafik(img, t, th, box):
         y = box[3] + 34
     else:
         y = absatz(d, th, 80, y, t["gross"], W - 160, groesse=110, farbe=th.akzent, gewicht="Bold")
