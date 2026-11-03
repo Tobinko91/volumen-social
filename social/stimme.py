@@ -1,4 +1,6 @@
 """KI-Stimme je Szene. Anbieter (config stimme.anbieter):
+- openai (seit 03.11.2026, Entscheidung Tobias): gpt-4o-mini-tts, Schluessel `openai_api_key`. Kosten ca. 1 $/Monat.
+  OpenAI schaltet diesen Weg am 6.1.2027 ab -> rechtzeitig umstellen.
 - google (seit 01.11.2026, Wunsch Tobias): Google Cloud Text-to-Speech, Stimme „Chirp 3 HD“.
   1 Mio Zeichen/Monat gratis, wir brauchen ca. 50.000. Schluessel `google_tts_key` in secrets.yaml.
 - elevenlabs: frueherer Anbieter (Kosten), Schluessel `elevenlabs_api_key`.
@@ -81,21 +83,49 @@ def _google(text: str, datei: Path, cfg: dict, key: str, post=requests.post) -> 
     datei.write_bytes(base64.b64decode(r.json()["audioContent"]))
 
 
+OPENAI_TTS = "https://api.openai.com/v1/audio/speech"
+OPENAI_STIL = ("Calm, confident narrator of a factual crypto data channel. Clear and natural, slightly energetic, "
+               "short pauses between sentences. Read numbers and percent signs naturally.")
+
+
+def _openai(text: str, datei: Path, cfg: dict, key: str, post=requests.post) -> None:
+    """OpenAI-Stimme (Entscheidung Tobias 03.11.2026). Hinweis: OpenAI schaltet diesen einfachen Weg
+    (gpt-4o-mini-tts, /v1/audio/speech) am 6.1.2027 ab -> bis dahin umstellen (siehe ideen-backlog S17)."""
+    st = cfg["stimme"]
+    body = {"model": st.get("openai_modell") or "gpt-4o-mini-tts", "voice": st.get("openai_stimme") or "cedar",
+            "input": text, "response_format": "mp3"}
+    if "mini-tts" in body["model"]:
+        body["instructions"] = st.get("openai_stil") or OPENAI_STIL
+    r = post(OPENAI_TTS, headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+             json=body, timeout=90)
+    if r.status_code >= 300:
+        try:
+            msg = r.json().get("error", {}).get("message", "")
+        except Exception:
+            msg = r.text[:200]
+        raise StimmeFehlt(f"OpenAI-Stimme: {r.status_code} {msg}")
+    datei.write_bytes(r.content)
+
+
+SCHLUESSEL = {"google": "google_tts_key", "openai": "openai_api_key", "elevenlabs": "elevenlabs_api_key"}
+ERZEUGER = {"google": "_google", "openai": "_openai", "elevenlabs": "_elevenlabs"}
+
+
 def schluessel(cfg: dict, geheim: dict) -> str | None:
     """Passender Schluessel zum eingestellten Anbieter."""
     anbieter = (cfg.get("stimme") or {}).get("anbieter", "elevenlabs")
-    return geheim.get("google_tts_key") if anbieter == "google" else geheim.get("elevenlabs_api_key")
+    return geheim.get(SCHLUESSEL.get(anbieter, "elevenlabs_api_key"))
 
 
 def sprechen(zeilen: list[str], ordner: Path, cfg: dict, key: str | None) -> tuple[list[Path], list[float], str]:
     """Erzeugt je Zeile eine Tondatei. Gibt (Dateien, Dauern, Quelle) zurueck."""
     ordner.mkdir(parents=True, exist_ok=True)
     st = cfg["stimme"]
-    google = st.get("anbieter") == "google"
-    echt = bool(key and st.get("aktiv", True) and (google or st.get("voice_id") or st.get("voice_name")))
+    anbieter = st.get("anbieter", "elevenlabs")
+    echt = bool(key and st.get("aktiv", True) and (anbieter != "elevenlabs" or st.get("voice_id") or st.get("voice_name")))
     if echt:
         try:
-            return _echt(zeilen, ordner, cfg, key, google)
+            return _echt(zeilen, ordner, cfg, key, anbieter)
         except Exception as e:   # Stimme kaputt -> Video trotzdem bauen, Hinweis an Tobias ueber die Quelle
             print("Stimme fehlgeschlagen, Video ohne Stimme:", e)
             fehler = f"stille (Stimme fehlgeschlagen: {str(e)[:120]})"
@@ -111,12 +141,13 @@ def sprechen(zeilen: list[str], ordner: Path, cfg: dict, key: str | None) -> tup
     return dateien, dauern, "stille"
 
 
-def _echt(zeilen, ordner, cfg, key, google):
+def _echt(zeilen, ordner, cfg, key, anbieter):
+    erzeuger = globals()[ERZEUGER.get(anbieter, "_elevenlabs")]
     dateien, dauern = [], []
     for i, z in enumerate(zeilen):
         f = ordner / f"ton_{i:02d}.mp3"
-        (_google if google else _elevenlabs)(z, f, cfg, key)
+        erzeuger(z, f, cfg, key)
         d = dauer(f) + 0.35          # kurze Pause nach jedem Satz
         dateien.append(f)
         dauern.append(max(d, cfg["video"]["min_szene_s"]))
-    return dateien, dauern, ("google" if google else "elevenlabs")
+    return dateien, dauern, anbieter

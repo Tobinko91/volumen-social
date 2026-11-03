@@ -83,5 +83,38 @@ class GoogleStimmeTest(unittest.TestCase):
             self.assertEqual(stimme.sprechen(["a b"], Path(d), self.CFG, None)[2], "stille")
 
 
+class OpenAIStimmeTest(unittest.TestCase):
+    """Entscheidung Tobias 03.11.2026: Stimme von OpenAI."""
+
+    def test_anfrage_und_schluessel(self):
+        import tempfile
+        from pathlib import Path
+        cfg = {"stimme": {"aktiv": True, "anbieter": "openai", "openai_stimme": "cedar", "openai_modell": "gpt-4o-mini-tts"}}
+        self.assertEqual(stimme.schluessel(cfg, {"openai_api_key": "ok", "google_tts_key": "g"}), "ok")
+        gesehen = {}
+
+        class R:
+            status_code = 200
+            content = b"ID3mp3"
+
+        def post(url, headers=None, json=None, timeout=None):
+            gesehen.update(url=url, headers=headers, json=json)
+            return R()
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "a.mp3"
+            stimme._openai("Bitcoin is up +2.1%.", f, cfg, "ok", post=post)
+            self.assertEqual(f.read_bytes(), b"ID3mp3")
+        self.assertEqual(gesehen["url"], stimme.OPENAI_TTS)
+        self.assertEqual(gesehen["headers"]["Authorization"], "Bearer ok")
+        self.assertEqual((gesehen["json"]["voice"], gesehen["json"]["model"]), ("cedar", "gpt-4o-mini-tts"))
+        self.assertIn("instructions", gesehen["json"])
+
+    def test_konfiguration(self):
+        import yaml
+        from pathlib import Path
+        cfg = yaml.safe_load((Path(__file__).resolve().parent.parent / "config.yaml").read_text(encoding="utf-8"))
+        self.assertEqual(cfg["stimme"]["anbieter"], "openai")
+
+
 if __name__ == "__main__":
     unittest.main()

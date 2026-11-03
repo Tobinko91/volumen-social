@@ -19,8 +19,13 @@ HIER = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(HIER))
 from social import stimme, telegram  # noqa: E402
 
-STIMMEN = [("en-US-Chirp3-HD-Charon", "A – männlich, ruhig"), ("en-US-Chirp3-HD-Fenrir", "B – männlich, kräftig"),
-           ("en-US-Chirp3-HD-Kore", "C – weiblich, klar"), ("en-US-Chirp3-HD-Aoede", "D – weiblich, warm")]
+STIMMEN = {
+    "openai": [("cedar", "A – männlich, ruhig"), ("ash", "B – männlich, kräftig"), ("marin", "C – weiblich, klar"),
+               ("coral", "D – weiblich, warm")],
+    "google": [("en-US-Chirp3-HD-Charon", "A – männlich, ruhig"), ("en-US-Chirp3-HD-Fenrir", "B – männlich, kräftig"),
+               ("en-US-Chirp3-HD-Kore", "C – weiblich, klar"), ("en-US-Chirp3-HD-Aoede", "D – weiblich, warm")],
+}
+FELD = {"openai": "openai_stimme", "google": "google_stimme"}
 TEXT = ("Bitcoin just moved +3.2% in one hour. Whales bought 4,000 BTC on exchanges. "
         "Here is what it means. Follow WhaleSqueeze for daily data. Not financial advice.")
 
@@ -29,18 +34,23 @@ def main() -> int:
     basis = Path(os.environ.get("SOCIAL_GEHEIM", "/opt/volumen-social"))
     geheim = yaml.safe_load((basis / "secrets.yaml").read_text()) or {}
     cfg = yaml.safe_load((HIER / "config.yaml").read_text(encoding="utf-8"))
-    key = geheim.get("google_tts_key")
-    if not key:
-        print("google_tts_key fehlt: erst python3 tools/schluessel.py (Punkt Google-Stimme)")
+    anbieter = cfg["stimme"].get("anbieter", "openai")
+    if anbieter not in STIMMEN:
+        print("Hoerproben gibt es fuer openai und google")
         return 1
+    key = stimme.schluessel(cfg, geheim)
+    if not key:
+        print(f"{stimme.SCHLUESSEL[anbieter]} fehlt: erst python3 tools/schluessel.py")
+        return 1
+    erzeuger = getattr(stimme, stimme.ERZEUGER[anbieter])
     with tempfile.TemporaryDirectory() as d:
-        for name, label in STIMMEN:
+        for name, label in STIMMEN[anbieter]:
             f = Path(d) / f"{name}.mp3"
             try:
-                stimme._google(TEXT, f, dict(cfg, stimme=dict(cfg["stimme"], google_stimme=name)), key)
+                erzeuger(TEXT, f, dict(cfg, stimme=dict(cfg["stimme"], **{FELD[anbieter]: name})), key)
             except Exception as e:
                 print("Fehler:", e)
-                telegram.text_senden(geheim, f"🎙 Google-Stimme geht noch nicht: {e}")
+                telegram.text_senden(geheim, f"🎙 Stimme ({anbieter}) geht noch nicht: {e}")
                 return 1
             with open(f, "rb") as fh:
                 requests.post(telegram.API.format(token=geheim["telegram_token"], methode="sendAudio"),
