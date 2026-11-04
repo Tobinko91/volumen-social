@@ -14,8 +14,10 @@ def _w(de_text: str, en_text: str) -> str:
     from . import design
     return de_text if design.SPRACHE == "de" else en_text
 
-def balken(img: Image.Image, t: Thema, box, reihen: list[dict], titel: str | None = None, einheit: str = ""):
-    """Waagerechte Balken. reihen: [{label, wert, farbe?, text?}]"""
+def balken(img: Image.Image, t: Thema, box, reihen: list[dict], titel: str | None = None, einheit: str = "",
+           sichtbar: int | None = None):
+    """Waagerechte Balken. reihen: [{label, wert, farbe?, text?}]. sichtbar = nur die ersten n Balken zeigen, die
+    uebrigen als leere Platzhalter (Lern-Video baut die Grafik Schritt fuer Schritt auf, Wunsch Tobias 04.11.2026)."""
     x0, y0, x1, y1 = box
     karte(img, t, box)
     d = ImageDraw.Draw(img)
@@ -31,6 +33,11 @@ def balken(img: Image.Image, t: Thema, box, reihen: list[dict], titel: str | Non
     bx0, bx1 = x0 + 36 + label_b, x1 - 36
     for i, r in enumerate(reihen):
         cy = y + i * hoehe + hoehe / 2
+        if sichtbar is not None and i >= sichtbar:   # noch nicht dran: grauer Platzhalter, keine Zahl
+            d.text((x0 + 36, cy - 18), r["label"], font=fl, fill=t.neben)
+            bh = min(46, hoehe * 0.55)
+            d.rounded_rectangle([bx0, cy - bh / 2, bx1 - 140, cy + bh / 2], radius=bh / 2, outline=t.linie, width=2)
+            continue
         d.text((x0 + 36, cy - 18), r["label"], font=fl, fill=t.text)
         txt = r.get("text") or f"{de(r['wert'], 1 if r['wert'] % 1 else 0)}{einheit}"
         tw = d.textlength(txt, font=fw)
@@ -43,7 +50,8 @@ def balken(img: Image.Image, t: Thema, box, reihen: list[dict], titel: str | Non
 
 
 def linien(img: Image.Image, t: Thema, box, reihen: list[dict], x_labels: list[str], titel: str | None = None,
-           y_min: float | None = None, y_max: float | None = None, einheit: str = "", flaeche: bool = True):
+           y_min: float | None = None, y_max: float | None = None, einheit: str = "", flaeche: bool = True,
+           bis: int | None = None):
     """Linien mit Endwert-Beschriftung. reihen: [{name, werte, farbe}]"""
     x0, y0, x1, y1 = box
     karte(img, t, box)
@@ -70,7 +78,9 @@ def linien(img: Image.Image, t: Thema, box, reihen: list[dict], x_labels: list[s
             xx = px0 + (px1 - px0) * i / (len(x_labels) - 1)
             d.text((xx - d.textlength(lab, font=fx) / 2, py1 + 18), lab, font=fx, fill=t.neben)
     for r in reihen:
-        pts = [pt(i, v) for i, v in enumerate(r["werte"])]
+        pts = [pt(i, v) for i, v in enumerate(r["werte"][:(bis + 1) if bis is not None else None])]
+        if len(pts) < 2:
+            continue
         if flaeche:
             ebene = Image.new("RGBA", img.size, (0, 0, 0, 0))
             ImageDraw.Draw(ebene).polygon(pts + [(pts[-1][0], py1), (pts[0][0], py1)], fill=rgb(r["farbe"], 40))
@@ -79,9 +89,59 @@ def linien(img: Image.Image, t: Thema, box, reihen: list[dict], x_labels: list[s
         d.line(pts, fill=r["farbe"], width=6, joint="curve")
         ex, ey = pts[-1]
         d.ellipse([ex - 10, ey - 10, ex + 10, ey + 10], fill=r["farbe"])
-        wert = r.get("endtext") or f"{de(r['werte'][-1])}{einheit}"
+        wert = r.get("endtext") if bis is None else None
+        wert = wert or (r["fmt"](r["werte"][len(pts) - 1]) if r.get("fmt") else
+                        f"{de(r['werte'][len(pts) - 1])}{einheit}")
         d.text((ex + 22, ey - 34), wert, font=font("Bold", 34), fill=r["farbe"])
         d.text((ex + 22, ey + 4), r["name"], font=font("Medium", 22), fill=t.neben)
+
+
+def wachstum(img: Image.Image, t: Thema, box, gesamt: list[float], einzahlung: list[float], marken: list[tuple],
+             x_labels: list[str], titel: str, end_texte: tuple[str, str]):
+    """Zinseszins sichtbar machen (Wunsch Tobias 04.11.2026): unten die eigenen Einzahlungen (Flieder), darueber der
+    Ertrag (Minze). Die Luecke zwischen den Linien = Geld, das das Geld verdient hat. marken: [(index, text)]."""
+    x0, y0, x1, y1 = box
+    karte(img, t, box)
+    d = ImageDraw.Draw(img)
+    top = y0 + 30
+    d.text((x0 + 36, top), titel, font=font("Medium", 26), fill=t.neben)
+    top += 56
+    hi = max(gesamt) * 1.05
+    px0, px1, py0, py1 = x0 + 50, x1 - 230, top + 20, y1 - 70
+    n = len(gesamt)
+
+    def pt(i, v):
+        return (px0 + (px1 - px0) * i / (n - 1), py1 - (py1 - py0) * v / hi)
+
+    for k in range(5):
+        yy = py0 + (py1 - py0) * k / 4
+        d.line([(px0, yy), (px1, yy)], fill=t.linie, width=1)
+    fx = font("Medium", 24)
+    for i, lab in enumerate(x_labels):
+        if lab:
+            xx = px0 + (px1 - px0) * i / (len(x_labels) - 1)
+            d.text((xx - d.textlength(lab, font=fx) / 2, py1 + 18), lab, font=fx, fill=t.neben)
+    g = [pt(i, v) for i, v in enumerate(gesamt)]
+    e = [pt(i, v) for i, v in enumerate(einzahlung)]
+    ebene = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    ed = ImageDraw.Draw(ebene)
+    ed.polygon(e + [(e[-1][0], py1), (e[0][0], py1)], fill=rgb(t.akzent2, 90))
+    ed.polygon(g + list(reversed(e)), fill=rgb(t.akzent, 110))
+    img.alpha_composite(ebene)
+    d = ImageDraw.Draw(img)
+    d.line(e, fill=t.akzent2, width=4)
+    d.line(g, fill=t.akzent, width=6, joint="curve")
+    fm = font("Bold", 24)
+    for i, txt in marken:
+        mx, my = g[i]
+        d.ellipse([mx - 9, my - 9, mx + 9, my + 9], fill=t.text)
+        d.text((mx - d.textlength(txt, font=fm) / 2, my - 40), txt, font=fm, fill=t.text)
+    ex, ey = g[-1]
+    d.text((ex + 20, ey - 10), end_texte[0], font=font("Bold", 30), fill=t.akzent)
+    d.text((ex + 20, ey + 26), "returns", font=font("Medium", 22), fill=t.neben)
+    fx_, fy_ = e[-1]
+    d.text((fx_ + 20, fy_ - 6), end_texte[1], font=font("Bold", 30), fill=t.akzent2)
+    d.text((fx_ + 20, fy_ + 30), "your deposits", font=font("Medium", 22), fill=t.neben)
 
 
 def schema(img: Image.Image, t: Thema, box, art: str):

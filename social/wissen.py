@@ -59,7 +59,17 @@ def video_grafik(img, t: dict, th, box, schritt: int, lang: str = "en", echt: di
     if t["id"] in CHART_ART:
         grafik.lern_chart(img, th, box, CHART_ART[t["id"]], schritt, lang)
         return True
-    return bool(_grafik(img, t, th, box))
+    return bool(_grafik(img, t, th, box, schritt))
+
+
+def sparplan(monate: int, rate: float = 200, rendite: float = 0.07) -> tuple[list[float], list[float]]:
+    """Monatlich sparen, monatlich verzinst (wie in den Texten nachgerechnet): (Kontostand, Einzahlungen) je Monat."""
+    r, b, g, e = rendite / 12, 0.0, [0.0], [0.0]
+    for m in range(1, monate + 1):
+        b = b * (1 + r) + rate
+        g.append(b)
+        e.append(rate * m)
+    return g, e
 
 
 ECHT_MOEGLICH = {"liquiditaetszone": "liquiditaet", "unterstuetzung": "unterstuetzung"}   # Pump nie echt!
@@ -103,8 +113,11 @@ def video_szenen(t: dict, lang: str = "en", echt: dict | None = None, tag=None) 
     return {"format": "wissen", "sprache": lang, "szenen": szenen, "fakten": t["fakten"], "titel": t["titel"]}
 
 
-def _grafik(img, t, th, box):
-    """Passende Grafik je Thema (Werte nachgerechnet, siehe tests/test_wissen.py)."""
+def _grafik(img, t, th, box, schritt=None):
+    """Passende Grafik je Thema (Werte nachgerechnet, siehe tests/test_wissen.py).
+    schritt None = fertiges Bild (Bild-Beitrag, Haken). Im Video (1, 2, 3) baut sich die Grafik auf, der letzte
+    Schritt zeigt bei Spar-Themen die Wachstumskurve „Einzahlung vs. Ertrag“ (Wunsch Tobias 04.11.2026)."""
+    sb = None if schritt is None else min(schritt, 3)
     from . import design, grafik as g
     from .design import MINUS
     if design.SPRACHE == "de":
@@ -114,38 +127,54 @@ def _grafik(img, t, th, box):
         g.linien(img, th, box, [
             {"name": "1% risk", "werte": [100 * 0.99 ** n for n in range(11)], "farbe": th.akzent, "endtext": "90.4%"},
             {"name": "5% risk", "werte": [100 * 0.95 ** n for n in range(11)], "farbe": th.minus, "endtext": "59.9%"},
-        ], ["0", "", "2", "", "4", "", "6", "", "8", "", "10"], titel="Account balance after losses in a row",
-            y_min=55, y_max=100)
+        ][:1 if sb == 1 else 2], ["0", "", "2", "", "4", "", "6", "", "8", "", "10"],
+            titel="Account balance after losses in a row", y_min=55, y_max=100)
     elif i == "verlust-falle":
         g.balken(img, th, box, [
             {"label": "−20%", "wert": 25, "text": "+25%", "farbe": th.akzent},
             {"label": "−50%", "wert": 100, "text": "+100%", "farbe": th.akzent2},
             {"label": "−90%", "wert": 900, "text": "+900%", "farbe": th.minus},
-        ], titel="Loss → gain needed to get back to even")
+        ], titel="Loss → gain needed to get back to even", sichtbar=sb)
     elif i == "hebel":
         g.balken(img, th, box, [
             {"label": f"{h}x", "wert": 100 / h, "text": f"{de(100 / h, 0)}%",
              "farbe": [th.akzent, th.akzent, th.akzent2, th.minus, th.minus][k]}
             for k, h in enumerate([2, 5, 10, 20, 50])
-        ], titel="Move against you that wipes out the position (simplified)")
+        ], titel="Move against you that wipes out the position (simplified)", sichtbar=None if sb is None else
+            [2, 3, 5][sb - 1])
+    elif i == "weg-100k-200" and sb == 3:   # Wachstumskurven bis $100k: ohne Ertrag gerade, mit 7 % krumm
+        reihen = []
+        for name, r_, farbe, end, jahre in (("no return", 0.0, th.minus, "41.7 yrs", 42),
+                                            ("7% a year", 0.07, th.akzent, "19.6 yrs", 20)):
+            gg, _ = sparplan(12 * jahre, 200, r_)
+            reihen.append({"name": name, "werte": [min(gg[12 * j], 100000) / 1000 for j in range(jahre + 1)],
+                           "farbe": farbe, "endtext": end})
+        g.linien(img, th, box, reihen, ["0"] + [""] * 9 + ["10"] + [""] * 9 + ["20"] + [""] * 9 + ["30"] + [""] * 11
+                 + ["42 yrs"], titel="Balance in $1,000 at $200 a month (return assumed)", y_min=0, y_max=100,
+                 flaeche=False)
     elif i == "weg-100k-200":
         g.balken(img, th, box, [
             {"label": "0% return", "wert": 41.7, "text": "41.7 years", "farbe": th.minus},
             {"label": "5% return", "wert": 22.6, "text": "22.6 years", "farbe": th.akzent2},
             {"label": "7% return", "wert": 19.6, "text": "19.6 years", "farbe": th.akzent},
-        ], titel="Years to $100,000 at $200 a month (return assumed)")
+        ], titel="Years to $100,000 at $200 a month (return assumed)", sichtbar=None if sb is None else [1, 3][sb - 1])
+    elif i == "erste-10k" and sb == 3:   # Schritt 3: wie sich das Geld vervielfacht (Einzahlung vs. Ertrag)
+        gg, ee = sparplan(155)
+        g.wachstum(img, th, box, gg, ee, [(45, "$10k"), (80, "$20k"), (109, "$30k"), (133, "$40k"), (155, "$50k")],
+                   ["0"] + [""] * 3 + ["4 yrs"] + [""] * 3 + ["8 yrs"] + [""] * 3 + ["12 yrs"],
+                   "$200 a month at 7% assumed: deposits vs. returns", ("$19,173", "$31,000"))
     elif i == "erste-10k":
         g.balken(img, th, box, [
             {"label": f"{['1st', '2nd', '3rd', '4th', '5th'][k - 1]} $10k", "wert": m, "text": f"{m} months",
              "farbe": th.minus if k == 1 else th.akzent}
             for k, m in enumerate([45, 35, 29, 24, 22], 1)
-        ], titel="Months per $10,000 ($200 a month, 7% assumed)")
+        ], titel="Months per $10,000 ($200 a month, 7% assumed)", sichtbar=sb)
     elif i == "zinseszins":
         g.linien(img, th, box, [
             {"name": "8% a year", "werte": [100 * 1.08 ** j for j in range(31)], "farbe": th.akzent,
-             "endtext": "$1,006"},
+             "endtext": "$1,006", "fmt": lambda v: f"${v:,.0f}"},
         ], ["0"] + [""] * 9 + ["10"] + [""] * 9 + ["20"] + [""] * 9 + ["30 years"], titel="$100 turns into …",
-            y_min=0)
+            y_min=0, y_max=1050, bis=None if sb in (None, 3) else (10 if sb == 1 else 20))
     elif i == "unterstuetzung":
         g.schema(img, th, box, "unterstuetzung")
     elif i == "liquiditaetszone":

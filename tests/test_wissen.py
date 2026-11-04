@@ -103,3 +103,24 @@ class HakenFrageTest(unittest.TestCase):
             self.assertIn("?", t["haken"], t["id"])
             for z in re.findall(r"\d[\d,.]*", t["haken"]):
                 self.assertIn(z.rstrip(".,"), t["titel"] + " " + " ".join(t["punkte"]), (t["id"], z))
+
+
+class SchrittGrafikTest(unittest.TestCase):
+    """04.11.2026 Tobias: Grafik baut sich auf, letzter Schritt zeigt die Vervielfachung (Einzahlung vs. Ertrag)."""
+    def test_sparplan_passt_zu_den_texten(self):
+        from social import wissen
+        g, e = wissen.sparplan(155)
+        self.assertEqual((round(g[155]), e[155], round(g[155] - e[155])), (50173, 31000, 19173))
+        marken = [next(m for m in range(1, 156) if g[m] >= z) for z in (10000, 20000, 30000, 40000, 50000)]
+        self.assertEqual(marken, [45, 80, 109, 133, 155])
+        self.assertEqual([b - a for a, b in zip([0] + marken, marken)], [45, 35, 29, 24, 22])
+
+    def test_schritte_zeichnen_ohne_fehler(self):
+        from PIL import Image
+        from social import design, wissen
+        th = design.thema_waehlen("markt", "x")
+        for t in wissen.themen():
+            for s in (None, 1, 2, 3):
+                img = Image.new("RGBA", (1080, 1920))
+                wissen.video_grafik(img, t, th, (60, 600, 1020, 1200), s if s else 3 if t["id"] in wissen.CHART_ART
+                                    else None, "en")
