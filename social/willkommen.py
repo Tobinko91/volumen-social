@@ -4,7 +4,7 @@ Keine Bot-Ergebnisse, keine Versprechen, nur was der Kanal taeglich bringt."""
 from __future__ import annotations
 
 ZEILEN = [
-    "This is WhaleSqueeze. We watch the crypto market while it sleeps.",
+    "Who watches the crypto market while it sleeps? We do. This is WhaleSqueeze.",
     "Every day: which coins whales are buying or leaving, straight from on-chain data.",
     "Live alerts on hacks, ETF decisions and the Fed, in minutes, not hours.",
     "The market in 30 seconds, every day.",

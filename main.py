@@ -63,7 +63,7 @@ def lade_sperrliste() -> set[str]:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("format", choices=sorted(formate.FORMATE) + ["wissen", "news", "coincheck", "wal", "karussell", "termine", "willkommen"])
+    ap.add_argument("format", choices=sorted(formate.FORMATE) + ["wissen", "news", "coincheck", "wal", "karussell", "termine", "willkommen", "warum"])
     ap.add_argument("--thema", help="nur bei wissen: bestimmtes Thema (id aus inhalte/wissen.yaml)")
     ap.add_argument("--eil", action="store_true", help="nur bei news: nur senden, wenn es eine Eilmeldung gibt")
     ap.add_argument("--nur-mit-stimme", action="store_true", help="nur bei willkommen: ohne Stimme nicht senden")
@@ -98,6 +98,8 @@ def main() -> int:
         return karussell_beitrag(args, cfg, geheim, sperr)
     if args.format == "termine":
         return termine_beitrag(args, cfg, geheim, sperr)
+    if args.format == "warum":
+        return warum_beitrag(args, cfg, geheim, sperr)
     if args.format == "willkommen":
         return willkommen_video(args, cfg, geheim, sperr)
     probe = bool(args.daten)
@@ -137,11 +139,12 @@ def main() -> int:
         ordner.mkdir(parents=True, exist_ok=True)
     bild_dateien = bilder.zeichnen(beitrag, zeilen, ordner / "bilder", cfg)
     toene, dauern, tonquelle = stimme.sprechen(zeilen, ordner / "ton", cfg, stimme.schluessel(cfg, geheim))
-    ziel = video.bauen(bild_dateien, toene, dauern, ordner / "video.mp4", cfg, **video.ut_formate(cfg, zeilen))
+    ziel = video.bauen(bild_dateien, toene, dauern, ordner / "video.mp4", cfg, **video.ut_formate(cfg, zeilen, beitrag))
     # Texte fuer die Kanaele wie beim Bild-Beitrag (Telegram-Text mit Link, X-Text)
     vtxt = post.markt_texte(beitrag, cfg)
     vtxt["telegram"] = links.mit_telegram_link(vtxt["telegram"], beitrag["format"], ordner.name,
                                                lang=beitrag.get("sprache", "de"))
+    vtxt["x"] = post.frage_vorne(vtxt["x"], beitrag)   # gleiche Frage in Bild, Ton und X-Text
     (ordner / "post_x.txt").write_text(vtxt["x"], encoding="utf-8")
     (ordner / "post_telegram.txt").write_text(vtxt["telegram"], encoding="utf-8")
     fehler += [f for f in pruefung.pruefen([vtxt["x"], vtxt["telegram"]], dict(beitrag, szenen=[0, 0]), cfg, sperr,
@@ -205,8 +208,8 @@ def wissen_video(t, txt, cfg, geheim, sperr, ordner: Path, args, echt=None) -> l
     ordner.mkdir(parents=True, exist_ok=True)
     bild_dateien = bilder.zeichnen(dict(b, ts=time.time()), zeilen, ordner / "bilder", cfg)
     toene, dauern, tonquelle = stimme.sprechen(zeilen, ordner / "ton", cfg, stimme.schluessel(cfg, geheim))
-    video.bauen(bild_dateien, toene, dauern, ordner / "video.mp4", cfg, **video.ut_formate(cfg, zeilen))
-    (ordner / "post_x.txt").write_text(txt["x"], encoding="utf-8")
+    video.bauen(bild_dateien, toene, dauern, ordner / "video.mp4", cfg, **video.ut_formate(cfg, zeilen, b))
+    (ordner / "post_x.txt").write_text(post.frage_vorne(txt["x"], b), encoding="utf-8")   # gleiche Frage wie im Video
     (ordner / "post_telegram.txt").write_text(txt["telegram"], encoding="utf-8")
     print(f"Lern-Video {t['id']}: {round(sum(dauern), 1)} s, Stimme {tonquelle}, Chart "
           f"{'echt ' + echt['titel'] if echt else 'Illustration'}, Pruefung", fehler or "bestanden")
@@ -379,7 +382,7 @@ def willkommen_video(args, cfg, geheim, sperr) -> int:
     ordner.mkdir(parents=True, exist_ok=True)
     bild_dateien = bilder.zeichnen(dict(b, ts=time.time()), zeilen, ordner / "bilder", cfg)
     toene, dauern, tonquelle = stimme.sprechen(zeilen, ordner / "ton", cfg, stimme.schluessel(cfg, geheim))
-    video.bauen(bild_dateien, toene, dauern, ordner / "video.mp4", cfg, **video.ut_formate(cfg, zeilen))
+    video.bauen(bild_dateien, toene, dauern, ordner / "video.mp4", cfg, **video.ut_formate(cfg, zeilen, b))
     (ordner / "post_x.txt").write_text(willkommen.X, encoding="utf-8")
     (ordner / "post_telegram.txt").write_text(willkommen.TELEGRAM, encoding="utf-8")
     print(f"Willkommensvideo: {round(sum(dauern), 1)} s, Stimme {tonquelle}, Pruefung", fehler or "bestanden")
@@ -431,14 +434,53 @@ def wal_video(w, txt, f, cfg, geheim, sperr, ordner: Path, lang: str, senden: bo
     ordner.mkdir(parents=True, exist_ok=True)
     bild_dateien = bilder.zeichnen(dict(b, ts=time.time()), zeilen, ordner / "bilder", cfg)
     toene, dauern, tonquelle = stimme.sprechen(zeilen, ordner / "ton", cfg, stimme.schluessel(cfg, geheim))
-    video.bauen(bild_dateien, toene, dauern, ordner / "video.mp4", cfg, **video.ut_formate(cfg, zeilen))
-    (ordner / "post_x.txt").write_text(txt["x"], encoding="utf-8")
+    video.bauen(bild_dateien, toene, dauern, ordner / "video.mp4", cfg, **video.ut_formate(cfg, zeilen, b))
+    (ordner / "post_x.txt").write_text(post.frage_vorne(txt["x"], b), encoding="utf-8")   # gleiche Frage wie im Video
     (ordner / "post_telegram.txt").write_text(txt["telegram"], encoding="utf-8")
     print(f"Wal-Video {w['base']}: {round(sum(dauern), 1)} s, Pruefung", fehler or "bestanden")
     if senden:
         vorschlag(args, geheim, cfg, ordner, "🎬 Video-Vorschlag Whale of the day" + (
             "\n⚠️ " + "; ".join(fehler) if fehler else ""))
     return fehler
+
+
+def warum_beitrag(args, cfg, geheim, sperr, kerzen_holen=None) -> int:
+    """„Why did it move?“ (Wunsch Tobias 04.11.2026, ersetzt das Markt-Video): ein Coin, Erklaerung aus Daten."""
+    from social import warum
+    probe = bool(args.daten)
+    d = daten.laden(args.daten or cfg["daten"]["dir"], None if probe else cfg["daten"]["max_alter_min"])
+    w = warum.auswahl(d, sperr)
+    if not w:
+        print("Keine Bewegung – kein Warum-Video.")
+        return 0
+    holen = kerzen_holen or ((lambda b: _test_kerzen(168)) if probe else (lambda b: kurse.kerzen(b, "1h", 168)))
+    try:
+        kerzen = holen(w["base"])
+    except Exception as e:
+        print("Kerzen nicht geholt:", e)
+        kerzen = []
+    b = warum.beitrag(d, sperr, kerzen, "en")
+    zeilen = [s["vorlage"] for s in b["szenen"]]   # feste Regel-Saetze, kein Claude (nichts erfinden)
+    fehler = pruefung.pruefen(zeilen, b, cfg, sperr)
+    txt = warum.texte(b, cfg)
+    fehler += [f for f in pruefung.pruefen([txt["x"], txt["telegram"]], dict(b, szenen=[0, 0]), cfg, sperr,
+                                           erlaubt_fusszeile=True) if f not in fehler]
+    ordner = Path(args.out) / f"{time.strftime('%Y%m%d-%H%M')}_warum_{b['base']}_video"
+    ordner.mkdir(parents=True, exist_ok=True)
+    bild_dateien = bilder.zeichnen(dict(b, ts=time.time()), zeilen, ordner / "bilder", cfg)
+    toene, dauern, tonquelle = stimme.sprechen(zeilen, ordner / "ton", cfg, stimme.schluessel(cfg, geheim))
+    video.bauen(bild_dateien, toene, dauern, ordner / "video.mp4", cfg, **video.ut_formate(cfg, zeilen, b))
+    (ordner / "post_x.txt").write_text(txt["x"], encoding="utf-8")
+    (ordner / "post_telegram.txt").write_text(txt["telegram"], encoding="utf-8")
+    (ordner / "meta.json").write_text(json.dumps({"titel": b["titel"], "zeilen": zeilen, "fakten": b["fakten"],
+                                                  "stimme": tonquelle, "dauer_s": round(sum(dauern), 1),
+                                                  "pruefung": fehler or "bestanden"}, ensure_ascii=False, indent=2))
+    print(f"Warum-Video {b['base']}: {round(sum(dauern), 1)} s, {len(zeilen)} Szenen, Stimme {tonquelle}, "
+          f"Kerzen {len(kerzen)}, Pruefung", fehler or "bestanden")
+    if args.senden:
+        vorschlag(args, geheim, cfg, ordner, f"🔍 Why did it move? ({b['base']})\nStimme: {tonquelle}" + (
+            "\n⚠️ " + "; ".join(fehler) if fehler else ""), fehler)
+    return 1 if fehler else 0
 
 
 def _test_kerzen(n: int = 168) -> list[dict]:

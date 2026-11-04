@@ -83,18 +83,23 @@ def echter_chart(t: dict, kerzen_holen=None, base: str = "BTC", intervall: str =
     return {"kerzen": k, "info": info, "titel": f"{base} · {intervall}"}
 
 
-def video_szenen(t: dict, lang: str = "en", echt: dict | None = None) -> dict:
+def video_szenen(t: dict, lang: str = "en", echt: dict | None = None, tag=None) -> dict:
     """S28 Lern-Video: Haken (Titel als Frage/Aussage + grosse Zahl), je Punkt eine Szene, Folgen.
     Gleiche Saetze und Fakten wie der Bild-Beitrag, darum gilt dieselbe Zahlen-Pruefung."""
     from .sprache import T as _T
     n = len(t["punkte"])
-    szenen = [{"typ": "lern_haken", "daten": dict(t, _echt=echt), "vorlage": t["titel"].rstrip(".") + "."}]
+    from .sprache import haken_art
+    art = haken_art(tag) if (lang == "en" and t.get("haken")) else "zahl"   # A/B-Test des Einstiegs (04.11.2026)
+    frage = t["haken"] if art == "frage" else None
+    szenen = [{"typ": "lern_haken", "haken": art, "daten": dict(t, _echt=echt, _frage=frage),
+               "vorlage": frage or t["titel"].rstrip(".") + "."}]
     for i, p in enumerate(t["punkte"], 1):
         szenen.append({"typ": "lern_punkt", "daten": {"nr": i, "von": n, "satz": p,
                                                       "ersatz": "Takeaway" if lang == "en" else "Merke",
                                                       "thema": t, "schritt": i, "echt": echt},   # Grafik je Punkt
                        "vorlage": p})
-    szenen.append({"typ": "outro", "daten": {}, "vorlage": _T[lang]["s_outro"]})
+    from .sprache import outro_szene
+    szenen.append(outro_szene("wissen", lang))   # Kommentar-Frage am Ende (04.11.2026)
     return {"format": "wissen", "sprache": lang, "szenen": szenen, "fakten": t["fakten"], "titel": t["titel"]}
 
 

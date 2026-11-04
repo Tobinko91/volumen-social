@@ -5,6 +5,7 @@
 - id: risiko-1-prozent
   saeule: Learn trading
   titel: Why risking 1% per trade protects your account
+  haken: "Why do careful traders risk only 1% per trade?"   # erster Satz im Video als Frage (04.11.2026)
   gross: "90.4%"
   gross_text: left after 10 losses in a row
   fakten: {risiko_klein: 1, risiko_gross: 5, verluste: 10, rest_1: 90.4, rest_5: 59.9}
@@ -17,6 +18,7 @@
 - id: verlust-falle
   saeule: Learn trading
   titel: "The loss trap: why −50% needs +100%"
+  haken: "You lose 50%. How much do you need to get back to even?"   # erster Satz im Video als Frage (04.11.2026)
   gross: "+100%"
   gross_text: needed to recover from a 50% loss
   fakten: {v20: 20, g20: 25, v50: 50, g50: 100, v90: 90, g90: 900}
@@ -29,6 +31,7 @@
 - id: hebel
   saeule: Learn trading
   titel: What leverage really means
+  haken: "What does leverage really do to your money?"   # erster Satz im Video als Frage (04.11.2026)
   gross: "10%"
   gross_text: move against you wipes out a 10x position
   fakten: {hebel_10: 10, bewegung_10: 10, hebel_20: 20, bewegung_20: 5}
@@ -41,6 +44,7 @@
 - id: unterstuetzung
   saeule: Understanding buy zones
   titel: Support and resistance, simply explained
+  haken: "Why does price keep bouncing at the same level?"   # erster Satz im Video als Frage (04.11.2026)
   gross: Support
   gross_text: an area where buyers often stepped in before
   fakten: {}
@@ -53,6 +57,7 @@
 - id: liquiditaetszone
   saeule: Understanding buy zones
   titel: "Liquidity zones: where the orders are waiting"
+  haken: "Why does price grab the lows before it turns?"   # erster Satz im Video als Frage (04.11.2026)
   gross: Liquidity
   gross_text: builds up where many orders sit
   fakten: {}
@@ -65,6 +70,7 @@
 - id: weg-100k-200
   saeule: Road to $100k
   titel: "$100,000 with $200 a month: how long does it take?"
+  haken: "How long does $200 a month take to reach $100,000?"   # erster Satz im Video als Frage (04.11.2026)
   gross: "19.6 years"
   gross_text: at an assumed 7% return per year
   fakten: {ziel: "100,000", sparrate: 200, jahre_0: 41.7, rendite_5: 5, jahre_5: 22.6, rendite_7: 7, jahre_7: 19.6}
@@ -77,6 +83,7 @@
 - id: erste-10k
   saeule: Road to $100k
   titel: Why the first $10,000 is the hardest
+  haken: "Why is the first $10,000 the hardest?"   # erster Satz im Video als Frage (04.11.2026)
   gross: "45 months"
   gross_text: for the first $10,000 ($200 a month, 7% assumed)
   fakten: {betrag: "10,000", sparrate: 200, rendite: 7, monate_erste: 45, monate_zweite: 35}
@@ -89,6 +96,7 @@
 - id: zinseszins
   saeule: Road to $100k
   titel: Compound interest in one picture
+  haken: "Why does compound interest feel slow, then suddenly fast?"   # erster Satz im Video als Frage (04.11.2026)
   gross: "$1,006"
   gross_text: from $100 after 30 years at 8% a year
   fakten: {start: 100, rendite: 8, jahre: 30, ende: "1,006"}
@@ -101,6 +109,7 @@
 - id: pump-and-dump
   saeule: Scams and traps
   titel: How a pump-and-dump works
+  haken: "How does a pump-and-dump really work?"   # erster Satz im Video als Frage (04.11.2026)
   gross: 3 phases
   gross_text: accumulate, promote, sell
   fakten: {phasen: 3}
@@ -113,6 +122,7 @@
 - id: fake-guru
   saeule: Scams and traps
   titel: 5 signs of a fake crypto guru
+  haken: "Is your crypto guru fake? Here are 5 signs."   # erster Satz im Video als Frage (04.11.2026)
   gross: 5 signs
   gross_text: that give away a shady guru
   fakten: {zeichen: 5}

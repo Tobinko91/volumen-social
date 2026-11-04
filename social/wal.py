@@ -28,15 +28,19 @@ W = {
            "v_verlauf": "Wale halten jetzt {w} % der Gesamtmenge.",
            "v_boerse": "{b} % liegen auf Börsen.", "v_holder": "Holder: {h}.",
            "v_holder7": "Holder: {h}, vor 7 Tagen {h7}.",
-           "v_frage": "WALE IN BEWEGUNG", "v_details": "BÖRSEN & HOLDER"},
+           "v_frage": "WALE IN BEWEGUNG", "b_frage": "WAS MACHEN DIE WALE?",
+           "v_haken7_zahl": "Wale haben ihren Anteil an {b} in 7 Tagen um {v} Prozentpunkte {verb}.",
+           "v_haken_zahl": "Wale halten {w} % von {b}.", "v_details": "BÖRSEN & HOLDER"},
     "en": {"etikett": "WHALE OF THE DAY", "wal": "Whales hold {w}% of supply", "pp": "{v} percentage points in 7 days",
            "boerse": "Exchange share {b}%", "boerse7": "Exchange share {b}% ({v} in 7 days)",
            "holder": "Holders: {h} (7 days ago {h7})", "holder1": "Holders: {h}",
            "chart": "Share of total supply · 30 days", "kurve_w": "Whales", "kurve_b": "Exchanges",
            "jetzt": "now", "vor": "{n}d ago", "titel": "🐋 <b>Whale of the day: ${b}</b>",
            "x_kopf": "🐋 Whale of the day: ${b}",
-           "v_haken7": "Whales {verb} their share of {b} by {v} percentage points in 7 days.",
-           "v_haken": "Whales hold {w}% of {b}.", "mehr": "raised", "weniger": "cut",
+           "v_haken7": "What are whales doing with {b}? They {verb} their share by {v} percentage points in 7 days.",
+           "v_haken": "What are whales doing with {b}? They hold {w}% of it.",
+           "v_haken7_zahl": "Whales {verb} their share of {b} by {v} percentage points in 7 days.",
+           "v_haken_zahl": "Whales hold {w}% of {b}.", "b_frage": "WHAT ARE WHALES DOING?", "mehr": "raised", "weniger": "cut",
            "v_verlauf": "Whales now hold {w}% of the supply.",
            "v_boerse": "{b}% sits on exchanges.", "v_holder": "Holders: {h}.",
            "v_holder7": "Holders: {h}, 7 days ago {h7}.",
@@ -87,15 +91,20 @@ def texte(w: dict, cfg: dict, lang: str = "de") -> dict:
     return {"x": x, "telegram": "\n".join(tg)}
 
 
-def video_szenen(w: dict, lang: str = "de") -> dict:
+def video_szenen(w: dict, lang: str = "de", tag=None) -> dict:
     """Szenen fuer das Video 'Whale of the day' (Wunsch Tobias 01.11.2026). Gleiche Fakten wie der Bild-Beitrag."""
+    from .sprache import haken_art
     t = W[lang]
+    art = haken_art(tag) if lang == "en" else "zahl"   # A/B-Test des Einstiegs (04.11.2026)
+    nachsatz = "" if art == "frage" else "_zahl"
     if w.get("wal_7d") is not None:
         v = w["wal_7d"]
-        haken = t["v_haken7"].format(b=w["base"], v=zahl(abs(v), lang), verb=t["mehr"] if v >= 0 else t["weniger"])
+        haken = t["v_haken7" + nachsatz].format(b=w["base"], v=zahl(abs(v), lang),
+                                                verb=t["mehr"] if v >= 0 else t["weniger"])
     else:
-        haken = t["v_haken"].format(b=w["base"], w=zahl(w.get("wal") or 0, lang))
-    szenen = [{"typ": "wal_haken", "daten": w, "vorlage": haken}]
+        haken = t["v_haken" + nachsatz].format(b=w["base"], w=zahl(w.get("wal") or 0, lang))
+    szenen = [{"typ": "wal_haken", "haken": art, "daten": dict(w, _frage=t["b_frage"] if art == "frage" else None),
+               "vorlage": haken}]
     if len(w.get("verlauf") or []) >= 2 and w.get("wal") is not None:
         szenen.append({"typ": "wal_verlauf", "daten": w, "vorlage": t["v_verlauf"].format(w=zahl(w["wal"], lang))})
     teile = []
@@ -107,7 +116,8 @@ def video_szenen(w: dict, lang: str = "de") -> dict:
     if teile:
         szenen.append({"typ": "wal_details", "daten": w, "vorlage": " ".join(teile)})
     from .sprache import T as _T
-    szenen.append({"typ": "outro", "daten": {}, "vorlage": _T[lang]["s_outro"]})
+    from .sprache import outro_szene
+    szenen.append(outro_szene("wal", lang))   # Kommentar-Frage am Ende (04.11.2026)
     return {"format": "wal", "sprache": lang, "szenen": szenen, "fakten": fakten(w),
             "titel": t["x_kopf"].format(b=w["base"])}
 

@@ -39,7 +39,8 @@ FEHLER = [("Claude-Fehler", "Claude-Antwort unlesbar"), ("X-Posts nicht geholt",
           ("Keine Wal-Daten", "keine Wal-Daten"), ("DatenFehler", "Bot-Daten fehlen/zu alt")]
 FORMAT_NAMEN = {"markt": "Markt", "markt_video": "Markt-Video", "news": "News", "coincheck": "Coin-Check",
                 "wal": "Wal", "wal_video": "Wal-Video", "wissen": "Lernen", "wissen_video": "Lern-Video",
-                "karussell": "Karussell", "termine": "Termine", "redaktion": "Redaktion"}
+                "karussell": "Karussell", "termine": "Termine", "redaktion": "Redaktion",
+                "warum_video": "Why did it move?"}
 
 
 def plan_abschnitte(text: str, tag: str) -> dict[str, list[str]]:

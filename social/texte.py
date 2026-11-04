@@ -71,7 +71,10 @@ def schreiben(beitrag: dict, cfg: dict, api_key: str | None) -> tuple[list[str],
         zeilen = json.loads(txt[txt.find("{"): txt.rfind("}") + 1])["zeilen"]
         if len(zeilen) != n or not all(isinstance(z, str) and z.strip() for z in zeilen):
             raise ValueError("falsche Zeilenzahl")
-        return [prozent_zeichen(z.strip(), beitrag.get("sprache", "de")) for z in zeilen], "claude"
+        out = [prozent_zeichen(z.strip(), beitrag.get("sprache", "de")) for z in zeilen]
+        # Einstieg und Kommentar-Frage bleiben fest (A/B-Test Frage/Zahl, 04.11.2026), Claude formuliert die Mitte
+        out[0], out[-1] = beitrag["szenen"][0]["vorlage"], beitrag["szenen"][-1]["vorlage"]
+        return out, "claude"
     except Exception as e:  # Netz, Format: lieber die sichere Vorlage
         print(f"Claude-Text fehlgeschlagen ({e}) – nehme Vorlage")
         return vorlage(beitrag), "vorlage"

@@ -138,7 +138,11 @@ class Leinwand:
             gr -= 10
         self.mitte(d, 500, wert, _font("Black", gr), self.farbe_wert(c))
         self.mitte(d, 500 + gr + 30, f"{daten['base']} · {self.t['b_24h']}", _font("Black", 96), self.f["text"])
-        self.mitte(d, 500 + gr + 170, self.t["b_warum"], _font("Black", 70), self.f["amber"])
+        frage = daten.get("_frage")   # A/B-Test: Frage gross im Bild statt „WHY? ↓“
+        ff = 70
+        while frage and d.textlength(frage, font=_font("Black", ff)) > self.W - 140 and ff > 40:
+            ff -= 4
+        self.mitte(d, 500 + gr + 170, frage or self.t["b_warum"], _font("Black", ff), self.f["amber"])
         self.mitte(d, 500 + gr + 270, str(daten.get("datum", "")).upper(), _font("SemiBold", 40), self.f["neben"])
         self.untertitel(d, text)
         return img
@@ -160,7 +164,7 @@ class Leinwand:
         else:
             gross, farbe = f"{zahl(w.get('wal') or 0, self.lang)}{self.pz}", self.f["plus"]
         self.mitte(d, 680, gross, _font("Black", 190), farbe)
-        self.mitte(d, 920, wt["v_frage"], _font("Black", 64), self.f["amber"])
+        self.mitte(d, 920, w.get("_frage") or wt["v_frage"], _font("Black", 64), self.f["amber"])
         self.untertitel(d, text)
         return img
 
@@ -261,7 +265,17 @@ class Leinwand:
         while d.textlength(wert, font=_font("Black", gr)) > self.W - 140 and gr > 90:
             gr -= 10
         farbe = self.f["minus"] if wert.startswith(("-", "−")) else self.f["plus"]
-        self.mitte(d, y0 - 62 if chart else 440, etikett, _font("Bold", 42 if chart else 46), self.f["amber"])
+        frage = t.get("_frage")
+        if frage:   # A/B-Test: die Frage gross statt des Etiketts (wer stumm scrollt, sieht sie sofort)
+            zeilen = textwrap.wrap(frage, width=26)[:2]
+            for i, z in enumerate(zeilen):
+                self.mitte(d, 372 + i * 58, z, _font("Black", 48), self.f["amber"])
+            neu_y0 = 372 + 58 * len(zeilen) + 24
+            if chart and neu_y0 > y0:   # Platz fuer die Grafik halten: Zahl etwas kleiner statt Grafik quetschen
+                gr = max(90, gr - (neu_y0 - y0))
+            y0 = max(y0, neu_y0)
+        else:
+            self.mitte(d, y0 - 62 if chart else 440, etikett, _font("Bold", 42 if chart else 46), self.f["amber"])
         self.mitte(d, y0, wert, _font("Black", gr), farbe)
         y = y0 + gr + 30
         for z in textwrap.wrap(t.get("gross_text", ""), width=30)[:2]:
@@ -327,8 +341,8 @@ class Leinwand:
             self.logo(d, (self.W - 32 * 8) / 2, 430, 8)
             d = ImageDraw.Draw(self.img)
             self.mitte(d, 720, "WhaleSqueeze", _font("Black", 110), self.f["text"])
-            self.mitte(d, 860, "We watch while", _font("Bold", 62), self.f["plus"])
-            self.mitte(d, 940, "the market sleeps.", _font("Bold", 62), self.f["plus"])
+            self.mitte(d, 860, "Who watches while", _font("Bold", 62), self.f["plus"])   # Frage als Haken
+            self.mitte(d, 940, "the market sleeps?", _font("Bold", 62), self.f["plus"])
         else:
             y = 420
             for i, (zeichen, titel, unter) in enumerate(self.WILLKOMMEN, 1):
@@ -346,6 +360,78 @@ class Leinwand:
         self.untertitel(d, text)
         return self.img
 
+    # ---------- „Why did it move?“ (04.11.2026) ----------
+    def warum_haken(self, daten, text):
+        img, d = self.neu()
+        self.kopf(d)
+        c = daten["chg24"]
+        self.mitte(d, 430, "WHY DID IT MOVE?", _font("Bold", 46), self.f["neben"])
+        self.mitte(d, 500, f"${daten['base']}", _font("Black", 150), self.f["text"])
+        wert = f"{zahl(c, self.lang, True)}{self.pz}"
+        self.mitte(d, 680, wert, _font("Black", 200), self.farbe_wert(c))
+        frage = daten.get("_frage") or "24H · HERE IS WHY ↓"
+        ff = 70
+        while d.textlength(frage, font=_font("Black", ff)) > self.W - 140 and ff > 40:
+            ff -= 4
+        self.mitte(d, 940, frage, _font("Black", ff), self.f["amber"])
+        self.untertitel(d, text)
+        return img
+
+    def warum_beleg(self, b, text):
+        """Ein Beleg: Rubrik, grosser Wert, kleine Zeile, Urteils-Etikett (z. B. SHORT SQUEEZE)."""
+        img, d = self.neu()
+        self.kopf(d)
+        self.mitte(d, 430, b["titel"], _font("Bold", 46), self.f["neben"])
+        gr = 140
+        while d.textlength(b["gross"], font=_font("Black", gr)) > self.W - 140 and gr > 60:
+            gr -= 8
+        self.mitte(d, 540, b["gross"], _font("Black", gr), self.f["plus"] if "-" not in b["gross"][:6]
+                   else self.f["minus"])
+        self.mitte(d, 560 + gr + 20, b.get("klein", ""), _font("Bold", 56), self.f["text"])
+        if b.get("label") and b["label"].upper() != b["gross"]:   # „LISTING“ nicht doppelt
+            fl = _font("Black", 52)
+            w = d.textlength(b["label"].upper(), font=fl) + 80
+            y = 560 + gr + 130
+            d.rounded_rectangle([(self.W - w) / 2, y, (self.W + w) / 2, y + 90], radius=45, outline=self.f["amber"],
+                                width=5)
+            self.mitte(d, y + 14, b["label"].upper(), fl, self.f["amber"])
+        self.untertitel(d, text)
+        return img
+
+    def warum_chart(self, daten, text):
+        from . import grafik
+        img, d = self.neu()
+        self.kopf(d)
+        self.mitte(d, 400, "THE CHART", _font("Bold", 46), self.f["neben"])
+        rgba = img.convert("RGBA")
+        grafik.echt_chart(rgba, self.th, (60, 470, self.W - 60, 1200), daten["kerzen"], daten["art"], daten["info"],
+                          3, self.lang, f"{daten['base']} · 1h · real chart")
+        self.img.paste(rgba.convert("RGB"))
+        d = ImageDraw.Draw(self.img)
+        self.untertitel(d, text)
+        return self.img
+
+    def warum_urteil(self, daten, text):
+        img, d = self.neu()
+        self.kopf(d)
+        self.mitte(d, 430, "VERDICT", _font("Bold", 46), self.f["neben"])
+        labels = daten.get("labels") or []
+        if not labels:
+            self.mitte(d, 560, "NO CLEAR", _font("Black", 120), self.f["text"])
+            self.mitte(d, 700, "DRIVER", _font("Black", 120), self.f["text"])
+        y = 540
+        for i, l in enumerate(labels):
+            if i:
+                self.mitte(d, y - 10, "+", _font("Black", 90), self.f["neben"])
+                y += 100
+            gr = 110
+            while d.textlength(l.upper(), font=_font("Black", gr)) > self.W - 140 and gr > 60:
+                gr -= 8
+            self.mitte(d, y, l.upper(), _font("Black", gr), self.f["amber"] if i else self.f["plus"])
+            y += gr + 40
+        self.untertitel(d, text)
+        return img
+
     def outro(self, daten, text):
         img, d = self.neu()
         self.kopf(d)
@@ -353,7 +439,14 @@ class Leinwand:
         # Folgen statt Website (Website noch hinter Passwort; „Folgen“ am Ende bringt auf Reels/TikTok Follower)
         self.mitte(d, 690, "@whalesqueeze", _font("Black", 104), self.f["amber"])
         self.mitte(d, 830, self.t["b_folgen"], _font("Bold", 50), self.f["text"])
-        self.mitte(d, 910, self.t["b_outro"], _font("SemiBold", 42), self.f["neben"])
+        cta = daten.get("_cta")
+        if cta:   # Kommentar-Frage (04.11.2026) statt Leitsatz
+            for i, z in enumerate(textwrap.wrap(cta, width=26)[:3]):
+                self.mitte(d, 920 + i * 62, z, _font("Black", 52), self.f["plus"])
+            self.mitte(d, 920 + 62 * len(textwrap.wrap(cta, width=26)[:3]) + 24, self.t["b_kommentar"],
+                       _font("Bold", 40), self.f["neben"])
+        else:
+            self.mitte(d, 910, self.t["b_outro"], _font("SemiBold", 42), self.f["neben"])
         konflikt = textwrap.wrap(self.cfg["hinweise"].get("konflikt") or "", width=48)
         for i, z in enumerate(konflikt):
             self.mitte(d, 930 + i * 44, z, _font("Medium", 34), self.f["neben"])

@@ -90,3 +90,16 @@ class LernGrafikTest(unittest.TestCase):
             grafik.lern_chart(img, th, (60, 40, 1020, 660), "liquiditaet", schritt)
             bilder.append(img.tobytes())
         self.assertEqual(len(set(bilder)), 3)
+
+
+class HakenFrageTest(unittest.TestCase):
+    """04.11.2026: erster Satz im Lern-Video ist eine Frage; Zahlen darin muessen im Thema vorkommen."""
+    def test_jedes_thema_hat_frage_mit_geprueften_zahlen(self):
+        import re
+        import yaml
+        from pathlib import Path
+        themen = yaml.safe_load((Path(__file__).resolve().parent.parent / "inhalte" / "wissen.yaml").read_text())
+        for t in themen:
+            self.assertIn("?", t["haken"], t["id"])
+            for z in re.findall(r"\d[\d,.]*", t["haken"]):
+                self.assertIn(z.rstrip(".,"), t["titel"] + " " + " ".join(t["punkte"]), (t["id"], z))

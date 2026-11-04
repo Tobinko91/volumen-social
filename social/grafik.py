@@ -416,6 +416,12 @@ def echt_chart(img: Image.Image, t: Thema, box, kerzen: list[dict], art: str, in
             d.ellipse([sx - 14, sy - 14, sx + 14, sy + 14], outline=t.akzent, width=5)
             w_ = d.textlength(tx["geholt"], font=fl)
             d.text((max(innen[0], min(sx - w_ / 2, innen[2] - w_)), sy + 22), tx["geholt"], font=fl, fill=t.akzent)
+    if art == "fib":   # „Why did it move?“: Linie, an der die Bewegung stoppte (rueckblickend, kein Ziel)
+        ly = Y(info["preis"])
+        for xx in range(int(innen[0]), int(innen[2]), 22):
+            d.line([(xx, ly), (xx + 12, ly)], fill=t.akzent2, width=4)
+        lab = f"{info['label']} {_preis(info['preis'])}"
+        d.text((innen[2] - d.textlength(lab, font=fk), ly - fk.size - 12), lab, font=fk, fill=t.akzent2)
     if art == "unterstuetzung":
         s, r = info["support"], info["resistance"]
         for j in s["beruehrungen"]:
