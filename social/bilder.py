@@ -282,7 +282,8 @@ class Leinwand:
             self.mitte(d, y, z, _font("Bold", 50), self.f["text"])
             y += 64
         rgba = self.img.convert("RGBA")   # Vorschau: das fertige Bild (letzter Schritt) als Haken
-        if wissen.video_grafik(rgba, t, self.th, (60, y + 30 if chart else max(y + 30, 820), self.W - 60, 1200), 3,
+        if wissen.video_grafik(rgba, t, self.th, (60, y + 30 if chart else max(y + 30, 820), self.W - 60, 1200),
+                               3 if (chart or t.get("_echt")) else None,   # Haken: fertiges Bild
                                self.lang, t.get("_echt")):
             self.img.paste(rgba.convert("RGB"))
         d = ImageDraw.Draw(self.img)
