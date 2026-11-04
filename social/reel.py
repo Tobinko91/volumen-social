@@ -51,7 +51,7 @@ def bauen(ordner: Path, cfg: dict, geheim: dict, kerzen_holen=None, sprechen=Non
         bilder.append(p)
     zeilen = [s["text"] for s in spec["szenen"]]
     toene, dauern, quelle = sprechen(zeilen, ordner / "ton", cfg, stimme.schluessel(cfg, geheim))
-    schneiden(bilder, toene, dauern, ordner / "video.mp4", cfg)
+    schneiden(bilder, toene, dauern, ordner / "video.mp4", cfg, texte=zeilen)
     return "; ".join([quelle, *hinweise])
 
 
@@ -105,5 +105,5 @@ def aus_bild(ordner: Path, cfg: dict, geheim: dict, sprechen=None, schneiden=Non
     zeilen = sprechtext((ordner / "post_x.txt").read_text(encoding="utf-8"))
     szene = bild_szene(ordner / "post.png", neu / "szene.png", ordner.name, cfg)
     toene, dauern, quelle = sprechen(zeilen, neu / "ton", cfg, stimme.schluessel(cfg, geheim))
-    schneiden([szene] * len(zeilen), toene, dauern, neu / "video.mp4", cfg)
+    schneiden([szene] * len(zeilen), toene, dauern, neu / "video.mp4", cfg, texte=zeilen)
     return neu, quelle

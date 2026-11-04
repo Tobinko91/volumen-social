@@ -49,11 +49,31 @@ def voice_id(cfg: dict, key: str) -> str:
     raise StimmeFehlt(f"Stimme '{st.get('voice_name')}' nicht im ElevenLabs-Konto gefunden")
 
 
+def woerter_aus_ausrichtung(al: dict) -> list[dict]:
+    """ElevenLabs-Zeitmarken je Zeichen -> je Wort {w, a, e} in Sekunden (fuer animierte Untertitel)."""
+    out, akt = [], None
+    for c, a, e in zip(al.get("characters", []), al.get("character_start_times_seconds", []),
+                       al.get("character_end_times_seconds", [])):
+        if c.isspace():
+            if akt:
+                out.append(akt)
+            akt = None
+        elif akt is None:
+            akt = {"w": c, "a": round(a, 3), "e": round(e, 3)}
+        else:
+            akt["w"] += c
+            akt["e"] = round(e, 3)
+    if akt:
+        out.append(akt)
+    return out
+
+
 def _elevenlabs(text: str, datei: Path, cfg: dict, key: str) -> None:
+    """Ton + Zeitmarken je Wort (Endpunkt with-timestamps, gleicher Preis); Marken als <datei>.json daneben."""
     vid = voice_id(cfg, key)
     r = requests.post(
-        f"https://api.elevenlabs.io/v1/text-to-speech/{vid}",
-        headers={"xi-api-key": key, "accept": "audio/mpeg", "content-type": "application/json"},
+        f"https://api.elevenlabs.io/v1/text-to-speech/{vid}/with-timestamps",
+        headers={"xi-api-key": key, "content-type": "application/json"},
         json={"text": text, "model_id": cfg["stimme"]["modell"],
               "voice_settings": {"stability": 0.55, "similarity_boost": 0.75, "style": 0.15}},
         timeout=120,
@@ -65,7 +85,12 @@ def _elevenlabs(text: str, datei: Path, cfg: dict, key: str) -> None:
         except Exception:
             msg = r.text[:200]
         raise StimmeFehlt(f"ElevenLabs: {r.status_code} {msg}")
-    datei.write_bytes(r.content)
+    j = r.json()
+    datei.write_bytes(base64.b64decode(j["audio_base64"]))
+    woerter = woerter_aus_ausrichtung(j.get("alignment") or {})
+    if woerter:
+        import json
+        datei.with_suffix(".json").write_text(json.dumps(woerter))
 
 
 def elevenlabs_guthaben(key: str, get=requests.get) -> dict:
