@@ -42,19 +42,36 @@ def _p(x: float, n: int = 1) -> str:
     return f"{x:+.{n}f}%"
 
 
-def auswahl(d, sperr: set[str]) -> dict | None:
-    """Groesste Bewegung (24 Std.) aus news.json, die Futures-Daten hat; sonst die groesste ueberhaupt."""
+def auswahl(d, sperr: set[str], richtung: str = "hoch") -> dict | None:
+    """richtung 'hoch' (14:30): groesster Gewinner; 'runter' (18:30, Wunsch Tobias 04.11.): groesster Verlierer.
+    Coins mit Futures-Daten zuerst. Gibt es keinen in der Richtung: 'hoch' nimmt die groesste Bewegung, 'runter' nichts."""
     kand = []
     for n in d.news:
         b = (n.get("base") or "").upper()
         if not b or b in sperr or n.get("chg24") is None:
             continue
+        if richtung == "runter" and n["chg24"] >= 0:
+            continue
         c = d.coins.get(n["base"]) or d.coins.get(b) or {}
-        kand.append((c.get("oi_chg4h") is not None, abs(n["chg24"]), n, c))
+        passt = (n["chg24"] > 0) if richtung == "hoch" else True
+        kand.append((passt, c.get("oi_chg4h") is not None, abs(n["chg24"]), n, c))
     if not kand:
         return None
-    _, _, n, c = max(kand, key=lambda k: (k[0], k[1]))
+    *_, n, c = max(kand, key=lambda k: k[:3])
     return {"base": n["base"], "chg24": round(n["chg24"], 1), "driver": n.get("driver"), "coin": c}
+
+
+def verlauf_satz(verlauf: list[dict] | None, jetzt: float | None = None) -> dict | None:
+    """Funding vor 6 Std. -> jetzt, wenn es sich um mindestens 0,03 Prozentpunkte geaendert hat (Wunsch 04.11.)."""
+    from . import verlauf as _v
+    if not verlauf:
+        return None
+    jetzt_f = verlauf[-1].get("funding")
+    vorher = _v.vor(verlauf, 6, "funding", jetzt or verlauf[-1]["ts"])
+    if jetzt_f is None or vorher is None or abs(jetzt_f - vorher) < FUNDING_AUFF:
+        return None
+    a, b = round(vorher, 2), round(jetzt_f, 2)
+    return {"satz": f"Funding went from {_p(a, 2)} to {_p(b, 2)} in 6 hours.", "zahlen": [a, b, 6]}
 
 
 # ---------------------------------------------------------------- Regeln
@@ -172,10 +189,11 @@ def chart_befund(k: list[dict], chg: float) -> dict | None:
 
 # ---------------------------------------------------------------- Beitrag
 
-def beitrag(d, sperr: set[str], kerzen: list[dict] | None, lang: str = "en", tag=None) -> dict:
+def beitrag(d, sperr: set[str], kerzen: list[dict] | None, lang: str = "en", tag=None, richtung: str = "hoch",
+            verlauf: list[dict] | None = None) -> dict:
     if lang != "en":
         raise ValueError("„Why did it move?“ gibt es nur auf Englisch")
-    w = auswahl(d, sperr)
+    w = auswahl(d, sperr, richtung)
     if not w:
         raise ValueError("Keine Bewegung in news.json – kein Warum-Video")
     b, chg, c = w["base"], w["chg24"], w["coin"]
@@ -203,6 +221,16 @@ def beitrag(d, sperr: set[str], kerzen: list[dict] | None, lang: str = "en", tag
                        ("WHALES & EXCHANGES", wal_befund(c))):
         if bef:
             belege.append(dict(bef, titel=titel))
+    vs = verlauf_satz(verlauf)
+    if vs:   # Verlauf macht den Futures-Beleg staerker; ohne Futures-Beleg eigener Beleg
+        fb = next((x for x in belege if x["titel"] == "FUTURES"), None)
+        if fb:
+            fb["satz"] = fb["satz"] + " " + vs["satz"]
+            fb["zahlen"] = fb["zahlen"] + vs["zahlen"]
+        else:
+            belege.append({"titel": "FUNDING", "label": None, "gross": vs["satz"].split(" in ")[0].replace(
+                "Funding went from ", "").replace(" to ", " → "), "klein": "funding, 6 hours", "satz": vs["satz"],
+                "zahlen": vs["zahlen"]})
     for bf in belege[:3]:
         szenen.append({"typ": "warum_beleg", "daten": bf, "vorlage": bf["satz"]})
         zahlen += bf["zahlen"]
@@ -223,6 +251,11 @@ def beitrag(d, sperr: set[str], kerzen: list[dict] | None, lang: str = "en", tag
     return {"format": "warum", "titel": f"Why did {b} move?", "sprache": lang, "base": b,
             "fakten": {"base": b, "chg24": chg, "zahlen": zahlen, "labels": labels}, "szenen": szenen,
             "hashtags": ["#crypto", f"#{b.lower()}", "#altcoins", "#cryptonews", "#whalesqueeze"]}
+
+
+def pruef_cfg(cfg: dict) -> dict:
+    """Warum-Video darf etwas laenger sein (ca. 40 Sek. statt 30): text.max_woerter_warum, Standard 110."""
+    return dict(cfg, text=dict(cfg["text"], max_woerter=cfg["text"].get("max_woerter_warum", 110)))
 
 
 def texte(bt: dict, cfg: dict) -> dict:

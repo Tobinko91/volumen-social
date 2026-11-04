@@ -69,6 +69,7 @@ def main() -> int:
     ap.add_argument("--nur-mit-stimme", action="store_true", help="nur bei willkommen: ohne Stimme nicht senden")
     ap.add_argument("--datum", help="nur bei termine: ab diesem Datum die kommende Woche (JJJJ-MM-TT), Standard heute")
     ap.add_argument("--coin", help="nur bei coincheck: bestimmter Coin, z. B. AKE")
+    ap.add_argument("--richtung", choices=["hoch", "runter"], help="nur bei warum: Gewinner (Standard) oder Verlierer")
     ap.add_argument("--sprache", choices=["de", "en"], default=None,
                     help="Sprache (Standard: config.yaml). Englisch nur Probe/Schattenlauf: wird nie gesendet.")
     ap.add_argument("--daten", help="Datenordner (Standard: config.yaml daten.dir)")
@@ -449,9 +450,11 @@ def warum_beitrag(args, cfg, geheim, sperr, kerzen_holen=None) -> int:
     from social import warum
     probe = bool(args.daten)
     d = daten.laden(args.daten or cfg["daten"]["dir"], None if probe else cfg["daten"]["max_alter_min"])
-    w = warum.auswahl(d, sperr)
+    from social import verlauf as _verlauf
+    richtung = getattr(args, "richtung", None) or "hoch"
+    w = warum.auswahl(d, sperr, richtung)
     if not w:
-        print("Keine Bewegung – kein Warum-Video.")
+        print("Keine passende Bewegung – kein Warum-Video.")
         return 0
     holen = kerzen_holen or ((lambda b: _test_kerzen(168)) if probe else (lambda b: kurse.kerzen(b, "1h", 168)))
     try:
@@ -459,9 +462,10 @@ def warum_beitrag(args, cfg, geheim, sperr, kerzen_holen=None) -> int:
     except Exception as e:
         print("Kerzen nicht geholt:", e)
         kerzen = []
-    b = warum.beitrag(d, sperr, kerzen, "en")
+    b = warum.beitrag(d, sperr, kerzen, "en", richtung=richtung,
+                      verlauf=_verlauf.laden(Path(args.out) / "verlauf", w["base"]))
     zeilen = [s["vorlage"] for s in b["szenen"]]   # feste Regel-Saetze, kein Claude (nichts erfinden)
-    fehler = pruefung.pruefen(zeilen, b, cfg, sperr)
+    fehler = pruefung.pruefen(zeilen, b, warum.pruef_cfg(cfg), sperr)
     txt = warum.texte(b, cfg)
     fehler += [f for f in pruefung.pruefen([txt["x"], txt["telegram"]], dict(b, szenen=[0, 0]), cfg, sperr,
                                            erlaubt_fusszeile=True) if f not in fehler]

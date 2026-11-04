@@ -6,6 +6,7 @@
 #   14:30 Markt-Beitrag als Bild + Video „Why did it move?“ (8:30 ET, vor US-Boersenstart)
 #   15:00 20:00 21:00 News (9:00 / 14:00 / 15:00 ET)
 #   16:00 Coin-Check (10:00 ET)
+#   18:30 „Why did it move?“ fuer den groessten Verlierer (12:30 ET)
 #   15:30 20:30 Kommentar-Vorschlaege (9:30 / 14:30 ET, Tobias postet selbst)
 #   17:30 Folge-Liste an Tobias (X per Knopf, Instagram/YouTube per Link; Wunsch 31.10.)
 #   19:00 Wal des Tages (13:00 ET, US-Mittagspause)
@@ -36,6 +37,8 @@ mkdir -p /opt/volumen-social/oeffentlich && chown redaktion:redaktion /opt/volum
 [ "$SLOT" = "04:00" ] && sudo -u redaktion env $UMGEBUNG python3 tools/tiktok_verbinden.py --erneuern
 # Gesundheits-Check taeglich 09:00 (auch waehrend Pause): lief gestern alles, welche Fehler? (Wunsch Tobias 02.11.)
 [ "$SLOT" = "09:00" ] && sudo -u redaktion env $UMGEBUNG python3 tools/gesundheit.py --senden
+# Funding/Open-Interest-Verlauf stuendlich mitschreiben (fuer „Why did it move?“, Wunsch 04.11.), auch in der Pause
+[ "$(date +%M)" -lt 30 ] && sudo -u redaktion env $UMGEBUNG python3 tools/verlauf.py
 # Pause: im Redaktions-Bot /pause schreiben (oder Datei anlegen), weiter mit /weiter
 [ -f /opt/volumen-social/pause ] || [ -f /opt/volumen-social/ausgabe/.pause ] && exit 0
 lauf() { sudo -u redaktion env $UMGEBUNG python3 main.py "$@" --senden; }
@@ -47,9 +50,13 @@ lauf() { sudo -u redaktion env $UMGEBUNG python3 main.py "$@" --senden; }
 # S30 Willkommensvideo EINMAL (sobald die Stimme laeuft), danach Merkdatei; neu: Datei loeschen
 W=/opt/volumen-social/ausgabe/.willkommen_gesendet
 [ ! -f "$W" ] && [ "$SLOT" = "14:00" -o "$SLOT" = "16:30" -o "$SLOT" = "18:30" ] && lauf willkommen --nur-mit-stimme && sudo -u redaktion touch "$W"
+# „Why did it move?“ EINMAL sofort als Probe (Wunsch Tobias 04.11.), danach Merkdatei; tagsueber 07-22 Uhr
+T=/opt/volumen-social/ausgabe/.warum_probe_gesendet
+[ ! -f "$T" ] && [ "$H" -ge 7 ] && [ "$H" -lt 22 ] && [ "$SLOT" != "14:30" ] && { lauf warum; sudo -u redaktion touch "$T"; }
 case "$SLOT" in
   14:30) lauf markt --art post; lauf warum ;;   # 04.11.2026: Markt nur noch als Bild, Video = „Why did it move?“
   15:00|20:00|21:00) lauf news ;;
+  18:30) lauf warum --richtung runter ;;   # größter Verlierer: „Why did X drop?“ (Wunsch Tobias 04.11.2026)
   16:00) lauf coincheck ;;
   19:00) lauf wal ;;
   21:30) lauf wissen ;;

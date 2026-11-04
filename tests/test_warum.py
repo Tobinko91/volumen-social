@@ -78,5 +78,46 @@ class BeitragTest(unittest.TestCase):
         self.assertIn("no clear driver", b["szenen"][-2]["vorlage"])
 
 
+class VerliererUndVerlaufTest(unittest.TestCase):
+    def test_richtung(self):
+        d = daten.laden(HIER / "beispieldaten")
+        d.news.append({"base": "MANTA", "chg24": -31.0, "driver": None})
+        self.assertEqual(warum.auswahl(d, set(), "runter")["base"], "MANTA")
+        self.assertGreater(warum.auswahl(d, set(), "hoch")["chg24"], 0)
+        for n in d.news:
+            n["chg24"] = abs(n["chg24"])
+        self.assertIsNone(warum.auswahl(d, set(), "runter"))   # kein Verlierer -> kein Video
+
+    def test_verlauf_speichern_und_satz(self):
+        import tempfile
+        from social import verlauf
+        with tempfile.TemporaryDirectory() as t:
+            o = Path(t)
+            for h, f in ((7, 0.01), (6, 0.01), (0, -0.29)):
+                verlauf.speichern({"BAT": {"funding": f, "oi": 1}}, o, 1_000_000 - h * 3600)
+            v = verlauf.laden(o, "BAT")
+            self.assertEqual(len(v), 3)
+            verlauf.speichern({"BAT": {"funding": 1, "oi": 1}}, o, 1_000_000 + 60)   # < 30 Min. -> nicht doppelt
+            self.assertEqual(len(verlauf.laden(o, "BAT")), 3)
+        s = warum.verlauf_satz(v)
+        self.assertEqual(s["satz"], "Funding went from +0.01% to -0.29% in 6 hours.")
+        self.assertIsNone(warum.verlauf_satz(v[:1]))
+
+    def test_beitrag_mit_verlauf_besteht_pruefung(self):
+        d = daten.laden(HIER / "beispieldaten")
+        v = [{"ts": 1000, "funding": 0.01}, {"ts": 1000 + 6 * 3600, "funding": -0.29}]
+        b = warum.beitrag(d, set(), _kerzen(), "en", verlauf=v)
+        fut = next(s for s in b["szenen"] if s["daten"].get("titel") == "FUTURES")
+        self.assertIn("Funding went from +0.01% to -0.29% in 6 hours.", fut["vorlage"])
+        self.assertEqual(pruefung.pruefen([s["vorlage"] for s in b["szenen"]], b, warum.pruef_cfg(CFG), set()), [])
+
+    def test_stimme_im_gesundheits_check(self):
+        import sys
+        sys.path.insert(0, str(HIER / "tools"))
+        import gesundheit
+        self.assertTrue(gesundheit.stimme_eingerichtet(CFG, {"elevenlabs_api_key": "k"}))
+        self.assertFalse(gesundheit.stimme_eingerichtet(CFG, {}))
+
+
 if __name__ == "__main__":
     unittest.main()
