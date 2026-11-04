@@ -62,5 +62,37 @@ class HakenTestTest(unittest.TestCase):
         self.assertIn("Einstieg Frage: 50 %", "\n".join(b.haltequote_text(b.haltequote(p, ig, "haken"))))
 
 
+class FrageUndKommentarTest(unittest.TestCase):
+    def test_x_beginnt_mit_frage_nur_am_frage_tag(self):
+        from social import post
+        b = {"szenen": [{"haken": "frage", "vorlage": "Why did BAT jump +52.8% in 24 hours? Here is what moved."}]}
+        self.assertEqual(post.frage_vorne("Crypto market\nNot financial advice.", b),
+                         "Why did BAT jump +52.8% in 24 hours?\nCrypto market\nNot financial advice.")
+        b["szenen"][0]["haken"] = "zahl"
+        self.assertEqual(post.frage_vorne("X", b), "X")
+        b["szenen"][0]["haken"] = "frage"
+        self.assertEqual(post.frage_vorne("x" * 270, b), "x" * 270)   # passt nicht -> unveraendert
+
+    def test_claude_laesst_haken_und_kommentar_frage(self):
+        from unittest import mock
+        from social import texte
+        b = {"sprache": "en", "fakten": {}, "szenen": [{"typ": "haken", "daten": {}, "vorlage": "Why did X jump?"},
+                                                       {"typ": "mover", "daten": {}, "vorlage": "mitte"},
+                                                       {"typ": "outro", "daten": {}, "vorlage": "Comment below."}]}
+
+        class R:
+            status_code = 200
+
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                return {"content": [{"type": "text", "text": '{"zeilen": ["A", "B", "C"]}'}], "stop_reason": "end_turn"}
+        cfg = {"text": {"modell": "m", "max_woerter": 80}, "video": {}}
+        with mock.patch.object(texte.requests, "post", return_value=R()):
+            z, q = texte.schreiben(b, cfg, "k")
+        self.assertEqual((q, z), ("claude", ["Why did X jump?", "B", "Comment below."]))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -106,3 +106,12 @@ def markt_bild(beitrag: dict, cfg: dict, ziel: Path, verlauf_holen=None) -> Path
     ziel.parent.mkdir(parents=True, exist_ok=True)
     img.convert("RGB").save(ziel)
     return ziel
+
+
+def frage_vorne(x: str, beitrag: dict, max_len: int = 280) -> str:
+    """X-Text beginnt am Frage-Tag mit derselben Frage wie Bild und Ton (04.11.2026). Passt sie nicht, bleibt der Text."""
+    s0 = (beitrag.get("szenen") or [{}])[0]
+    if s0.get("haken") != "frage" or "?" not in s0.get("vorlage", ""):
+        return x
+    neu = s0["vorlage"].split("?")[0].strip() + "?\n" + x
+    return neu if len(neu) <= max_len else x

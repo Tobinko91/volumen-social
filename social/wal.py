@@ -116,7 +116,8 @@ def video_szenen(w: dict, lang: str = "de", tag=None) -> dict:
     if teile:
         szenen.append({"typ": "wal_details", "daten": w, "vorlage": " ".join(teile)})
     from .sprache import T as _T
-    szenen.append({"typ": "outro", "daten": {}, "vorlage": _T[lang]["s_outro"]})
+    from .sprache import outro_szene
+    szenen.append(outro_szene("wal", lang))   # Kommentar-Frage am Ende (04.11.2026)
     return {"format": "wal", "sprache": lang, "szenen": szenen, "fakten": fakten(w),
             "titel": t["x_kopf"].format(b=w["base"])}
 

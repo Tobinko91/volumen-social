@@ -33,7 +33,9 @@ class HakenTest(unittest.TestCase):
         self.assertEqual(s0["daten"]["base"], groesste["base"])
         self.assertTrue(s0["vorlage"].startswith(f"Why did {groesste['base']} jump"))   # Frage als Haken
         self.assertIn("?", s0["vorlage"])
-        self.assertEqual(b["szenen"][-1]["vorlage"], "Follow WhaleSqueeze for daily crypto data.")
+        self.assertEqual(b["szenen"][-1]["vorlage"],
+                         "Which coin should we check tomorrow? Comment below. And follow WhaleSqueeze.")
+        self.assertEqual(b["szenen"][-1]["daten"]["_cta"], "Which coin should we check tomorrow?")
         zeilen = [s["vorlage"] for s in b["szenen"]]
         self.assertEqual(pruefung.pruefen(zeilen, b, CFG, set()), [])
         self.assertNotIn("dot com", " ".join(zeilen))   # Website noch hinter Passwort

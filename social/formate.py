@@ -55,7 +55,8 @@ def markt_30s(d: Daten, sperrliste: set[str], lang: str | None = None, anzahl_mo
         szenen.append({"typ": "mover", "daten": m, "vorlage": t["s_mover"].format(
             base=m["base"], wert=zahl(abs(m["chg24"]), lang),
             richtung=t["hoeher"] if m["chg24"] >= 0 else t["tiefer"], grund=grund).strip()})
-    szenen.append({"typ": "outro", "daten": {}, "vorlage": t["s_outro"]})
+    from .sprache import outro_szene
+    szenen.append(outro_szene("markt", lang))   # Kommentar-Frage am Ende (04.11.2026)
 
     return {
         "format": "markt_30s",

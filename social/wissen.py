@@ -98,7 +98,8 @@ def video_szenen(t: dict, lang: str = "en", echt: dict | None = None, tag=None) 
                                                       "ersatz": "Takeaway" if lang == "en" else "Merke",
                                                       "thema": t, "schritt": i, "echt": echt},   # Grafik je Punkt
                        "vorlage": p})
-    szenen.append({"typ": "outro", "daten": {}, "vorlage": _T[lang]["s_outro"]})
+    from .sprache import outro_szene
+    szenen.append(outro_szene("wissen", lang))   # Kommentar-Frage am Ende (04.11.2026)
     return {"format": "wissen", "sprache": lang, "szenen": szenen, "fakten": t["fakten"], "titel": t["titel"]}
 
 

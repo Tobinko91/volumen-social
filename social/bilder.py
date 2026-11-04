@@ -367,7 +367,14 @@ class Leinwand:
         # Folgen statt Website (Website noch hinter Passwort; „Folgen“ am Ende bringt auf Reels/TikTok Follower)
         self.mitte(d, 690, "@whalesqueeze", _font("Black", 104), self.f["amber"])
         self.mitte(d, 830, self.t["b_folgen"], _font("Bold", 50), self.f["text"])
-        self.mitte(d, 910, self.t["b_outro"], _font("SemiBold", 42), self.f["neben"])
+        cta = daten.get("_cta")
+        if cta:   # Kommentar-Frage (04.11.2026) statt Leitsatz
+            for i, z in enumerate(textwrap.wrap(cta, width=26)[:3]):
+                self.mitte(d, 920 + i * 62, z, _font("Black", 52), self.f["plus"])
+            self.mitte(d, 920 + 62 * len(textwrap.wrap(cta, width=26)[:3]) + 24, self.t["b_kommentar"],
+                       _font("Bold", 40), self.f["neben"])
+        else:
+            self.mitte(d, 910, self.t["b_outro"], _font("SemiBold", 42), self.f["neben"])
         konflikt = textwrap.wrap(self.cfg["hinweise"].get("konflikt") or "", width=48)
         for i, z in enumerate(konflikt):
             self.mitte(d, 930 + i * 44, z, _font("Medium", 34), self.f["neben"])

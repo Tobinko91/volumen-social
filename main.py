@@ -142,6 +142,7 @@ def main() -> int:
     vtxt = post.markt_texte(beitrag, cfg)
     vtxt["telegram"] = links.mit_telegram_link(vtxt["telegram"], beitrag["format"], ordner.name,
                                                lang=beitrag.get("sprache", "de"))
+    vtxt["x"] = post.frage_vorne(vtxt["x"], beitrag)   # gleiche Frage in Bild, Ton und X-Text
     (ordner / "post_x.txt").write_text(vtxt["x"], encoding="utf-8")
     (ordner / "post_telegram.txt").write_text(vtxt["telegram"], encoding="utf-8")
     fehler += [f for f in pruefung.pruefen([vtxt["x"], vtxt["telegram"]], dict(beitrag, szenen=[0, 0]), cfg, sperr,
@@ -206,7 +207,7 @@ def wissen_video(t, txt, cfg, geheim, sperr, ordner: Path, args, echt=None) -> l
     bild_dateien = bilder.zeichnen(dict(b, ts=time.time()), zeilen, ordner / "bilder", cfg)
     toene, dauern, tonquelle = stimme.sprechen(zeilen, ordner / "ton", cfg, stimme.schluessel(cfg, geheim))
     video.bauen(bild_dateien, toene, dauern, ordner / "video.mp4", cfg, **video.ut_formate(cfg, zeilen, b))
-    (ordner / "post_x.txt").write_text(txt["x"], encoding="utf-8")
+    (ordner / "post_x.txt").write_text(post.frage_vorne(txt["x"], b), encoding="utf-8")   # gleiche Frage wie im Video
     (ordner / "post_telegram.txt").write_text(txt["telegram"], encoding="utf-8")
     print(f"Lern-Video {t['id']}: {round(sum(dauern), 1)} s, Stimme {tonquelle}, Chart "
           f"{'echt ' + echt['titel'] if echt else 'Illustration'}, Pruefung", fehler or "bestanden")
@@ -432,7 +433,7 @@ def wal_video(w, txt, f, cfg, geheim, sperr, ordner: Path, lang: str, senden: bo
     bild_dateien = bilder.zeichnen(dict(b, ts=time.time()), zeilen, ordner / "bilder", cfg)
     toene, dauern, tonquelle = stimme.sprechen(zeilen, ordner / "ton", cfg, stimme.schluessel(cfg, geheim))
     video.bauen(bild_dateien, toene, dauern, ordner / "video.mp4", cfg, **video.ut_formate(cfg, zeilen, b))
-    (ordner / "post_x.txt").write_text(txt["x"], encoding="utf-8")
+    (ordner / "post_x.txt").write_text(post.frage_vorne(txt["x"], b), encoding="utf-8")   # gleiche Frage wie im Video
     (ordner / "post_telegram.txt").write_text(txt["telegram"], encoding="utf-8")
     print(f"Wal-Video {w['base']}: {round(sum(dauern), 1)} s, Pruefung", fehler or "bestanden")
     if senden:
