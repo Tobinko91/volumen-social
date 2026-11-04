@@ -65,7 +65,14 @@ def main() -> int:
         ziel = AUSGABE / f"chat_{o.name}"
         shutil.copytree(o, ziel, dirs_exist_ok=True)
         fehler = pruefen(ziel, cfg, sperr)
-        hinweis = "💬 Aus dem Redaktions-Chat" + ("\n⚠️ " + "; ".join(fehler) if fehler else "")
+        ton = ""
+        if (ziel / "reel.json").exists() and not (ziel / "video.mp4").exists():   # Reel: Server spricht + schneidet
+            from social import reel
+            try:
+                ton = "\n🎙 Ton: " + reel.bauen(ziel, cfg, geheim)
+            except Exception as e:
+                fehler.append(f"Reel nicht gebaut ({str(e)[:120]}), nur Bild")
+        hinweis = "💬 Aus dem Redaktions-Chat" + ton + ("\n⚠️ " + "; ".join(fehler) if fehler else "")
         if not (ziel / "post.png").exists():
             telegram.text_senden(geheim, hinweis)
         else:
