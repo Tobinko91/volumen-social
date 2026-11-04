@@ -83,5 +83,54 @@ class ReelTest(unittest.TestCase):
         self.assertIn("🎙 Ton: elevenlabs", gesendet[0][1])
 
 
+class ReelAusBildTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.o = self.tmp / "20261104-1430_markt_30s"
+        self.o.mkdir()
+        Image.new("RGB", (1080, 1350), (40, 30, 80)).save(self.o / "post.png")
+        (self.o / "post_x.txt").write_text("📊 Market check\n$ZK whales +6.0 pp · BTC $75,740\n#crypto https://t.me/x\n"
+                                           "Not financial advice.")
+        (self.o / "post_telegram.txt").write_text("<b>T</b>\n\n<i>Not financial advice.</i>")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def test_sprechtext(self):
+        z = reel.sprechtext((self.o / "post_x.txt").read_text())
+        self.assertEqual(z, ["Market check.", "ZK whales +6.0 pp, BTC $75,740.", "Not financial advice."])
+
+    def test_aus_bild(self):
+        gesehen = {}
+
+        def sprechen(zeilen, ordner, cfg, key):
+            gesehen["n"] = len(zeilen)
+            return [Path(f"{i}.mp3") for i in range(len(zeilen))], [3.0] * len(zeilen), "elevenlabs"
+
+        def schneiden(bilder, toene, dauern, ziel, cfg):
+            gesehen["groesse"] = Image.open(bilder[0]).size
+            ziel.write_bytes(b"v")
+        neu, q = reel.aus_bild(self.o, CFG, {}, sprechen=sprechen, schneiden=schneiden)
+        self.assertEqual((neu.name, q), ("20261104-1430_markt_30s_video", "elevenlabs"))
+        self.assertEqual(gesehen, {"n": 3, "groesse": (1080, 1920)})
+        from social.bericht import format_aus_ordner
+        self.assertEqual(format_aus_ordner(neu.name), "markt_video")
+        self.assertEqual(reel.aus_bild(self.o, CFG, {})[1], "schon gebaut")
+
+    def test_knopf_nur_bei_bildern_und_freigabe(self):
+        from social import telegram
+        alle = lambda r: [k["callback_data"] for z in telegram.knoepfe("b1", reel=r)["inline_keyboard"] for k in z]
+        self.assertIn("p|reel|b1", alle(True))
+        self.assertNotIn("p|reel|b1", alle(False))
+        sys.path.insert(0, str(HIER / "tools"))
+        import freigabe
+        with mock.patch.object(freigabe, "AUSGABE", self.tmp), \
+                mock.patch.object(reel, "aus_bild", lambda o, c, g: (o.parent / (o.name + "_video"), "elevenlabs")), \
+                mock.patch.object(telegram, "vorschlag_senden", lambda g, o, h: True):
+            self.assertIn("Reel gebaut", freigabe.posten({}, self.o.name, "reel"))
+            (self.o / "video.mp4").write_bytes(b"v")
+            self.assertIn("schon ein Video", freigabe.posten({}, self.o.name, "reel"))
+
+
 if __name__ == "__main__":
     unittest.main()
