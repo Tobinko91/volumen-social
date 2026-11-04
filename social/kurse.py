@@ -97,3 +97,19 @@ def zonen(k: list[dict], anzahl: int = 1) -> dict:
             liste.append(z)
     return {"oben": sorted(oben, key=lambda z: z["lo"]), "unten": sorted(unten, key=lambda z: -z["lo"]),
             "grenzen": grenzen, "vol": vol}
+
+
+def long_short(base: str, get=None) -> dict | None:
+    """Long/Short-Verhaeltnis der Konten auf Binance-Futures (oeffentlich, 1h, 24 Std.). Bitunix bietet das nicht
+    oeffentlich an. None, wenn der Coin dort nicht gehandelt wird oder die Abfrage scheitert."""
+    get = get or (lambda url, p: requests.get(url, params=p, timeout=15).json())
+    try:
+        rows = get("https://fapi.binance.com/futures/data/globalLongShortAccountRatio",
+                   {"symbol": f"{base.upper()}USDT", "period": "1h", "limit": 25})
+        if not isinstance(rows, list) or not rows:
+            return None
+        rows = sorted(rows, key=lambda r: int(r["timestamp"]))
+        return {"jetzt": float(rows[-1]["longShortRatio"]), "long_pct": float(rows[-1]["longAccount"]) * 100,
+                "vor24": float(rows[0]["longShortRatio"]) if len(rows) >= 24 else None}
+    except Exception:
+        return None

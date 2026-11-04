@@ -106,6 +106,25 @@ def marktlage(d: Daten) -> dict | None:
     return out
 
 
+WAL_MAX_7D = 25.0      # mehr als 25 Prozentpunkte in 7 Tagen = fast immer ein Datenfehler (CARV 04.11.: -99,1)
+WAL_MAX_SPRUNG = 15.0  # Sprung zwischen zwei Messpunkten im Verlauf
+
+
+def wal_plausibel(c: dict) -> bool:
+    """Fehler 04.11.2026: CARV ging als „Wal des Tages“ mit -99,1 Prozentpunkten raus, der Verlauf sprang
+    0 -> 99 -> 0 %. Das sind Datenluecken/falsch erkannte Adressen, keine Wale. Solche Coins nie zeigen."""
+    if (c.get("holder_status") or "ok") != "ok":
+        return False
+    w = (c.get("wale") or {}).get("wal")
+    if not _zahl(w) or w <= 0.5:
+        return False
+    w7 = (c.get("wale_7d") or {}).get("wal")
+    if _zahl(w7) and abs(w7) > WAL_MAX_7D:
+        return False
+    v = [p[1] for p in (c.get("wale_verlauf") or []) if len(p) >= 2 and _zahl(p[1])]
+    return not any(abs(a - b) > WAL_MAX_SPRUNG for a, b in zip(v, v[1:]))
+
+
 def wal_des_tages(d: Daten, sperrliste: set[str], min_mcap: float = 20e6) -> dict | None:
     """Coin mit der groessten Wal-Veraenderung in 7 Tagen (Prozentpunkte der Gesamtmenge, Bot 9.10).
 
@@ -113,7 +132,7 @@ def wal_des_tages(d: Daten, sperrliste: set[str], min_mcap: float = 20e6) -> dic
     """
     neu, alt = [], []
     for b, c in d.coins.items():
-        if b.upper() in sperrliste or (c.get("mcap") or 0) < min_mcap:
+        if b.upper() in sperrliste or (c.get("mcap") or 0) < min_mcap or not wal_plausibel(c):
             continue
         w7 = (c.get("wale_7d") or {}).get("wal")
         w = (c.get("wale") or {}).get("wal")
@@ -135,7 +154,7 @@ def wale_der_woche(d: Daten, sperrliste: set[str], n: int = 5, min_mcap: float =
     Nur echte 7-Tage-Werte (kein Rueckfall), damit jede Folie dieselbe Aussage hat."""
     liste = []
     for b, c in d.coins.items():
-        if b.upper() in sperrliste or (c.get("mcap") or 0) < min_mcap:
+        if b.upper() in sperrliste or (c.get("mcap") or 0) < min_mcap or not wal_plausibel(c):
             continue
         w7 = (c.get("wale_7d") or {}).get("wal")
         if _zahl(w7) and w7 != 0:

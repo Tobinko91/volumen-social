@@ -34,12 +34,24 @@ LEKTION = {
     "Long flush": "Next time: falling open interest in a drop means leveraged longs were closed.",
     "New shorts": "Next time: rising open interest in a drop with negative funding means traders bet on more downside.",
     "Coins to exchanges": "Next time: watch the exchange share. Coins on exchanges can be sold quickly.",
+    "Stops taken": "Next time: old highs and lows are where stops cluster. Price often runs through them fast.",
+    "Volume spike": "Next time: a volume spike shows real interest. Watch whether it lasts after the first day.",
     "Whales buying": "Next time: watch the whale share. Rising whale holdings show who is accumulating.",
 }
 
 
 def _p(x: float, n: int = 1) -> str:
     return f"{x:+.{n}f}%"
+
+
+def coin_wahl(d, base: str) -> dict | None:
+    """Wunsch-Coin (/warum COIN): Werte aus coins/<BASE>.json (Bitunix, wie der Bot), Ausloeser aus news.json."""
+    b = base.upper()
+    c = d.coins.get(b) or next((v for k, v in d.coins.items() if k.upper() == b), None)
+    if not c or c.get("chg24") is None:
+        return None
+    n = next((x for x in d.news if (x.get("base") or "").upper() == b), {})
+    return {"base": c.get("base") or b, "chg24": round(c["chg24"], 1), "driver": n.get("driver"), "coin": c}
 
 
 def auswahl(d, sperr: set[str], richtung: str = "hoch") -> dict | None:
@@ -83,8 +95,8 @@ def futures_befund(chg: float, oi: float | None, funding: float | None) -> dict 
     oi1 = round(oi, 1)
     if hoch and oi >= OI_STARK and funding < 0:
         return {"label": "Short squeeze", "gross": f"OI {_p(oi1)}", "klein": f"Funding {_p(f, 2)}",
-                "satz": f"Open interest rose {abs(oi1)}% in 4 hours while funding was {_p(f, 2)}. Traders were betting "
-                        "against it, and the rising price squeezed them.", "zahlen": [oi1, f]}
+                "satz": f"Open interest rose {abs(oi1)}% in 4 hours with funding at {_p(f, 2)}. Shorts got squeezed.",
+                "zahlen": [oi1, f]}
     if hoch and oi <= -OI_STARK:
         return {"label": "Short covering", "gross": f"OI {_p(oi1)}", "klein": f"Funding {_p(f, 2)}",
                 "satz": f"Open interest fell {abs(oi1)}% while the price rose. Shorts were closing their bets, "
@@ -111,7 +123,7 @@ def spot_befund(chg: float, spot: float | None) -> dict | None:
     if spot >= SPOT_HOCH:
         return {"label": "Real spot buying" if chg >= 0 else None, "gross": f"{s}% spot",
                 "klein": "share of volume",
-                "satz": f"{s}% of the volume was on spot markets: real coins changing hands, not just leverage.",
+                "satz": f"{s}% of the volume was spot: real buying, not just leverage.",
                 "zahlen": [s]}
     if spot <= SPOT_TIEF:
         return {"label": "Futures-driven", "gross": f"{s}% spot", "klein": "share of volume",
@@ -120,6 +132,9 @@ def spot_befund(chg: float, spot: float | None) -> dict | None:
 
 
 def wal_befund(c: dict) -> dict | None:
+    from .daten import wal_plausibel
+    if not wal_plausibel(c):   # Datenfehler wie CARV 04.11. nie als Erklaerung
+        return None
     w7 = c.get("wale_7d") or {}
     wal, boe = w7.get("wal"), w7.get("boerse")
     if wal is None and boe is None:
@@ -187,18 +202,119 @@ def chart_befund(k: list[dict], chg: float) -> dict | None:
                     "range."}
 
 
+# ---------------------------------------------------------------- Kurs, Volumen, Zonen, Halter, Long/Short (04.11.)
+# Tobias 04.11.2026: „Wir brauchen echte Werte: wie ist der Kurs verlaufen, wie weit runter, Holder (Wale, Boersen),
+# Long-Short-Ratio, Volumen, welche Liquidationszonen wurden abgeholt.“ Alles aus Bitunix-Kerzen (Server) und Bot-Daten.
+
+def pr(x: float) -> str:
+    """Preis wie an der Boerse: 23.23, 0.4512, 1,234."""
+    return f"${x:,.0f}" if x >= 100 else (f"${x:.2f}" if x >= 1 else f"${x:.4g}")
+
+
+def _pz(x: float) -> float:
+    return float(pr(x).replace("$", "").replace(",", ""))
+
+
+def kurs_befund(k: list[dict], hoch: bool) -> dict | None:
+    """Verlauf der letzten 24 Std. aus echten 1h-Kerzen: Start, Hoch/Tief, jetzt, Abstand zum Extrem."""
+    if len(k) < 26:
+        return None
+    letzt = k[-24:]
+    start, jetzt = k[-25]["c"], k[-1]["c"]
+    hi, lo = max(x["h"] for x in letzt), min(x["l"] for x in letzt)
+    if hoch:
+        abst = round((hi - jetzt) / hi * 100, 1)
+        satz = f"From {pr(start)} to a high of {pr(hi)} in 24 hours. Now {pr(jetzt)}, {abst}% below the high."
+    else:
+        abst = round((jetzt - lo) / lo * 100, 1)
+        satz = f"From {pr(start)} to a low of {pr(lo)} in 24 hours. Now {pr(jetzt)}, {abst}% above the low."
+    return {"satz": satz, "zahlen": [_pz(start), _pz(hi), _pz(lo), _pz(jetzt), abst]}
+
+
+def volumen_befund(k: list[dict]) -> dict | None:
+    """24-Std.-Volumen gegen den Tagesschnitt der Tage davor (mindestens 3 volle Tage)."""
+    vor = k[:-24]
+    tage = [sum(x["v"] for x in vor[i:i + 24]) for i in range(len(vor) % 24, len(vor), 24)]
+    tage = [t for t in tage if t > 0]
+    jetzt = sum(x["v"] for x in k[-24:])
+    if len(tage) < 3 or jetzt <= 0:
+        return None
+    r = round(jetzt / (sum(tage) / len(tage)), 1)
+    if r < 1.5:
+        return None
+    return {"r": r, "satz": f"Volume was {r}x the daily average of the days before.", "zahlen": [r],
+            "label": "Volume spike" if r >= 3 else None}
+
+
+def zonen_befund(k: list[dict], hoch: bool) -> dict | None:
+    """Liquiditaetszonen, die abgeholt wurden: alte Hochs (Stops der Shorts) bzw. alte Tiefs (Stops der Longs) aus
+    den Tagen davor, die in den letzten 24 Std. ueberschritten/unterschritten wurden."""
+    from . import muster
+    if len(k) < 60:
+        return None
+    vor, letzt = k[:-24], k[-24:]
+    start = k[-25]["c"]
+    if hoch:
+        hi = max(x["h"] for x in letzt)
+        z = sorted({round(vor[i]["h"], 8) for i in muster._hochs(vor) if start < vor[i]["h"] < hi})
+    else:
+        lo = min(x["l"] for x in letzt)
+        z = sorted({round(vor[i]["l"], 8) for i in muster._tiefs(vor) if lo < vor[i]["l"] < start}, reverse=True)
+    if not z:
+        return None
+    z = z[-3:] if hoch else z[:3]
+    wer = "short sellers" if hoch else "long traders"
+    liste = ", ".join(pr(x) for x in z)
+    satz = f"It took out {len(z)} old {'highs' if hoch else 'lows'} where {wer} had their stops: {liste}."
+    return {"zonen": z, "satz": satz, "zahlen": [len(z)] + [_pz(x) for x in z]}
+
+
+def halter_befund(c: dict) -> dict | None:
+    """Wie viel halten Wale und Boersen (Prozent der Gesamtmenge), nur bei plausiblen Daten."""
+    from .daten import wal_plausibel
+    if not wal_plausibel(c):
+        return None
+    w = c.get("wale") or {}
+    wal, boe = round(w.get("wal") or 0, 1), round(w.get("boerse") or 0, 1)
+    satz = f"Holders: whales hold {wal}% of the supply, exchanges {boe}%."
+    zahlen = [wal, boe]
+    wb = wal_befund(c)
+    if wb:
+        satz += " " + wb["satz"]
+        zahlen += wb["zahlen"]
+    return {"titel": "HOLDERS", "gross": f"Whales {wal}%", "klein": f"Exchanges {boe}%",
+            "label": wb["label"] if wb else None, "satz": satz, "zahlen": zahlen}
+
+
+def lsr_satz(lsr: dict | None) -> dict | None:
+    """Long/Short-Verhaeltnis (Konten, Binance-Futures, oeffentlich): jetzt und vor 24 Std."""
+    if not lsr or lsr.get("jetzt") is None:
+        return None
+    r, lp = round(lsr["jetzt"], 2), round(lsr["long_pct"])
+    satz = f"Long/short ratio on Binance: {r}, so {lp}% of accounts are long"
+    zahlen = [r, lp]
+    if lsr.get("vor24") is not None:
+        r0 = round(lsr["vor24"], 2)
+        satz += f" (24 hours ago: {r0})"
+        zahlen.append(r0)
+    return {"satz": satz + ".", "zahlen": zahlen}
+
+
 # ---------------------------------------------------------------- Beitrag
 
 def beitrag(d, sperr: set[str], kerzen: list[dict] | None, lang: str = "en", tag=None, richtung: str = "hoch",
-            verlauf: list[dict] | None = None) -> dict:
+            verlauf: list[dict] | None = None, wahl: dict | None = None, lsr: dict | None = None) -> dict:
+    """Szenen: Haken, Kurs-Chart (Verlauf + abgeholte Zonen), Ausloeser, Futures (+ Funding-Verlauf, Long/Short),
+    Volumen + Spot, Halter, Urteil, Kommentar-Frage. Nur was die Daten hergeben."""
     if lang != "en":
         raise ValueError("„Why did it move?“ gibt es nur auf Englisch")
-    w = auswahl(d, sperr, richtung)
+    w = wahl or auswahl(d, sperr, richtung)
     if not w:
         raise ValueError("Keine Bewegung in news.json – kein Warum-Video")
     b, chg, c = w["base"], w["chg24"], w["coin"]
     hoch = chg >= 0
-    zahlen = [abs(chg), 4, 7, 24]   # feste Zeitraeume im Sprechtext (4 hours, 7 days, 24 hours)
+    k = kerzen or []
+    zahlen = [abs(chg), 4, 6, 7, 24]   # feste Zeitraeume im Sprechtext
     art = haken_art(tag)
     verb = "jump" if hoch else "drop"
     if art == "frage":
@@ -209,38 +325,74 @@ def beitrag(d, sperr: set[str], kerzen: list[dict] | None, lang: str = "en", tag
         frage = None
     szenen = [{"typ": "warum_haken", "haken": art, "daten": {"base": b, "chg24": chg, "_frage": frage},
                "vorlage": haken}]
-    labels, belege = [], []
+    labels = []
+
+    # 1. Kurs: echter Chart (3 Tage, 1h) mit Verlauf und abgeholten Zonen
+    kb, zb = kurs_befund(k, hoch), zonen_befund(k, hoch)
+    if kb:
+        satz = kb["satz"] + (" " + zb["satz"] if zb else "")
+        zahlen += kb["zahlen"] + (zb["zahlen"] if zb else [])
+        szenen.append({"typ": "warum_chart", "daten": {"kerzen": k[-72:], "art": "zonen",
+                                                       "info": {"zonen": zb["zonen"] if zb else [], "hoch": hoch},
+                                                       "base": b}, "vorlage": satz})
+        if zb:
+            labels.append("Stops taken")
+    # 2. Ausloeser
     drv = w.get("driver") or {}
     tag_ = (drv.get("tags") or [None])[0]
     if tag_ and TAG["en"].get(tag_):
-        belege.append({"titel": "TRIGGER", "label": TAG_EN.get(tag_, tag_), "gross": TAG_EN.get(tag_, tag_).upper(),
-                       "klein": "news",
-                       "satz": f"The trigger: {TAG['en'][tag_]}.", "zahlen": []})
-    for titel, bef in (("FUTURES", futures_befund(chg, c.get("oi_chg4h"), c.get("funding"))),
-                       ("SPOT VS FUTURES", spot_befund(chg, c.get("spot_anteil"))),
-                       ("WHALES & EXCHANGES", wal_befund(c))):
-        if bef:
-            belege.append(dict(bef, titel=titel))
+        szenen.append({"typ": "warum_beleg", "daten": {"titel": "TRIGGER", "label": None,
+                                                        "gross": TAG_EN.get(tag_, tag_).upper(), "klein": "news"},
+                       "vorlage": f"The trigger: {TAG['en'][tag_]}."})
+        labels.insert(0, TAG_EN.get(tag_, tag_))
+    # 3. Futures: OI/Funding-Regel + Funding-Verlauf + Long/Short
+    fb = futures_befund(chg, c.get("oi_chg4h"), c.get("funding"))
+    teile, fz = [], []
+    if fb:
+        teile.append(fb["satz"]); fz += fb["zahlen"]
+        labels.append(fb["label"])
+    elif c.get("oi_chg4h") is not None and c.get("funding") is not None:
+        oi, f = round(c["oi_chg4h"], 1), round(c["funding"], 2)
+        teile.append(f"Futures: open interest {_p(oi)} in 4 hours, funding {_p(f, 2)}."); fz += [oi, f]
     vs = verlauf_satz(verlauf)
-    if vs:   # Verlauf macht den Futures-Beleg staerker; ohne Futures-Beleg eigener Beleg
-        fb = next((x for x in belege if x["titel"] == "FUTURES"), None)
-        if fb:
-            fb["satz"] = fb["satz"] + " " + vs["satz"]
-            fb["zahlen"] = fb["zahlen"] + vs["zahlen"]
-        else:
-            belege.append({"titel": "FUNDING", "label": None, "gross": vs["satz"].split(" in ")[0].replace(
-                "Funding went from ", "").replace(" to ", " → "), "klein": "funding, 6 hours", "satz": vs["satz"],
-                "zahlen": vs["zahlen"]})
-    for bf in belege[:3]:
-        szenen.append({"typ": "warum_beleg", "daten": bf, "vorlage": bf["satz"]})
-        zahlen += bf["zahlen"]
-        if bf.get("label"):
-            labels.append(bf["label"])
-    ch = chart_befund(kerzen or [], chg) if kerzen else None
-    if ch:
-        szenen.append({"typ": "warum_chart", "daten": {"kerzen": kerzen, "art": ch["art"], "info": ch["info"],
-                                                       "base": b}, "vorlage": ch["satz"]})
-        zahlen += ch["zahlen"]
+    if vs:
+        teile.append(vs["satz"]); fz += vs["zahlen"]
+    ls = lsr_satz(lsr)
+    if ls:
+        teile.append(ls["satz"]); fz += ls["zahlen"]
+    if teile:
+        gross = (fb or {}).get("gross") or (f"OI {_p(round(c['oi_chg4h'], 1))}" if c.get("oi_chg4h") is not None
+                                            else f"L/S {round(lsr['jetzt'], 2)}")
+        klein = (f"Long/short {round(lsr['jetzt'], 2)}" if ls else
+                 (f"Funding {_p(round(c['funding'], 2), 2)}" if c.get("funding") is not None else ""))
+        szenen.append({"typ": "warum_beleg", "daten": {"titel": "FUTURES", "label": (fb or {}).get("label"),
+                                                        "gross": gross, "klein": klein}, "vorlage": " ".join(teile)})
+        zahlen += fz
+    # 4. Volumen + Spot-Anteil
+    vb, sb = volumen_befund(k), spot_befund(chg, c.get("spot_anteil"))
+    if vb or sb:
+        satz = " ".join(x["satz"] for x in (vb, sb) if x)
+        zahlen += (vb["zahlen"] if vb else []) + (sb["zahlen"] if sb else [])
+        for x in (vb, sb):
+            if x and x.get("label"):
+                labels.append(x["label"])
+        szenen.append({"typ": "warum_beleg", "daten": {"titel": "VOLUME",
+                                                        "gross": f"{vb['r']}x volume" if vb else sb["gross"],
+                                                        "klein": sb["gross"] if (vb and sb) else "vs. daily average",
+                                                        "label": (vb or {}).get("label") or (sb or {}).get("label")},
+                       "vorlage": satz})
+    # 5. Halter (Wale, Boersen) nur mit plausiblen Daten
+    hb = halter_befund(c)
+    if hb:
+        szenen.append({"typ": "warum_beleg", "daten": hb, "vorlage": hb["satz"]})
+        zahlen += hb["zahlen"]
+        if hb.get("label"):
+            labels.append(hb["label"])
+    prio = ["Short squeeze", "Short covering", "Leverage rally", "Long flush", "New shorts", "Real spot buying",
+            "Futures-driven", "Coins to exchanges", "Whales buying", "Volume spike", "Stops taken"]
+    labels = [l for i, l in enumerate(labels) if l and l not in labels[:i]]
+    trig = [l for l in labels if l not in prio]   # Ausloeser (Listing ...) zuerst
+    labels = trig + sorted([l for l in labels if l in prio], key=prio.index)
     if labels:
         lektion = next((LEKTION[l] for l in labels if l in LEKTION), "")
         urteil = f"Verdict: {' plus '.join(l.lower() for l in labels[:2])}. {lektion}".strip()
@@ -255,7 +407,7 @@ def beitrag(d, sperr: set[str], kerzen: list[dict] | None, lang: str = "en", tag
 
 def pruef_cfg(cfg: dict) -> dict:
     """Warum-Video darf etwas laenger sein (ca. 40 Sek. statt 30): text.max_woerter_warum, Standard 110."""
-    return dict(cfg, text=dict(cfg["text"], max_woerter=cfg["text"].get("max_woerter_warum", 110)))
+    return dict(cfg, text=dict(cfg["text"], max_woerter=cfg["text"].get("max_woerter_warum", 150)))
 
 
 def texte(bt: dict, cfg: dict) -> dict:

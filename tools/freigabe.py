@@ -199,6 +199,15 @@ def befehl(g: dict, text: str) -> str:
         subprocess.Popen([sys.executable, str(app / "main.py"), "coincheck", "--coin", coin, "--senden"],
                          cwd=str(app), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return f"🔎 Coin-Check für {coin} wird erstellt, kommt in etwa einer Minute."
+    if cmd == "/warum" and len(teile) > 1:   # „Why did it move?“ fuer einen Wunsch-Coin (Tobias 04.11.2026)
+        import subprocess
+        coin = teile[1].upper().strip("$#")
+        if not coin.isalnum() or len(coin) > 15:
+            return "Bitte nur den Ticker, z. B. /warum CLANKER"
+        app = Path(__file__).resolve().parent.parent
+        subprocess.Popen([sys.executable, str(app / "main.py"), "warum", "--coin", coin, "--senden"],
+                         cwd=str(app), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return f"🔍 „Why did it move?“ für {coin} wird gebaut (Daten vom Bot/Bitunix), kommt in 1–2 Minuten."
     if cmd == "/auto":   # Freigabe-Tor: Status, /auto aus, /auto an
         from social import autopost, bericht
         aus = autopost.aus_datei(AUSGABE)
@@ -222,7 +231,7 @@ def befehl(g: dict, text: str) -> str:
     if cmd == "/weiter":
         PAUSE.unlink(missing_ok=True)
         return "▶️ Geht weiter."
-    return "Befehle: /check AKE, /status, /auto (an/aus), /musik, /sperre BTC, /entsperre BTC, /pause, /weiter"
+    return "Befehle: /check AKE, /warum CLANKER, /status, /auto (an/aus), /musik, /sperre BTC, /entsperre BTC, /pause, /weiter"
 
 
 def musik_speichern(g: dict, m: dict, holen=requests.get) -> str:

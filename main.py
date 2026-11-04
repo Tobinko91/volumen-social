@@ -448,14 +448,25 @@ def wal_video(w, txt, f, cfg, geheim, sperr, ordner: Path, lang: str, senden: bo
 def warum_beitrag(args, cfg, geheim, sperr, kerzen_holen=None) -> int:
     """„Why did it move?“ (Wunsch Tobias 04.11.2026, ersetzt das Markt-Video): ein Coin, Erklaerung aus Daten."""
     from social import warum
-    if not (cfg.get("warum") or {}).get("aktiv", True) and not args.daten:   # Pause (Tobias 04.11.: CARV unrealistisch)
+    if not (cfg.get("warum") or {}).get("aktiv", True) and not args.daten and not args.coin:   # Pause (CARV 04.11.)
         print("Warum-Video pausiert (config warum.aktiv: false).")
         return 0
     probe = bool(args.daten)
     d = daten.laden(args.daten or cfg["daten"]["dir"], None if probe else cfg["daten"]["max_alter_min"])
     from social import verlauf as _verlauf
     richtung = getattr(args, "richtung", None) or "hoch"
-    w = warum.auswahl(d, sperr, richtung)
+    if args.coin:   # /warum COIN im Redaktions-Bot
+        base = args.coin.upper().strip("$")
+        if base in sperr:
+            telegram.text_senden(geheim, f"{base} steht auf deiner Sperrliste – kein Warum-Video.") if args.senden else None
+            return 0
+        w = warum.coin_wahl(d, base)
+        if not w:
+            msg = f"{base} ist nicht in den Bot-Daten (Bitunix-Scan) – kein Warum-Video."
+            telegram.text_senden(geheim, msg) if args.senden else print(msg)
+            return 0
+    else:
+        w = warum.auswahl(d, sperr, richtung)
     if not w:
         print("Keine passende Bewegung – kein Warum-Video.")
         return 0
@@ -465,7 +476,8 @@ def warum_beitrag(args, cfg, geheim, sperr, kerzen_holen=None) -> int:
     except Exception as e:
         print("Kerzen nicht geholt:", e)
         kerzen = []
-    b = warum.beitrag(d, sperr, kerzen, "en", richtung=richtung,
+    lsr = None if probe else kurse.long_short(w["base"])
+    b = warum.beitrag(d, sperr, kerzen, "en", richtung=richtung, wahl=w, lsr=lsr,
                       verlauf=_verlauf.laden(Path(args.out) / "verlauf", w["base"]))
     zeilen = [s["vorlage"] for s in b["szenen"]]   # feste Regel-Saetze, kein Claude (nichts erfinden)
     fehler = pruefung.pruefen(zeilen, b, warum.pruef_cfg(cfg), sperr)
