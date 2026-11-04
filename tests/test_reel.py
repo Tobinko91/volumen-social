@@ -91,10 +91,44 @@ class UntertitelTest(unittest.TestCase):
                          ["Election night.", "Bitcoin slid to", "a seven-week low."])
         with tempfile.TemporaryDirectory() as d:
             ut = video.untertitel("Election night. Bitcoin slid to a seven-week low.", 4.0, Path(d), 0, CFG)
-            self.assertEqual(len(ut), 3)
+            self.assertEqual(len(ut), 8)                      # ein Bild je Wort (aktives Wort hervorgehoben)
             self.assertEqual((ut[0][1], ut[-1][2]), (0.0, 4.0))
             self.assertTrue(all(a < e for _, a, e in ut))
+            self.assertTrue(all(ut[k][2] == ut[k + 1][1] for k in range(7)))   # lueckenlos
             self.assertEqual(Image.open(ut[0][0]).size, (1080, 1920))
+
+    def test_echte_zeitmarken(self):
+        from social import stimme, video
+        al = {"characters": list("Hi there."), "character_start_times_seconds": [0, .1, .2, .3, .4, .5, .6, .7, .8],
+              "character_end_times_seconds": [.1, .2, .3, .4, .5, .6, .7, .8, .9]}
+        w = stimme.woerter_aus_ausrichtung(al)
+        self.assertEqual(w, [{"w": "Hi", "a": 0, "e": 0.2}, {"w": "there.", "a": 0.3, "e": 0.9}])
+        with tempfile.TemporaryDirectory() as d:
+            ut = video.untertitel("Hi there.", 1.5, Path(d), 0, CFG, w, y=1310)
+        self.assertEqual([(a, e) for _, a, e in ut], [(0.0, 0.3), (0.3, 1.5)])
+
+    def test_elevenlabs_speichert_marken(self):
+        import base64
+        from social import stimme
+
+        class R:
+            status_code = 200
+
+            def json(self):
+                return {"audio_base64": base64.b64encode(b"mp3").decode(),
+                        "alignment": {"characters": list("Go"), "character_start_times_seconds": [0, .1],
+                                      "character_end_times_seconds": [.1, .2]}}
+        cfg = {"stimme": {"voice_id": "v1", "modell": "eleven_flash_v2_5"}}
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(stimme.requests, "post", return_value=R()) as p:
+            stimme._elevenlabs("Go", Path(d) / "a.mp3", cfg, "k")
+            self.assertIn("with-timestamps", p.call_args[0][0])
+            self.assertEqual((Path(d) / "a.mp3").read_bytes(), b"mp3")
+            self.assertEqual(json.loads((Path(d) / "a.json").read_text()), [{"w": "Go", "a": 0, "e": 0.2}])
+
+    def test_formate_ohne_satzkasten(self):
+        from social import video
+        self.assertEqual(video.ut_formate(CFG, ["a"]), {"texte": ["a"], "untertitel_y": 1310})
+        self.assertEqual(video.ut_formate({"video": {}}, ["a"]), {})
 
 
 class ReelAusBildTest(unittest.TestCase):

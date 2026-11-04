@@ -69,6 +69,8 @@ class Leinwand:
     def untertitel(self, d, text, y=1230):
         """Untertitel (viele schauen ohne Ton). Zahlen fett und in Leuchtminze (Wunsch Tobias 01.11.2026),
         damit sie beim Durchscrollen sofort auffallen."""
+        if self.cfg.get("video", {}).get("untertitel_animiert"):   # seit 04.11.: animiert im Video (video.py)
+            return
         text = text.replace(self.t["adresse_gesprochen"], ".com")   # Stimme sagt "Punkt com", Bild zeigt die Adresse
         breite_max = self.W - 140 - 80
         groesse = 50
