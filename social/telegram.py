@@ -120,13 +120,17 @@ def text_senden(geheim: dict, text: str) -> bool:
     return r.ok
 
 
-def knoepfe(beitrag_id: str) -> dict:
-    """Inline-Knoepfe fuer die Freigabe. callback_data hoechstens 64 Zeichen."""
+def knoepfe(beitrag_id: str, reel: bool = False) -> dict:
+    """Inline-Knoepfe fuer die Freigabe. callback_data hoechstens 64 Zeichen.
+    reel=True (nur Bild-Vorschlaege): zusaetzlich „🎬 Als Reel“ (Wunsch Tobias 04.11.2026)."""
     def k(text, ziel):
         return {"text": text, "callback_data": f"p|{ziel}|{beitrag_id}"[:64]}
-    return {"inline_keyboard": [[k("📢 Telegram-Kanal", "tg"), k("𝕏 X", "x")],
-                                [k("📸 Instagram", "ig"), k("🎵 TikTok", "tt"), k("▶️ YouTube", "yt")],
-                                [k("✅ Alle Kanäle", "alle"), k("🗑 Verwerfen", "nein")]]}
+    reihen = [[k("📢 Telegram-Kanal", "tg"), k("𝕏 X", "x")],
+              [k("📸 Instagram", "ig"), k("🎵 TikTok", "tt"), k("▶️ YouTube", "yt")],
+              [k("✅ Alle Kanäle", "alle"), k("🗑 Verwerfen", "nein")]]
+    if reel:
+        reihen.insert(2, [k("🎬 Als Reel (mit Stimme)", "reel")])
+    return {"inline_keyboard": reihen}
 
 
 def vorschlag_senden(geheim: dict, ordner: Path, hinweis: str = "") -> bool:
@@ -181,11 +185,11 @@ def vorschlag_senden(geheim: dict, ordner: Path, hinweis: str = "") -> bool:
                           files={"photo": (bild.name, fh, "image/png")}, timeout=60)
         r = senden("sendMessage", data={"chat_id": chat, "text": rest[:4096], "parse_mode": "HTML",
                                 "disable_web_page_preview": "true",
-                                "reply_markup": json.dumps(knoepfe(ordner.name))}, timeout=30)
+                                "reply_markup": json.dumps(knoepfe(ordner.name, reel=True))}, timeout=30)
     else:
         with open(bild, "rb") as fh:
             r = senden("sendPhoto", data={"chat_id": chat, "caption": tg, "parse_mode": "HTML",
-                                    "reply_markup": json.dumps(knoepfe(ordner.name))},
+                                    "reply_markup": json.dumps(knoepfe(ordner.name, reel=True))},
                               files={"photo": (bild.name, fh, "image/png")}, timeout=60)
     text_senden(geheim, (hinweis + "\n\n" if hinweis else "") + f"X-Text ({len(x)} Zeichen):\n\n" + x)
     if fehler:

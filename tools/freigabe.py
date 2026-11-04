@@ -44,12 +44,30 @@ def tiktok_entwuerfe_24h(jetzt: float | None = None) -> int:
                if e.get("kanal") == "tiktok" and e.get("ereignis") == "gepostet" and "Entwurf" in str(e.get("link", "")))
 
 
+def reel_bauen(g: dict, ordner: Path) -> str:
+    if ordner.name.endswith("_video") or (ordner / "video.mp4").exists() or (ordner / "karussell.json").exists():
+        return "🎬 Das ist schon ein Video bzw. eine Bilderserie."
+    from social import reel, telegram as _telegram
+    try:
+        neu, quelle = reel.aus_bild(ordner, kanaele._cfg(), g)
+    except Exception as e:
+        return f"❌ Reel nicht gebaut: {str(e)[:200]}"
+    if quelle == "schon gebaut":
+        return "🎬 Reel gibt es schon (Vorschlag weiter oben im Chat)."
+    hinweis = f"🎬 Reel aus Bild-Vorschlag · 🎙 Ton: {quelle}"
+    if not _telegram.vorschlag_senden(g, neu, hinweis):
+        return "⚠️ Reel gebaut, aber Telegram hat die Vorschau abgelehnt."
+    return "🎬 Reel gebaut, Vorschau kommt als eigener Vorschlag mit Knöpfen."
+
+
 def posten(g: dict, beitrag_id: str, ziel: str) -> str:
     ordner = AUSGABE / Path(beitrag_id).name          # nur Ordnername, kein Pfad von aussen
     video = ordner / "video.mp4"
     medium = video if video.exists() else ordner / "post.png"   # Video-Vorschlag oder Bild-Beitrag
     if not medium.exists():
         return "Beitrag nicht mehr vorhanden (Videos/Bilder werden nach 3 Tagen gelöscht)."
+    if ziel == "reel":   # Bild-Vorschlag als 9:16-Reel mit Stimme, kommt als neuer Video-Vorschlag (04.11.2026)
+        return reel_bauen(g, ordner)
     from social import karussell_posten, video_posten
     ist_karussell = medium != video and (ordner / "karussell.json").exists()   # S11: Bilderserie
     poster = (video_posten.POSTER if medium == video

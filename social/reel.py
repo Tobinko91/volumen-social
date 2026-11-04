@@ -53,3 +53,57 @@ def bauen(ordner: Path, cfg: dict, geheim: dict, kerzen_holen=None, sprechen=Non
     toene, dauern, quelle = sprechen(zeilen, ordner / "ton", cfg, stimme.schluessel(cfg, geheim))
     schneiden(bilder, toene, dauern, ordner / "video.mp4", cfg)
     return "; ".join([quelle, *hinweise])
+
+
+# ---------------------------------------------------------------- Reel aus einem Bild-Vorschlag (Knopf „🎬 Als Reel“)
+
+def sprechtext(x_text: str) -> list[str]:
+    """X-Text als Sprechtext: ohne Emojis, Links, Hashtags, Cashtag-$; je Satz/Zeile eine Szene-Zeile."""
+    import re
+    t = re.sub(r"https?://\S+", "", x_text)
+    t = re.sub(r"#\w+", "", t)
+    t = re.sub(r"\$([A-Za-z]{2,10})\b", r"\1", t)                      # $ZK -> ZK, $75,740 bleibt
+    t = "".join(c for c in t if c.isascii() or c.isalpha() or c in "€–—’“”…·")
+    t = t.replace("·", ",")
+    zeilen = [re.sub(r"\s+,", ",", re.sub(r"\s+", " ", z)).strip(" -•,") for z in t.splitlines()]
+    return [z if z[-1:] in ".!?:" else z + "." for z in zeilen if len(z) > 1]
+
+
+def bild_szene(post: Path, ziel: Path, thema: str, cfg: dict) -> Path:
+    """Hochformat 1080x1920: Marke oben, Beitragsbild gross in der Mitte, Folgen-Hinweis unten."""
+    from PIL import ImageDraw
+    from . import design
+    th = design.thema_waehlen("markt", thema)
+    W, H = cfg["video"]["breite"], cfg["video"]["hoehe"]
+    img = design.hintergrund(th, W, H, saat=31)
+    design.marke(img, th, 80, 90, 72)
+    b = Image.open(post).convert("RGBA")
+    breite = W - 60
+    b = b.resize((breite, int(b.height * breite / b.width)))
+    y = max(230, (H - b.height) // 2)
+    img.alpha_composite(b, ((W - breite) // 2, y))
+    d = ImageDraw.Draw(img)
+    f = design.font("Bold", 40)
+    txt = f"Follow {design.FUSS_MARKE}"
+    d.text(((W - d.textlength(txt, font=f)) / 2, min(H - 140, y + b.height + 50)), txt, font=f, fill=th.akzent)
+    img.convert("RGB").save(ziel)
+    return ziel
+
+
+def aus_bild(ordner: Path, cfg: dict, geheim: dict, sprechen=None, schneiden=None) -> tuple[Path, str]:
+    """Neuer Vorschlags-Ordner <name>_video mit video.mp4: Beitragsbild als Hochformat, Brian liest den X-Text."""
+    import shutil
+    from . import stimme, video
+    sprechen = sprechen or stimme.sprechen
+    schneiden = schneiden or video.bauen
+    neu = ordner.parent / f"{ordner.name}_video"
+    if (neu / "video.mp4").exists():
+        return neu, "schon gebaut"
+    neu.mkdir(exist_ok=True)
+    for f in ("post.png", "post_x.txt", "post_telegram.txt"):
+        shutil.copy(ordner / f, neu / f)
+    zeilen = sprechtext((ordner / "post_x.txt").read_text(encoding="utf-8"))
+    szene = bild_szene(ordner / "post.png", neu / "szene.png", ordner.name, cfg)
+    toene, dauern, quelle = sprechen(zeilen, neu / "ton", cfg, stimme.schluessel(cfg, geheim))
+    schneiden([szene] * len(zeilen), toene, dauern, neu / "video.mp4", cfg)
+    return neu, quelle
