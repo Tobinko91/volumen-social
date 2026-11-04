@@ -52,6 +52,9 @@ def untertitel(text: str, dauer: float, ordner: Path, nr: int, cfg: dict, woerte
     from . import design
     W, H = cfg["video"]["breite"], cfg["video"]["hoehe"]
     woerter = woerter or woerter_schaetzen(text, dauer)
+    # Klammern zerfallen auf zwei Einblendungen und sehen unfertig aus (Tobias 04.11.2026) -> weglassen
+    woerter = [dict(w, w=w["w"].replace("(", "").replace(")", "")) for w in woerter]
+    woerter = [w for w in woerter if w["w"]]
     mitte = int(y or cfg["video"].get("untertitel_y", 1745))
     out, alle = [], [w for g in gruppen(woerter) for w in g]
     for gi, g in enumerate(gruppen(woerter)):

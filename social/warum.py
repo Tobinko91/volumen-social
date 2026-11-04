@@ -247,8 +247,10 @@ def volumen_befund(k: list[dict]) -> dict | None:
 
 
 def zonen_befund(k: list[dict], hoch: bool) -> dict | None:
-    """Liquiditaetszonen, die abgeholt wurden: alte Hochs (Stops der Shorts) bzw. alte Tiefs (Stops der Longs) aus
-    den Tagen davor, die in den letzten 24 Std. ueberschritten/unterschritten wurden."""
+    """Die Liquiditaetszone, die abgeholt wurde: das hoechste alte Hoch (Stops der Shorts) bzw. tiefste alte Tief
+    (Stops der Longs) aus den Tagen davor, das in den letzten 24 Std. durchbrochen wurde.
+    Nur EINE Linie (Tobias 04.11.2026: zwei Linien dicht beieinander waren nicht lesbar, Preis-Listen nuschelt die
+    Stimme)."""
     from . import muster
     if len(k) < 60:
         return None
@@ -256,17 +258,17 @@ def zonen_befund(k: list[dict], hoch: bool) -> dict | None:
     start = k[-25]["c"]
     if hoch:
         hi = max(x["h"] for x in letzt)
-        z = sorted({round(vor[i]["h"], 8) for i in muster._hochs(vor) if start < vor[i]["h"] < hi})
+        z = [vor[i]["h"] for i in muster._hochs(vor) if start < vor[i]["h"] < hi]
+        zone = max(z) if z else None
     else:
         lo = min(x["l"] for x in letzt)
-        z = sorted({round(vor[i]["l"], 8) for i in muster._tiefs(vor) if lo < vor[i]["l"] < start}, reverse=True)
-    if not z:
+        z = [vor[i]["l"] for i in muster._tiefs(vor) if lo < vor[i]["l"] < start]
+        zone = min(z) if z else None
+    if zone is None:
         return None
-    z = z[-3:] if hoch else z[:3]
     wer = "short sellers" if hoch else "long traders"
-    liste = ", ".join(pr(x) for x in z)
-    satz = f"It took out {len(z)} old {'highs' if hoch else 'lows'} where {wer} had their stops: {liste}."
-    return {"zonen": z, "satz": satz, "zahlen": [len(z)] + [_pz(x) for x in z]}
+    satz = f"It broke the old {'high' if hoch else 'low'} at {pr(zone)}, where {wer} had their stops."
+    return {"zonen": [zone], "satz": satz, "zahlen": [_pz(zone)]}
 
 
 def halter_befund(c: dict) -> dict | None:
@@ -291,13 +293,15 @@ def lsr_satz(lsr: dict | None) -> dict | None:
     if not lsr or lsr.get("jetzt") is None:
         return None
     r, lp = round(lsr["jetzt"], 2), round(lsr["long_pct"])
-    satz = f"Long/short ratio on Binance: {r}, so {lp}% of accounts are long"
+    # ohne Klammern (Tobias 04.11.2026: Klammer zerfiel in den Untertiteln auf zwei Einblendungen)
     zahlen = [r, lp]
     if lsr.get("vor24") is not None:
         r0 = round(lsr["vor24"], 2)
-        satz += f" (24 hours ago: {r0})"
         zahlen.append(r0)
-    return {"satz": satz + ".", "zahlen": zahlen}
+        richtung = "up from" if r > r0 else ("down from" if r < r0 else "same as")
+        return {"satz": f"Long/short ratio on Binance: {r}, {richtung} {r0} a day ago. {lp}% of accounts are long.",
+                "zahlen": zahlen}
+    return {"satz": f"Long/short ratio on Binance: {r}. {lp}% of accounts are long.", "zahlen": zahlen}
 
 
 # ---------------------------------------------------------------- Beitrag
