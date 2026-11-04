@@ -40,8 +40,8 @@ class ReelTest(unittest.TestCase):
         self.gesehen["zeilen"], self.gesehen["key"] = zeilen, key
         return [Path("a.mp3"), Path("b.mp3")], [2.5, 2.5], "elevenlabs"
 
-    def _schneiden(self, bilder, toene, dauern, ziel, cfg):
-        self.gesehen["bilder"] = bilder
+    def _schneiden(self, bilder, toene, dauern, ziel, cfg, texte=None):
+        self.gesehen["bilder"], self.gesehen["texte"] = bilder, texte
         ziel.write_bytes(b"mp4")
         return ziel
 
@@ -55,6 +55,7 @@ class ReelTest(unittest.TestCase):
         self.assertEqual(self.gesehen["bilder"][1].name, "szene_1.png")
         self.assertEqual(Image.open(self.gesehen["bilder"][0]).size, (1080, 1920))
         self.assertTrue((self.o / "video.mp4").exists())
+        self.assertEqual(self.gesehen["texte"], ["Bitcoin dipped.", "Then it bounced."])   # Untertitel
 
     def test_ohne_kurse_trotzdem_video(self):
         q = reel.bauen(self.o, CFG, {}, kerzen_holen=lambda b, i, n: [], sprechen=self._sprechen,
@@ -83,6 +84,19 @@ class ReelTest(unittest.TestCase):
         self.assertIn("🎙 Ton: elevenlabs", gesendet[0][1])
 
 
+class UntertitelTest(unittest.TestCase):
+    def test_stuecke_und_zeiten(self):
+        from social import video
+        self.assertEqual(video.stuecke("Election night. Bitcoin slid to a seven-week low."),
+                         ["Election night.", "Bitcoin slid to", "a seven-week low."])
+        with tempfile.TemporaryDirectory() as d:
+            ut = video.untertitel("Election night. Bitcoin slid to a seven-week low.", 4.0, Path(d), 0, CFG)
+            self.assertEqual(len(ut), 3)
+            self.assertEqual((ut[0][1], ut[-1][2]), (0.0, 4.0))
+            self.assertTrue(all(a < e for _, a, e in ut))
+            self.assertEqual(Image.open(ut[0][0]).size, (1080, 1920))
+
+
 class ReelAusBildTest(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
@@ -107,12 +121,13 @@ class ReelAusBildTest(unittest.TestCase):
             gesehen["n"] = len(zeilen)
             return [Path(f"{i}.mp3") for i in range(len(zeilen))], [3.0] * len(zeilen), "elevenlabs"
 
-        def schneiden(bilder, toene, dauern, ziel, cfg):
+        def schneiden(bilder, toene, dauern, ziel, cfg, texte=None):
+            gesehen["n_texte"] = len(texte)
             gesehen["groesse"] = Image.open(bilder[0]).size
             ziel.write_bytes(b"v")
         neu, q = reel.aus_bild(self.o, CFG, {}, sprechen=sprechen, schneiden=schneiden)
         self.assertEqual((neu.name, q), ("20261104-1430_markt_30s_video", "elevenlabs"))
-        self.assertEqual(gesehen, {"n": 3, "groesse": (1080, 1920)})
+        self.assertEqual(gesehen, {"n": 3, "n_texte": 3, "groesse": (1080, 1920)})
         from social.bericht import format_aus_ordner
         self.assertEqual(format_aus_ordner(neu.name), "markt_video")
         self.assertEqual(reel.aus_bild(self.o, CFG, {})[1], "schon gebaut")
