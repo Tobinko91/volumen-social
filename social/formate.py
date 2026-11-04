@@ -5,7 +5,7 @@ Jede Szene = ein Bild + ein gesprochener Satz. Der Text darf nur Fakten aus `fak
 from __future__ import annotations
 
 from .daten import Daten, marktlage
-from .sprache import TAG, T, datum, zahl, zahl_gesprochen
+from .sprache import haken_art, TAG, T, datum, zahl, zahl_gesprochen
 
 
 def markt_30s(d: Daten, sperrliste: set[str], lang: str | None = None, anzahl_mover: int = 3) -> dict:
@@ -32,9 +32,19 @@ def markt_30s(d: Daten, sperrliste: set[str], lang: str | None = None, anzahl_mo
     # Haken (Wunsch Tobias 01.11.2026): die ersten 1-2 Sekunden entscheiden auf TikTok/Reels, ob jemand bleibt.
     # Darum zuerst die groesste Bewegung als riesige Zahl, nicht der Titel.
     h = mover[0]
-    szenen = [{"typ": "haken", "daten": dict(h, datum=tag_txt), "vorlage": t["s_haken"].format(
-        base=h["base"], wert=zahl(abs(h["chg24"]), lang),
-        verb=t["haken_hoch"] if h["chg24"] >= 0 else t["haken_runter"])}]
+    import datetime as _dt
+    art = haken_art(_dt.date.fromtimestamp(d.ts)) if lang == "en" else "zahl"   # A/B-Test nur englisch
+    hoch = h["chg24"] >= 0
+    if art == "frage":
+        vorlage = t["s_haken"].format(base=h["base"], wert=zahl(abs(h["chg24"]), lang),
+                                      verb=t["haken_hoch"] if hoch else t["haken_runter"])
+        frage = t["b_frage"].format(base=h["base"], verb=(t["haken_hoch"] if hoch else t["haken_runter"]).upper())
+    else:
+        sz, vh, vr = ("s_haken_zahl", "haken_hoch_zahl", "haken_runter_zahl") if "s_haken_zahl" in t else \
+            ("s_haken", "haken_hoch", "haken_runter")
+        vorlage = t[sz].format(base=h["base"], wert=zahl(abs(h["chg24"]), lang), verb=t[vh] if hoch else t[vr])
+        frage = None
+    szenen = [{"typ": "haken", "haken": art, "daten": dict(h, datum=tag_txt, _frage=frage), "vorlage": vorlage}]
     if breite:
         szenen.append({"typ": "breite", "daten": breite, "vorlage": t["s_breite"].format(
             anzahl=breite["anzahl"], median_gesprochen=zahl_gesprochen(breite["median_24h"], lang),

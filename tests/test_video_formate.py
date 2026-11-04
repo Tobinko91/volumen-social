@@ -17,9 +17,17 @@ CFG = yaml.safe_load((HIER / "config.yaml").read_text())
 
 class HakenTest(unittest.TestCase):
     def test_erste_szene_ist_die_groesste_bewegung(self):
+        from unittest import mock
         d = daten.laden(HIER / "beispieldaten")
-        b = formate.markt_30s(d, set(), "en")
+        with mock.patch.object(formate, "haken_art", lambda tag: "zahl"):
+            z = formate.markt_30s(d, set(), "en")["szenen"][0]
+        self.assertTrue(z["vorlage"].startswith(f"{z['daten']['base']} jumped"))   # A/B: Aussage mit Zahl
+        self.assertEqual((z["haken"], z["daten"]["_frage"]), ("zahl", None))
+        with mock.patch.object(formate, "haken_art", lambda tag: "frage"):
+            b = formate.markt_30s(d, set(), "en")
         s0 = b["szenen"][0]
+        self.assertEqual(s0["haken"], "frage")
+        self.assertEqual(s0["daten"]["_frage"], f"WHY DID {s0['daten']['base']} JUMP?")
         self.assertEqual(s0["typ"], "haken")
         groesste = max(b["fakten"]["mover"], key=lambda m: abs(m["chg24"]))
         self.assertEqual(s0["daten"]["base"], groesste["base"])

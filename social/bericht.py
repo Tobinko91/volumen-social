@@ -167,29 +167,39 @@ def auswerten(protokoll: list[dict], x: dict, ig: dict) -> dict:
     return out
 
 
-def haltequote(protokoll: list[dict], ig: dict) -> dict:
-    """Instagram-Reels: Ø angesehene Zeit / Videolaenge, getrennt nach Untertitel-Art ('wort' seit 04.11.2026,
-    'vorher' = fester Satz-Kasten oder keine Angabe). -> {'wort': [0.62, ...], 'vorher': [...]}"""
-    out: dict[str, list[float]] = {"wort": [], "vorher": []}
+def haltequote(protokoll: list[dict], ig: dict, nach: str = "untertitel") -> dict:
+    """Instagram-Reels: Ø angesehene Zeit / Videolaenge.
+    nach='untertitel': 'wort' (seit 04.11.2026) gegen 'vorher' (fester Satz-Kasten oder keine Angabe).
+    nach='haken': A/B-Test des Einstiegs, 'frage' gegen 'zahl' (Videos ohne Angabe zaehlen nicht)."""
+    out: dict[str, list[float]] = {"wort": [], "vorher": []} if nach == "untertitel" else {"frage": [], "zahl": []}
     for e in protokoll:
         if e.get("ereignis") != "gepostet" or e.get("kanal") != "instagram" or e.get("link") not in ig:
             continue
-        ms, dauer = ig[e["link"]].get("schnitt_ms"), (e.get("video") or {}).get("dauer")
+        info = e.get("video") or {}
+        ms, dauer = ig[e["link"]].get("schnitt_ms"), info.get("dauer")
         if ms is None or not dauer:
             continue
-        art = "wort" if (e.get("video") or {}).get("untertitel") == "wort" else "vorher"
+        if nach == "untertitel":
+            art = "wort" if info.get("untertitel") == "wort" else "vorher"
+        else:
+            art = info.get("haken")
+            if art not in out:
+                continue
         out[art].append(min(1.0, ms / 1000 / dauer))
     return out
 
 
-def haltequote_text(h: dict) -> list[str]:
+NAMEN_HALTE = {"wort": "Wort-Untertitel", "vorher": "vorher", "frage": "Einstieg Frage", "zahl": "Einstieg Zahl"}
+
+
+def haltequote_text(h: dict, titel: str = "Haltequote Instagram-Reels (Ø angesehen / Videolänge):") -> list[str]:
     def teil(xs):
         return f"{round(statistics.mean(xs) * 100)} % (n = {len(xs)})" if xs else "– (n = 0)"
-    z = ["", "Haltequote Instagram-Reels (Ø angesehen / Videolänge):",
-         f"• Wort-Untertitel: {teil(h['wort'])}", f"• vorher: {teil(h['vorher'])}"]
-    if len(h["wort"]) >= 3 and len(h["vorher"]) >= 3:
-        d = round((statistics.mean(h["wort"]) - statistics.mean(h["vorher"])) * 100)
-        z.append(f"→ Wort-Untertitel {'+' if d >= 0 else ''}{d} Prozentpunkte. Ziel bei 20-Sek.-Videos: über 70 %.")
+    a, b = list(h)
+    z = ["", titel, f"• {NAMEN_HALTE[a]}: {teil(h[a])}", f"• {NAMEN_HALTE[b]}: {teil(h[b])}"]
+    if len(h[a]) >= 3 and len(h[b]) >= 3:
+        d = round((statistics.mean(h[a]) - statistics.mean(h[b])) * 100)
+        z.append(f"→ {NAMEN_HALTE[a]} {'+' if d >= 0 else ''}{d} Prozentpunkte. Ziel bei 20-Sek.-Videos: über 70 %.")
     else:
         z.append("→ Noch zu wenige Reels für einen Vergleich (je mindestens 3).")
     return z
@@ -228,7 +238,7 @@ def _diff(jetzt, vorher) -> str:
 
 
 def text(formate: dict, follower: dict, follower_alt: dict, top: list[tuple[str, str, int]],
-         jetzt: float | None = None, halte: dict | None = None) -> str:
+         jetzt: float | None = None, halte: dict | None = None, haken: dict | None = None) -> str:
     d = dt.datetime.fromtimestamp(jetzt or time.time())
     z = [f"📊 Wochenbericht bis {d.day}.{d.month}.{d.year}", "", "Follower (Veränderung zur Vorwoche):"]
     for k, name in (("telegram", "Telegram"), ("x", "X"), ("instagram", "Instagram"), ("tiktok", "TikTok")):
@@ -243,6 +253,8 @@ def text(formate: dict, follower: dict, follower_alt: dict, top: list[tuple[str,
         z += [f"{i}. {NAMEN.get(f, f)}, {_zahl(n)} Aufrufe: {l}" for i, (f, l, n) in enumerate(top[:3], 1)]
     if halte is not None:
         z += haltequote_text(halte)
+    if haken is not None:
+        z += haltequote_text(haken, "A/B-Test Einstieg (Instagram-Reels, Ø angesehen / Videolänge):")
     z += ["", "Empfehlung:"] + empfehlung(formate)
     return "\n".join(z)
 

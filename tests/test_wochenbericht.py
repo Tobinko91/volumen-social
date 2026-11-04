@@ -28,5 +28,39 @@ class HaltequoteTest(unittest.TestCase):
         self.assertIn("+30 Prozentpunkte", t3)
 
 
+class HakenTestTest(unittest.TestCase):
+    def test_tage_wechseln_und_abschaltbar(self):
+        import datetime as dt
+        from social import sprache
+        a, b = sprache.haken_art(dt.date(2026, 11, 5), True), sprache.haken_art(dt.date(2026, 11, 6), True)
+        self.assertEqual({a, b}, {"frage", "zahl"})
+        self.assertEqual(sprache.haken_art(dt.date(2026, 11, 6), False), "frage")
+
+    def test_wal_und_lernen_beide_varianten(self):
+        from unittest import mock
+        from social import sprache, wal, wissen
+        w = {"base": "ABC", "wal": 12.5, "wal_7d": 2.4}
+        with mock.patch.object(sprache, "haken_art", lambda tag=None: "zahl"):
+            z = wal.video_szenen(w, "en")["szenen"][0]
+            t = wissen.themen()[0]
+            lz = wissen.video_szenen(t, "en")["szenen"][0]
+        self.assertTrue(z["vorlage"].startswith("Whales raised their share of ABC"))
+        self.assertEqual(lz["vorlage"], t["titel"].rstrip(".") + ".")
+        with mock.patch.object(sprache, "haken_art", lambda tag=None: "frage"):
+            f = wal.video_szenen(w, "en")["szenen"][0]
+            lf = wissen.video_szenen(t, "en")["szenen"][0]
+        self.assertEqual((f["haken"], f["daten"]["_frage"]), ("frage", "WHAT ARE WHALES DOING?"))
+        self.assertEqual(lf["vorlage"], t["haken"])
+
+    def test_bericht_nach_haken(self):
+        from social import bericht as b
+        p = [{"ereignis": "gepostet", "kanal": "instagram", "link": "L1", "video": {"dauer": 20, "haken": "frage"}},
+             {"ereignis": "gepostet", "kanal": "instagram", "link": "L2", "video": {"dauer": 20, "haken": "zahl"}},
+             {"ereignis": "gepostet", "kanal": "instagram", "link": "L3", "video": {"dauer": 20}}]
+        ig = {k: {"schnitt_ms": 10000} for k in ("L1", "L2", "L3")}
+        self.assertEqual(b.haltequote(p, ig, "haken"), {"frage": [0.5], "zahl": [0.5]})
+        self.assertIn("Einstieg Frage: 50 %", "\n".join(b.haltequote_text(b.haltequote(p, ig, "haken"))))
+
+
 if __name__ == "__main__":
     unittest.main()

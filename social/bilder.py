@@ -138,7 +138,11 @@ class Leinwand:
             gr -= 10
         self.mitte(d, 500, wert, _font("Black", gr), self.farbe_wert(c))
         self.mitte(d, 500 + gr + 30, f"{daten['base']} · {self.t['b_24h']}", _font("Black", 96), self.f["text"])
-        self.mitte(d, 500 + gr + 170, self.t["b_warum"], _font("Black", 70), self.f["amber"])
+        frage = daten.get("_frage")   # A/B-Test: Frage gross im Bild statt „WHY? ↓“
+        ff = 70
+        while frage and d.textlength(frage, font=_font("Black", ff)) > self.W - 140 and ff > 40:
+            ff -= 4
+        self.mitte(d, 500 + gr + 170, frage or self.t["b_warum"], _font("Black", ff), self.f["amber"])
         self.mitte(d, 500 + gr + 270, str(daten.get("datum", "")).upper(), _font("SemiBold", 40), self.f["neben"])
         self.untertitel(d, text)
         return img
@@ -160,7 +164,7 @@ class Leinwand:
         else:
             gross, farbe = f"{zahl(w.get('wal') or 0, self.lang)}{self.pz}", self.f["plus"]
         self.mitte(d, 680, gross, _font("Black", 190), farbe)
-        self.mitte(d, 920, wt["v_frage"], _font("Black", 64), self.f["amber"])
+        self.mitte(d, 920, w.get("_frage") or wt["v_frage"], _font("Black", 64), self.f["amber"])
         self.untertitel(d, text)
         return img
 
@@ -261,7 +265,17 @@ class Leinwand:
         while d.textlength(wert, font=_font("Black", gr)) > self.W - 140 and gr > 90:
             gr -= 10
         farbe = self.f["minus"] if wert.startswith(("-", "−")) else self.f["plus"]
-        self.mitte(d, y0 - 62 if chart else 440, etikett, _font("Bold", 42 if chart else 46), self.f["amber"])
+        frage = t.get("_frage")
+        if frage:   # A/B-Test: die Frage gross statt des Etiketts (wer stumm scrollt, sieht sie sofort)
+            zeilen = textwrap.wrap(frage, width=26)[:2]
+            for i, z in enumerate(zeilen):
+                self.mitte(d, 372 + i * 58, z, _font("Black", 48), self.f["amber"])
+            neu_y0 = 372 + 58 * len(zeilen) + 24
+            if chart and neu_y0 > y0:   # Platz fuer die Grafik halten: Zahl etwas kleiner statt Grafik quetschen
+                gr = max(90, gr - (neu_y0 - y0))
+            y0 = max(y0, neu_y0)
+        else:
+            self.mitte(d, y0 - 62 if chart else 440, etikett, _font("Bold", 42 if chart else 46), self.f["amber"])
         self.mitte(d, y0, wert, _font("Black", gr), farbe)
         y = y0 + gr + 30
         for z in textwrap.wrap(t.get("gross_text", ""), width=30)[:2]:
@@ -327,8 +341,8 @@ class Leinwand:
             self.logo(d, (self.W - 32 * 8) / 2, 430, 8)
             d = ImageDraw.Draw(self.img)
             self.mitte(d, 720, "WhaleSqueeze", _font("Black", 110), self.f["text"])
-            self.mitte(d, 860, "We watch while", _font("Bold", 62), self.f["plus"])
-            self.mitte(d, 940, "the market sleeps.", _font("Bold", 62), self.f["plus"])
+            self.mitte(d, 860, "Who watches while", _font("Bold", 62), self.f["plus"])   # Frage als Haken
+            self.mitte(d, 940, "the market sleeps?", _font("Bold", 62), self.f["plus"])
         else:
             y = 420
             for i, (zeichen, titel, unter) in enumerate(self.WILLKOMMEN, 1):

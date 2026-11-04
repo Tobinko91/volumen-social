@@ -43,6 +43,9 @@ T = {
         "s_outro": "Folge WhaleSqueeze für tägliche Krypto-Daten.",
         "s_haken": "{base} ist in 24 Stunden um {wert} % {verb}. Das hat den Markt heute bewegt.",
         "haken_hoch": "gestiegen", "haken_runter": "gefallen",
+        "b_frage": "WARUM IST {base} {verb}?",
+        "s_haken_zahl": "{base} ist in 24 Stunden um {wert} % {verb}. Das hat den Markt heute bewegt.",
+        "haken_hoch_zahl": "gestiegen", "haken_runter_zahl": "gefallen",
         "b_haken": "GRÖSSTE BEWEGUNG HEUTE", "b_warum": "WARUM? ↓", "b_folgen": "FOLGEN FÜR TÄGLICHE DATEN",
         "adresse_gesprochen": " Punkt com",
         "b_markt": "KRYPTO-MARKT", "b_30s": "IN 30 SEKUNDEN",
@@ -75,6 +78,9 @@ T = {
         "s_outro": "Follow WhaleSqueeze for daily crypto data.",
         "s_haken": "Why did {base} {verb} {wert}% in 24 hours? Here is what moved crypto today.",
         "haken_hoch": "jump", "haken_runter": "drop",   # Frage als Haken (04.11.2026)
+        "b_frage": "WHY DID {base} {verb}?",
+        "s_haken_zahl": "{base} {verb} {wert}% in 24 hours. Here is what moved crypto today.",
+        "haken_hoch_zahl": "jumped", "haken_runter_zahl": "dropped",
         "b_haken": "TODAY'S BIGGEST MOVE", "b_warum": "WHY? ↓", "b_folgen": "FOLLOW FOR DAILY DATA",
         "adresse_gesprochen": " dot com",
         "b_markt": "CRYPTO MARKET", "b_30s": "IN 30 SECONDS",
@@ -93,6 +99,25 @@ T = {
         "p_bewegungen": "Biggest moves", "p_ausloeser": "Trigger",
     },
 }
+
+
+def haken_test_an() -> bool:
+    try:
+        import yaml
+        from pathlib import Path
+        cfg = yaml.safe_load((Path(__file__).resolve().parent.parent / "config.yaml").read_text(encoding="utf-8"))
+        return bool((cfg.get("video") or {}).get("haken_test", True))
+    except Exception:
+        return True
+
+
+def haken_art(tag: dt.date | None = None, test: bool | None = None) -> str:
+    """A/B-Test des Einstiegs (Wunsch Tobias 04.11.2026): Tage abwechselnd 'frage' (Frage im Ton und gross im Bild)
+    und 'zahl' (Aussage mit der Zahl, wie bis 04.11.). Ein Tag = eine Art fuer alle Formate, damit der
+    Wochenbericht sauber vergleicht. Ohne Test (config video.haken_test: false) immer 'frage'."""
+    if not (haken_test_an() if test is None else test):
+        return "frage"
+    return "frage" if (tag or dt.date.today()).toordinal() % 2 == 0 else "zahl"
 
 
 def datum(ts: int, lang: str) -> str:

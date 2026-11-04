@@ -92,15 +92,17 @@ def untertitel(text: str, dauer: float, ordner: Path, nr: int, cfg: dict, woerte
     return out
 
 
-def ut_formate(cfg: dict, zeilen: list[str]) -> dict:
+def ut_formate(cfg: dict, zeilen: list[str], beitrag: dict | None = None) -> dict:
     """Feste Formate (Markt, Wal, Lernen, Willkommen): animierte Untertitel an der Stelle des frueheren
     Satz-Kastens (bilder.py zeichnet ihn dann nicht mehr)."""
     v = cfg["video"]
-    return {"texte": zeilen, "untertitel_y": v.get("untertitel_y_formate", 1310)} if v.get("untertitel_animiert") else {}
+    out = {"texte": zeilen, "untertitel_y": v.get("untertitel_y_formate", 1310)} if v.get("untertitel_animiert") else {}
+    haken = ((beitrag or {}).get("szenen") or [{}])[0].get("haken")
+    return dict(out, haken=haken) if haken else out
 
 
 def bauen(bilder: list[Path], toene: list[Path], dauern: list[float], ziel: Path, cfg: dict,
-          texte: list[str] | None = None, untertitel_y: int | None = None) -> Path:
+          texte: list[str] | None = None, untertitel_y: int | None = None, haken: str | None = None) -> Path:
     """texte: Sprechtext je Szene -> animierte Untertitel (viele schauen ohne Ton). Zeitmarken der Stimme liegen
     als <ton>.json neben der Tondatei (ElevenLabs), sonst wird geschaetzt."""
     import json
@@ -137,7 +139,8 @@ def bauen(bilder: list[Path], toene: list[Path], dauern: list[float], ziel: Path
 
     try:   # fuer den Wochenbericht (Haltequote mit/ohne Wort-Untertitel)
         (ziel.parent / "video_info.json").write_text(json.dumps(
-            {"dauer": round(sum(dauern), 2), "untertitel": "wort" if texte else "ohne"}))
+            {"dauer": round(sum(dauern), 2), "untertitel": "wort" if texte else "ohne",
+             **({"haken": haken} if haken else {})}))
     except OSError:
         pass
     from . import musik as _musik
