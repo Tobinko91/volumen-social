@@ -1,0 +1,25 @@
+{
+ "thema": "clanker-warum",
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "text": "Why did CLANKER jump 20% today? Here is what the data shows."
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "Over 7 days it is up just 0.3%. The jump only won back last week's losses."
+  },
+  {
+   "bild": "szene_2.png",
+   "text": "Binance futures alone traded 9.3 million dollars. Coinbase spot: half a million."
+  },
+  {
+   "bild": "szene_3.png",
+   "text": "All futures together traded about 67 times the spot volume. Leveraged bets set the price, not holders."
+  },
+  {
+   "bild": "szene_4.png",
+   "text": "Verdict: a futures-driven rebound. We found no new announcement from the project today. Which coin should we explain next? Comment below."
+  }
+ ]
+}
