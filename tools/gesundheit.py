@@ -31,7 +31,7 @@ PLAN_LOG = Path("/var/log/volumen-social-plan.log")
 UPDATE_LOG = Path("/var/log/volumen-social-update.log")
 
 # Feste Termine (deutsche Zeit) mit Namen, wie in tools/plan.sh
-TERMINE = {"14:30": "Markt", "15:00": "News", "15:30": "Kommentare", "16:00": "Coin-Check", "17:30": "Folge-Liste",
+TERMINE = {"14:30": "Markt", "15:00": "News", "15:30": "Kommentare", "16:00": "Coin-Check", "17:30": "Folge-Liste", "18:30": "Warum (Verlierer)",
            "19:00": "Wal", "20:00": "News", "20:30": "Kommentare", "21:00": "News", "21:30": "Lernen"}
 FEHLER = [("Claude-Fehler", "Claude-Antwort unlesbar"), ("X-Posts nicht geholt", "X-Abfrage fehlgeschlagen"),
           ("Telegram hat die Nachricht abgelehnt", "Telegram lehnte Nachricht ab"),
@@ -191,6 +191,12 @@ def bericht_text(tag: str, abschnitte: dict, vs: dict, arten: Counter, quellen: 
     return "\n".join(z), warn
 
 
+def stimme_eingerichtet(cfg: dict, g: dict) -> bool:
+    """Fehler bis 04.11.2026: prueft nur google_tts_key, die Stimme laeuft aber ueber ElevenLabs."""
+    from social import stimme
+    return bool(stimme.schluessel(cfg, g))
+
+
 def main() -> int:
     args = sys.argv[1:]
     jetzt = time.time()
@@ -204,7 +210,7 @@ def main() -> int:
     du = shutil.disk_usage(str(AUSGABE if AUSGABE.exists() else BASIS))
     text, warn = bericht_text(tag, abschnitte, vorschlaege(AUSGABE, tag), arten, quellen, laeufe,
                               haengend(AUSGABE, jetzt), update_stand(lies(UPDATE_LOG)), daten_alter_min(cfg, jetzt),
-                              du.free / du.total * 100, bool(g.get("google_tts_key")),
+                              du.free / du.total * 100, stimme_eingerichtet(cfg, g),
                               (BASIS / "pause").exists() or (AUSGABE / ".pause").exists())
     print(text)
     if "--senden" in args:

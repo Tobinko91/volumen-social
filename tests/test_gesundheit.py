@@ -41,7 +41,7 @@ class GesundheitTest(unittest.TestCase):
         vs = {"je": Counter({"markt": 1, "news": 2}), "status": Counter({"gepostet": 2, "offen": 1})}
         text, warn = gh.bericht_text("2026-11-02", a, vs, arten, quellen, laeufe, [], ("2026-11-02 18:45:41 Update auf 4b1696a", False),
                                      12, 60, False, False)
-        self.assertIn("4/10 Termine", text)
+        self.assertIn("4/11 Termine", text)
         self.assertIn("Folge-Liste", text)
         self.assertIn("CoinDesk", text)
         self.assertIn("Claude-Antwort unlesbar (Kommentare) 1×", text)

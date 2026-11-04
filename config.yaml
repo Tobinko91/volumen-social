@@ -67,6 +67,7 @@ farben:                      # dunkle Website-Farben (stil.css)
 text:
   modell: claude-sonnet-5-5
   max_woerter: 85            # ca. 30 Sekunden
+  max_woerter_warum: 110     # „Why did it move?“ ca. 40 Sekunden (Erklaerung braucht etwas mehr)
 
 stimme:   # Sobald die Stimme laeuft: Tobias an S30 erinnern (Willkommensvideo bauen und anpinnen, ideen-backlog)
   aktiv: true                # 01.11.2026 Tobias: Stimme rein. Ohne Schluessel des Anbieters bleibt es still
