@@ -23,7 +23,8 @@ class HakenTest(unittest.TestCase):
         self.assertEqual(s0["typ"], "haken")
         groesste = max(b["fakten"]["mover"], key=lambda m: abs(m["chg24"]))
         self.assertEqual(s0["daten"]["base"], groesste["base"])
-        self.assertTrue(s0["vorlage"].startswith(f"{groesste['base']} jumped"))
+        self.assertTrue(s0["vorlage"].startswith(f"Why did {groesste['base']} jump"))   # Frage als Haken
+        self.assertIn("?", s0["vorlage"])
         self.assertEqual(b["szenen"][-1]["vorlage"], "Follow WhaleSqueeze for daily crypto data.")
         zeilen = [s["vorlage"] for s in b["szenen"]]
         self.assertEqual(pruefung.pruefen(zeilen, b, CFG, set()), [])
@@ -54,7 +55,7 @@ class WalVideoTest(unittest.TestCase):
              "holder": None, "holder_7d": None, "chg24": 1.0, "verlauf": []}
         b = wal.video_szenen(w, "en")
         self.assertEqual([s["typ"] for s in b["szenen"]], ["wal_haken", "outro"])
-        self.assertEqual(b["szenen"][0]["vorlage"], "Whales hold 12.5% of ABC.")
+        self.assertEqual(b["szenen"][0]["vorlage"], "What are whales doing with ABC? They hold 12.5% of it.")
 
     @unittest.skipUnless(shutil.which("ffmpeg"), "ffmpeg fehlt")
     def test_wal_lauf_baut_bild_und_video(self):

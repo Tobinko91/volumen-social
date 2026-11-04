@@ -135,6 +135,11 @@ def bauen(bilder: list[Path], toene: list[Path], dauern: list[float], ziel: Path
     roh = tmp / "roh.mp4"
     _ff("-f", "concat", "-safe", "0", "-i", str(liste), "-c", "copy", str(roh))
 
+    try:   # fuer den Wochenbericht (Haltequote mit/ohne Wort-Untertitel)
+        (ziel.parent / "video_info.json").write_text(json.dumps(
+            {"dauer": round(sum(dauern), 2), "untertitel": "wort" if texte else "ohne"}))
+    except OSError:
+        pass
     from . import musik as _musik
     musik = _musik.pfad(cfg, ziel.parent.parent)
     if musik:

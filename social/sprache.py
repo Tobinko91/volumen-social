@@ -73,8 +73,8 @@ T = {
         "grund_ja": "Likely trigger: {ausloeser}.",
         "grund_nein": "",
         "s_outro": "Follow WhaleSqueeze for daily crypto data.",
-        "s_haken": "{base} {verb} {wert}% in 24 hours. Here is what moved crypto today.",
-        "haken_hoch": "jumped", "haken_runter": "dropped",
+        "s_haken": "Why did {base} {verb} {wert}% in 24 hours? Here is what moved crypto today.",
+        "haken_hoch": "jump", "haken_runter": "drop",   # Frage als Haken (04.11.2026)
         "b_haken": "TODAY'S BIGGEST MOVE", "b_warum": "WHY? ↓", "b_folgen": "FOLLOW FOR DAILY DATA",
         "adresse_gesprochen": " dot com",
         "b_markt": "CRYPTO MARKET", "b_30s": "IN 30 SECONDS",

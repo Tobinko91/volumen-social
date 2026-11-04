@@ -88,7 +88,7 @@ def video_szenen(t: dict, lang: str = "en", echt: dict | None = None) -> dict:
     Gleiche Saetze und Fakten wie der Bild-Beitrag, darum gilt dieselbe Zahlen-Pruefung."""
     from .sprache import T as _T
     n = len(t["punkte"])
-    szenen = [{"typ": "lern_haken", "daten": dict(t, _echt=echt), "vorlage": t["titel"].rstrip(".") + "."}]
+    szenen = [{"typ": "lern_haken", "daten": dict(t, _echt=echt), "vorlage": t.get("haken") or t["titel"].rstrip(".") + "."}]
     for i, p in enumerate(t["punkte"], 1):
         szenen.append({"typ": "lern_punkt", "daten": {"nr": i, "von": n, "satz": p,
                                                       "ersatz": "Takeaway" if lang == "en" else "Merke",

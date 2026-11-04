@@ -38,11 +38,18 @@ def format_aus_ordner(name: str) -> str:
 
 def protokollieren(datei: Path, ordner: str, ereignis: str, kanal: str | None = None, link: str | None = None,
                    jetzt: float | None = None) -> None:
-    """Eine Zeile anhaengen. ereignis: gepostet | verworfen | fehler."""
+    """Eine Zeile anhaengen. ereignis: gepostet | verworfen | fehler. Bei Videos zusaetzlich Laenge und Art der
+    Untertitel aus <ordner>/video_info.json (fuer die Haltequote im Wochenbericht; Ordner werden nach 3 Tagen
+    geloescht, das Protokoll bleibt)."""
     datei.parent.mkdir(parents=True, exist_ok=True)
+    e = {"ts": int(jetzt or time.time()), "ordner": ordner, "format": format_aus_ordner(ordner),
+         "ereignis": ereignis, "kanal": kanal, "link": link}
+    try:
+        e["video"] = json.loads((datei.parent / Path(ordner).name / "video_info.json").read_text())
+    except Exception:
+        pass
     with open(datei, "a", encoding="utf-8") as f:
-        f.write(json.dumps({"ts": int(jetzt or time.time()), "ordner": ordner, "format": format_aus_ordner(ordner),
-                            "ereignis": ereignis, "kanal": kanal, "link": link}, ensure_ascii=False) + "\n")
+        f.write(json.dumps(e, ensure_ascii=False) + "\n")
 
 
 def protokoll_laden(datei: Path, seit: float = 0) -> list[dict]:
@@ -93,7 +100,8 @@ def instagram_zahlen(geheim: dict, ig=None) -> tuple[dict, int | None]:
     tok = geheim["instagram_token"]
     me = ig("GET", "me", tok, fields="user_id,followers_count")
     uid = geheim.get("instagram_user_id") or me.get("user_id")
-    medien = ig("GET", f"{uid}/media", tok, fields="id,permalink,timestamp,like_count", limit="50").get("data") or []
+    medien = ig("GET", f"{uid}/media", tok, fields="id,permalink,timestamp,like_count,media_product_type",
+                limit="50").get("data") or []
     out = {}
     for m in medien:
         try:
@@ -101,9 +109,16 @@ def instagram_zahlen(geheim: dict, ig=None) -> tuple[dict, int | None]:
         except Exception:
             ins = []
         w = {i["name"]: (i.get("values") or [{}])[0].get("value", i.get("total_value", {}).get("value")) for i in ins}
+        schnitt = None
+        if m.get("media_product_type") == "REELS":   # eigene Abfrage: bei Bildern wuerde die Metrik alles kippen
+            try:
+                r = ig("GET", f"{m['id']}/insights", tok, metric="ig_reels_avg_watch_time").get("data") or []
+                schnitt = (r[0].get("values") or [{}])[0].get("value", (r[0].get("total_value") or {}).get("value"))
+            except Exception:
+                pass
         out[m.get("permalink")] = {"aufrufe": w.get("views"), "reichweite": w.get("reach"),
                                    "gespeichert": w.get("saved"), "geteilt": w.get("shares"),
-                                   "likes": m.get("like_count")}
+                                   "likes": m.get("like_count"), "schnitt_ms": schnitt}
     return out, me.get("followers_count")
 
 
@@ -152,6 +167,34 @@ def auswerten(protokoll: list[dict], x: dict, ig: dict) -> dict:
     return out
 
 
+def haltequote(protokoll: list[dict], ig: dict) -> dict:
+    """Instagram-Reels: Ø angesehene Zeit / Videolaenge, getrennt nach Untertitel-Art ('wort' seit 04.11.2026,
+    'vorher' = fester Satz-Kasten oder keine Angabe). -> {'wort': [0.62, ...], 'vorher': [...]}"""
+    out: dict[str, list[float]] = {"wort": [], "vorher": []}
+    for e in protokoll:
+        if e.get("ereignis") != "gepostet" or e.get("kanal") != "instagram" or e.get("link") not in ig:
+            continue
+        ms, dauer = ig[e["link"]].get("schnitt_ms"), (e.get("video") or {}).get("dauer")
+        if ms is None or not dauer:
+            continue
+        art = "wort" if (e.get("video") or {}).get("untertitel") == "wort" else "vorher"
+        out[art].append(min(1.0, ms / 1000 / dauer))
+    return out
+
+
+def haltequote_text(h: dict) -> list[str]:
+    def teil(xs):
+        return f"{round(statistics.mean(xs) * 100)} % (n = {len(xs)})" if xs else "– (n = 0)"
+    z = ["", "Haltequote Instagram-Reels (Ø angesehen / Videolänge):",
+         f"• Wort-Untertitel: {teil(h['wort'])}", f"• vorher: {teil(h['vorher'])}"]
+    if len(h["wort"]) >= 3 and len(h["vorher"]) >= 3:
+        d = round((statistics.mean(h["wort"]) - statistics.mean(h["vorher"])) * 100)
+        z.append(f"→ Wort-Untertitel {'+' if d >= 0 else ''}{d} Prozentpunkte. Ziel bei 20-Sek.-Videos: über 70 %.")
+    else:
+        z.append("→ Noch zu wenige Reels für einen Vergleich (je mindestens 3).")
+    return z
+
+
 def empfehlung(formate: dict) -> list[str]:
     """Ausbauen: hoechste mittlere Reichweite. Pruefen: niedrigste (mind. 3 Beitraege) oder oft verworfen."""
     z = []
@@ -185,7 +228,7 @@ def _diff(jetzt, vorher) -> str:
 
 
 def text(formate: dict, follower: dict, follower_alt: dict, top: list[tuple[str, str, int]],
-         jetzt: float | None = None) -> str:
+         jetzt: float | None = None, halte: dict | None = None) -> str:
     d = dt.datetime.fromtimestamp(jetzt or time.time())
     z = [f"📊 Wochenbericht bis {d.day}.{d.month}.{d.year}", "", "Follower (Veränderung zur Vorwoche):"]
     for k, name in (("telegram", "Telegram"), ("x", "X"), ("instagram", "Instagram"), ("tiktok", "TikTok")):
@@ -198,6 +241,8 @@ def text(formate: dict, follower: dict, follower_alt: dict, top: list[tuple[str,
     if top:
         z += ["", "Top-Beiträge der Woche:"]
         z += [f"{i}. {NAMEN.get(f, f)}, {_zahl(n)} Aufrufe: {l}" for i, (f, l, n) in enumerate(top[:3], 1)]
+    if halte is not None:
+        z += haltequote_text(halte)
     z += ["", "Empfehlung:"] + empfehlung(formate)
     return "\n".join(z)
 
