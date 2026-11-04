@@ -44,7 +44,8 @@ T = {
         # Kommentar-Frage am Ende (04.11.2026): Kommentare sind auf TikTok/Instagram ein starkes Reichweiten-Signal
         "cta": {"markt": "Welchen Coin sollen wir morgen prüfen? Schreib es in die Kommentare.",
                 "wal": "Bei welchem Coin sollen wir als Nächstes auf die Wale schauen? Schreib es in die Kommentare.",
-                "wissen": "Was sollen wir als Nächstes erklären? Schreib es in die Kommentare."},
+                "wissen": "Was sollen wir als Nächstes erklären? Schreib es in die Kommentare.",
+                "warum": "Welchen Coin sollen wir als Nächstes erklären? Schreib es in die Kommentare."},
         "s_cta_folgen": "Und folge WhaleSqueeze.", "b_kommentar": "↓ IN DIE KOMMENTARE",
         "s_haken": "{base} ist in 24 Stunden um {wert} % {verb}. Das hat den Markt heute bewegt.",
         "haken_hoch": "gestiegen", "haken_runter": "gefallen",
@@ -83,7 +84,8 @@ T = {
         "s_outro": "Follow WhaleSqueeze for daily crypto data.",
         "cta": {"markt": "Which coin should we check tomorrow? Comment below.",
                 "wal": "Which coin should we check for whales next? Comment below.",
-                "wissen": "What should we explain next? Comment below."},
+                "wissen": "What should we explain next? Comment below.",
+                "warum": "Which coin should we explain next? Comment below."},
         "s_cta_folgen": "And follow WhaleSqueeze.", "b_kommentar": "↓ COMMENT BELOW",
         "s_haken": "Why did {base} {verb} {wert}% in 24 hours? Here is what moved crypto today.",
         "haken_hoch": "jump", "haken_runter": "drop",   # Frage als Haken (04.11.2026)

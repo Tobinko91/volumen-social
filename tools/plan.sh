@@ -3,7 +3,7 @@
 # Laeuft per cron um :00 und :30. Zeiten in deutscher Zeit, Ruhe von 22 bis 7 Uhr.
 # Seit 27.10.2026 auf das englischsprachige Publikum (USA) ausgerichtet. Seit 1.11.2026 US-Winterzeit:
 # Abstand zur US-Ostkueste 6 Std. (bis 8.3.2027; danach 5 Std., dann alles eine Stunde frueher). In Klammern ET:
-#   14:30 Markt-Beitrag als Bild + Video (Reels/TikTok) (8:30 ET, vor US-Boersenstart)
+#   14:30 Markt-Beitrag als Bild + Video „Why did it move?“ (8:30 ET, vor US-Boersenstart)
 #   15:00 20:00 21:00 News (9:00 / 14:00 / 15:00 ET)
 #   16:00 Coin-Check (10:00 ET)
 #   15:30 20:30 Kommentar-Vorschlaege (9:30 / 14:30 ET, Tobias postet selbst)
@@ -48,7 +48,7 @@ lauf() { sudo -u redaktion env $UMGEBUNG python3 main.py "$@" --senden; }
 W=/opt/volumen-social/ausgabe/.willkommen_gesendet
 [ ! -f "$W" ] && [ "$SLOT" = "14:00" -o "$SLOT" = "16:30" -o "$SLOT" = "18:30" ] && lauf willkommen --nur-mit-stimme && sudo -u redaktion touch "$W"
 case "$SLOT" in
-  14:30) lauf markt --art beides ;;
+  14:30) lauf markt --art post; lauf warum ;;   # 04.11.2026: Markt nur noch als Bild, Video = „Why did it move?“
   15:00|20:00|21:00) lauf news ;;
   16:00) lauf coincheck ;;
   19:00) lauf wal ;;

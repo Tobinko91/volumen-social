@@ -360,6 +360,78 @@ class Leinwand:
         self.untertitel(d, text)
         return self.img
 
+    # ---------- „Why did it move?“ (04.11.2026) ----------
+    def warum_haken(self, daten, text):
+        img, d = self.neu()
+        self.kopf(d)
+        c = daten["chg24"]
+        self.mitte(d, 430, "WHY DID IT MOVE?", _font("Bold", 46), self.f["neben"])
+        self.mitte(d, 500, f"${daten['base']}", _font("Black", 150), self.f["text"])
+        wert = f"{zahl(c, self.lang, True)}{self.pz}"
+        self.mitte(d, 680, wert, _font("Black", 200), self.farbe_wert(c))
+        frage = daten.get("_frage") or "24H · HERE IS WHY ↓"
+        ff = 70
+        while d.textlength(frage, font=_font("Black", ff)) > self.W - 140 and ff > 40:
+            ff -= 4
+        self.mitte(d, 940, frage, _font("Black", ff), self.f["amber"])
+        self.untertitel(d, text)
+        return img
+
+    def warum_beleg(self, b, text):
+        """Ein Beleg: Rubrik, grosser Wert, kleine Zeile, Urteils-Etikett (z. B. SHORT SQUEEZE)."""
+        img, d = self.neu()
+        self.kopf(d)
+        self.mitte(d, 430, b["titel"], _font("Bold", 46), self.f["neben"])
+        gr = 140
+        while d.textlength(b["gross"], font=_font("Black", gr)) > self.W - 140 and gr > 60:
+            gr -= 8
+        self.mitte(d, 540, b["gross"], _font("Black", gr), self.f["plus"] if "-" not in b["gross"][:6]
+                   else self.f["minus"])
+        self.mitte(d, 560 + gr + 20, b.get("klein", ""), _font("Bold", 56), self.f["text"])
+        if b.get("label") and b["label"].upper() != b["gross"]:   # „LISTING“ nicht doppelt
+            fl = _font("Black", 52)
+            w = d.textlength(b["label"].upper(), font=fl) + 80
+            y = 560 + gr + 130
+            d.rounded_rectangle([(self.W - w) / 2, y, (self.W + w) / 2, y + 90], radius=45, outline=self.f["amber"],
+                                width=5)
+            self.mitte(d, y + 14, b["label"].upper(), fl, self.f["amber"])
+        self.untertitel(d, text)
+        return img
+
+    def warum_chart(self, daten, text):
+        from . import grafik
+        img, d = self.neu()
+        self.kopf(d)
+        self.mitte(d, 400, "THE CHART", _font("Bold", 46), self.f["neben"])
+        rgba = img.convert("RGBA")
+        grafik.echt_chart(rgba, self.th, (60, 470, self.W - 60, 1200), daten["kerzen"], daten["art"], daten["info"],
+                          3, self.lang, f"{daten['base']} · 1h · real chart")
+        self.img.paste(rgba.convert("RGB"))
+        d = ImageDraw.Draw(self.img)
+        self.untertitel(d, text)
+        return self.img
+
+    def warum_urteil(self, daten, text):
+        img, d = self.neu()
+        self.kopf(d)
+        self.mitte(d, 430, "VERDICT", _font("Bold", 46), self.f["neben"])
+        labels = daten.get("labels") or []
+        if not labels:
+            self.mitte(d, 560, "NO CLEAR", _font("Black", 120), self.f["text"])
+            self.mitte(d, 700, "DRIVER", _font("Black", 120), self.f["text"])
+        y = 540
+        for i, l in enumerate(labels):
+            if i:
+                self.mitte(d, y - 10, "+", _font("Black", 90), self.f["neben"])
+                y += 100
+            gr = 110
+            while d.textlength(l.upper(), font=_font("Black", gr)) > self.W - 140 and gr > 60:
+                gr -= 8
+            self.mitte(d, y, l.upper(), _font("Black", gr), self.f["amber"] if i else self.f["plus"])
+            y += gr + 40
+        self.untertitel(d, text)
+        return img
+
     def outro(self, daten, text):
         img, d = self.neu()
         self.kopf(d)
