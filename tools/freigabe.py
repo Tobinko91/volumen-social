@@ -78,7 +78,11 @@ def posten(g: dict, beitrag_id: str, ziel: str) -> str:
     zeilen = []
     for z in ziele:
         if z in status:
-            zeilen.append(f"{z}: schon gepostet ({status[z]})")
+            if "Entwurf" in str(status[z]):   # TikTok bis zur App-Pruefung: nur Entwurf, Tobias postet in der App
+                zeilen.append(f"🎵 {z}: schon als ENTWURF an TikTok geschickt, noch nicht öffentlich. In der TikTok-App: "
+                              "Posteingang → „Systembenachrichtigungen“ → „Dein Inhalt … ist bereit“ → antippen → Posten.")
+            else:
+                zeilen.append(f"{z}: schon gepostet ({status[z]})")
             continue
         try:
             from social import design
