@@ -68,9 +68,47 @@ def woerter_aus_ausrichtung(al: dict) -> list[dict]:
     return out
 
 
+def sprech_wort(w: str) -> list[str]:
+    """Ein angezeigtes Wort -> gesprochene Woerter (Fehler 04.11.2026: Brian nuschelte bei „$12.95“).
+    $12.95 -> 12 dollars 95 · $10,000 -> 10,000 dollars · $0.04512 -> 0.04512 dollars · 6.0x -> 6.0 times.
+    Gilt nur fuer den Ton; Untertitel zeigen weiter „$12.95“."""
+    import re
+    m = re.fullmatch(r"([(\[]?)\$(\d[\d,]*)(?:\.(\d+))?([%.,:;!?)\]]*)", w)
+    if m:
+        vor, ganz, nach, rest = m.groups()
+        if nach and len(nach) == 2 and not ganz.startswith("0"):
+            return [vor + ganz, "dollars", nach + rest]
+        return [vor + ganz + ("." + nach if nach else ""), "dollars" + rest]
+    m = re.fullmatch(r"(\d+(?:\.\d+)?)x([.,:;!?]*)", w)
+    if m:
+        return [m.group(1), "times" + m.group(2)]
+    return [w]
+
+
+def sprechbar(text: str) -> tuple[str, list[int]]:
+    """-> (Text fuer die Stimme, Anzahl gesprochener Woerter je angezeigtem Wort)."""
+    gruppen = [sprech_wort(w) for w in text.split()]
+    return " ".join(t for g in gruppen for t in g), [len(g) for g in gruppen]
+
+
+def zurueck_auf_anzeige(text: str, gesprochen: list[dict], laengen: list[int]) -> list[dict]:
+    """Zeitmarken der gesprochenen Woerter auf die angezeigten Woerter zurueckrechnen."""
+    anzeige = text.split()
+    if sum(laengen) != len(gesprochen) or len(anzeige) != len(laengen):
+        return gesprochen
+    out, i = [], 0
+    for w, n in zip(anzeige, laengen):
+        teil = gesprochen[i:i + n]
+        out.append({"w": w, "a": teil[0]["a"], "e": teil[-1]["e"]})
+        i += n
+    return out
+
+
 def _elevenlabs(text: str, datei: Path, cfg: dict, key: str) -> None:
     """Ton + Zeitmarken je Wort (Endpunkt with-timestamps, gleicher Preis); Marken als <datei>.json daneben."""
     vid = voice_id(cfg, key)
+    anzeige = text
+    text, laengen = sprechbar(text)
     r = requests.post(
         f"https://api.elevenlabs.io/v1/text-to-speech/{vid}/with-timestamps",
         headers={"xi-api-key": key, "content-type": "application/json"},
@@ -87,7 +125,7 @@ def _elevenlabs(text: str, datei: Path, cfg: dict, key: str) -> None:
         raise StimmeFehlt(f"ElevenLabs: {r.status_code} {msg}")
     j = r.json()
     datei.write_bytes(base64.b64decode(j["audio_base64"]))
-    woerter = woerter_aus_ausrichtung(j.get("alignment") or {})
+    woerter = zurueck_auf_anzeige(anzeige, woerter_aus_ausrichtung(j.get("alignment") or {}), laengen)
     if woerter:
         import json
         datei.with_suffix(".json").write_text(json.dumps(woerter))

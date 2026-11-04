@@ -158,7 +158,8 @@ class EchteWerteTest(unittest.TestCase):
         self.assertIn("to a high of $23.98", kb["satz"])
         self.assertEqual(warum.volumen_befund(k)["r"], 6.0)
         zb = warum.zonen_befund(k, True)
-        self.assertIn("old highs where short sellers had their stops", zb["satz"])
+        self.assertEqual(zb["satz"], "It broke the old high at $16.10, where short sellers had their stops.")
+        self.assertEqual(len(zb["zonen"]), 1)   # nur EINE Linie
         self.assertEqual(warum.pr(23.234), "$23.23")
         self.assertEqual(warum.pr(0.045123), "$0.04512")
 
@@ -168,7 +169,8 @@ class EchteWerteTest(unittest.TestCase):
         l = kurse.long_short("X", get=lambda u, p: rows)
         self.assertEqual((l["jetzt"], round(l["long_pct"]), l["vor24"]), (1.5, 60, 0.8))
         self.assertIsNone(kurse.long_short("X", get=lambda u, p: {"code": -1121}))
-        self.assertIn("so 60% of accounts are long (24 hours ago: 0.8)", warum.lsr_satz(l)["satz"])
+        self.assertEqual(warum.lsr_satz(l)["satz"],
+                         "Long/short ratio on Binance: 1.5, up from 0.8 a day ago. 60% of accounts are long.")
         h = warum.halter_befund({"wale": {"wal": 41.2, "boerse": 12.5}})
         self.assertEqual(h["satz"], "Holders: whales hold 41.2% of the supply, exchanges 12.5%.")
         self.assertIsNone(warum.halter_befund({"wale": {"wal": 0, "boerse": 0}}))
@@ -182,9 +184,34 @@ class EchteWerteTest(unittest.TestCase):
         text = " ".join(s["vorlage"] for s in b["szenen"])
         for teil in ("to a high of", "Long/short ratio", "daily average", "had their stops"):
             self.assertIn(teil, text)
+        self.assertNotIn("(", text)
         self.assertEqual(pruefung.pruefen([s["vorlage"] for s in b["szenen"]], b, warum.pruef_cfg(CFG), set()), [])
         txt = warum.texte(b, CFG)
         self.assertLessEqual(len(txt["x"]), 280)
+
+
+class StimmePreiseTest(unittest.TestCase):
+    def test_preise_sprechbar_untertitel_bleiben(self):
+        from social import stimme
+        self.assertEqual(stimme.sprech_wort("$12.95,"), ["12", "dollars", "95,"])
+        self.assertEqual(stimme.sprech_wort("$10,000"), ["10,000", "dollars"])
+        self.assertEqual(stimme.sprech_wort("$0.04512."), ["0.04512", "dollars."])
+        self.assertEqual(stimme.sprech_wort("6.0x"), ["6.0", "times"])
+        self.assertEqual(stimme.sprech_wort("+17.1%"), ["+17.1%"])
+        t = "Now $23.23, 2.8% below."
+        sp, n = stimme.sprechbar(t)
+        self.assertEqual(sp, "Now 23 dollars 23, 2.8% below.")
+        gesp = [{"w": w, "a": i, "e": i + 0.5} for i, w in enumerate(sp.split())]
+        anz = stimme.zurueck_auf_anzeige(t, gesp, n)
+        self.assertEqual([w["w"] for w in anz], ["Now", "$23.23,", "2.8%", "below."])
+        self.assertEqual((anz[1]["a"], anz[1]["e"]), (1, 3.5))
+
+    def test_untertitel_ohne_klammern(self):
+        import tempfile
+        from social import video
+        with tempfile.TemporaryDirectory() as t:
+            ut = video.untertitel("Ratio 1.5 (24 hours ago: 0.8).", 3.0, Path(t), 0, CFG)
+        self.assertEqual(len(ut), 6)
 
 
 if __name__ == "__main__":
