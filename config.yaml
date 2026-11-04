@@ -149,3 +149,6 @@ pruefung:
     - "you should"
     - "not too late"
   zahlen_toleranz: 0.06      # Zahl im Text darf max. 0,06 von einer Datenzahl abweichen (Rundung)
+
+warum:
+  aktiv: false   # 04.11.2026 Tobias: CARV-Video unrealistisch -> pausiert, bis der Fehler gefunden ist

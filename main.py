@@ -448,6 +448,9 @@ def wal_video(w, txt, f, cfg, geheim, sperr, ordner: Path, lang: str, senden: bo
 def warum_beitrag(args, cfg, geheim, sperr, kerzen_holen=None) -> int:
     """„Why did it move?“ (Wunsch Tobias 04.11.2026, ersetzt das Markt-Video): ein Coin, Erklaerung aus Daten."""
     from social import warum
+    if not (cfg.get("warum") or {}).get("aktiv", True) and not args.daten:   # Pause (Tobias 04.11.: CARV unrealistisch)
+        print("Warum-Video pausiert (config warum.aktiv: false).")
+        return 0
     probe = bool(args.daten)
     d = daten.laden(args.daten or cfg["daten"]["dir"], None if probe else cfg["daten"]["max_alter_min"])
     from social import verlauf as _verlauf
