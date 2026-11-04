@@ -1,0 +1,49 @@
+{
+ "thema": "midterms-3",
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "chart": {
+    "base": "BTC",
+    "intervall": "15m",
+    "anzahl": 56,
+    "box": [
+     60,
+     760,
+     1020,
+     1480
+    ],
+    "titel": "BTC \u00b7 15m \u00b7 real chart"
+   },
+   "text": "Election night. Bitcoin slid to a seven-week low, just under seventy-six thousand dollars."
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "Five minutes later, CBS called the House for the Democrats. Then the AP called the Senate too."
+  },
+  {
+   "bild": "szene_2.png",
+   "chart": {
+    "base": "BTC",
+    "intervall": "15m",
+    "anzahl": 56,
+    "box": [
+     60,
+     760,
+     1020,
+     1480
+    ],
+    "titel": "BTC \u00b7 15m \u00b7 real chart"
+   },
+   "text": "Once the result was clear, Bitcoin bounced. Back near seventy-eight thousand by early Wednesday."
+  },
+  {
+   "bild": "szene_3.png",
+   "text": "For crypto rules, the clock is ticking. The CLARITY Act dies if the Senate does not pass it by January third."
+  },
+  {
+   "bild": "szene_4.png",
+   "text": "After that, Democrats chair the committees that write crypto laws. Part four on Thursday: what changes."
+  }
+ ]
+}
