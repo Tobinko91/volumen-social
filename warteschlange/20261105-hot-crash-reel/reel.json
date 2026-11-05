@@ -1,0 +1,39 @@
+{
+ "thema": "crash-1105",
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "text": "Stocks and crypto are crashing at the same time. Why?"
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "The AI trade is unwinding. Chip stocks fell about 8%, Tesla about 10%, the Nasdaq about 5%."
+  },
+  {
+   "bild": "szene_2.png",
+   "text": "After the Democratic sweep, investors expect more scrutiny of the AI data-center buildout."
+  },
+  {
+   "bild": "szene_3.png",
+   "chart": {
+    "base": "BTC",
+    "intervall": "15m",
+    "anzahl": 64,
+    "box": [
+     60,
+     620,
+     1020,
+     1400
+    ],
+    "titel": "BTC \u00b7 15m",
+    "ab_ts": 1793890800,
+    "ab_text": "the selloff"
+   },
+   "text": "Crypto followed. About 400 million dollars of leveraged longs were wiped out within one hour."
+  },
+  {
+   "bild": "szene_4.png",
+   "text": "Next up: the US jobs report on Friday. Overreaction or just the start? Comment below."
+  }
+ ]
+}
