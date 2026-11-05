@@ -89,7 +89,7 @@ zeitplan:                    # S31 (Tobias 02.11.2026): einmal freigeben, jeder 
     instagram: "18:00"       # 12:00 ET
     tiktok: "19:00"          # 13:00 ET
     youtube: "20:00"         # 14:00 ET
-  sofort_formate: [news, redaktion]   # News, Eilmeldungen, Beitraege aus dem Redaktions-Chat: ueberall sofort
+  sofort_formate: [news, redaktion, redaktion_video]   # News, Eilmeldungen, Beitraege aus dem Redaktions-Chat: ueberall sofort
   nur_video: [tiktok]        # bei „Alle Kanäle“: TikTok nur Videos und Bilderserien (einzelner Knopf geht immer)
 
 youtube:
