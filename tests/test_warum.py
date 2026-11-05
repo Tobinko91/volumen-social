@@ -193,18 +193,40 @@ class EchteWerteTest(unittest.TestCase):
 class StimmePreiseTest(unittest.TestCase):
     def test_preise_sprechbar_untertitel_bleiben(self):
         from social import stimme
-        self.assertEqual(stimme.sprech_wort("$12.95,"), ["12", "dollars", "95,"])
+        # 05.11.: gerundet und mit „about“ (Tobias: „19% statt 19.24%, approx“)
+        self.assertEqual(stimme.sprech_wort("$12.95,"), ["about", "13", "dollars,"])
+        self.assertEqual(stimme.sprech_wort("19.24%"), ["about", "19%"])
+        self.assertEqual(stimme.sprech_wort("+17.1%"), ["about", "+17%"])
+        self.assertEqual(stimme.sprech_wort("7%"), ["7%"])
+        self.assertEqual(stimme.sprech_wort("-0.29%"), ["-0.29%"])
         self.assertEqual(stimme.sprech_wort("$10,000"), ["10,000", "dollars"])
-        self.assertEqual(stimme.sprech_wort("$0.04512."), ["0.04512", "dollars."])
-        self.assertEqual(stimme.sprech_wort("6.0x"), ["6.0", "times"])
-        self.assertEqual(stimme.sprech_wort("+17.1%"), ["+17.1%"])
+        self.assertEqual(stimme.sprech_wort("$0.04512."), ["about", "0.045", "dollars."])
+        self.assertEqual(stimme.sprech_wort("6.0x"), ["6", "times"])
         t = "Now $23.23, 2.8% below."
         sp, n = stimme.sprechbar(t)
-        self.assertEqual(sp, "Now 23 dollars 23, 2.8% below.")
+        self.assertEqual(sp, "Now about 23 dollars, 2.8% below.")
         gesp = [{"w": w, "a": i, "e": i + 0.5} for i, w in enumerate(sp.split())]
         anz = stimme.zurueck_auf_anzeige(t, gesp, n)
-        self.assertEqual([w["w"] for w in anz], ["Now", "$23.23,", "2.8%", "below."])
+        self.assertEqual([w["w"] for w in anz], ["Now", "$23.23,", "2.8%", "below."])   # Untertitel genau
         self.assertEqual((anz[1]["a"], anz[1]["e"]), (1, 3.5))
+
+    def test_abend_erinnerung(self):
+        import datetime as dt
+        import json as _j
+        import sys
+        import tempfile
+        sys.path.insert(0, str(HIER / "tools"))
+        import offen
+        with tempfile.TemporaryDirectory() as t:
+            a = Path(t)
+            for name, st in (("20261105-1430_warum_BAT_video", None), ("20261105-1500_news_x", None),
+                             ("20261105-1600_coincheck_AKE", {"telegram": "l"}), ("20261104-2130_wissen_x_video", None)):
+                (a / name).mkdir()
+                (a / name / "post_telegram.txt").write_text("<b>Kopf</b>\nRest")
+                if st:
+                    (a / name / "gepostet.json").write_text(_j.dumps(st))
+            o = offen.offene(a, dt.date(2026, 11, 5))
+        self.assertEqual([x.name for x in o], ["20261105-1430_warum_BAT_video", "20261105-1500_news_x"])
 
     def test_untertitel_ohne_klammern(self):
         import tempfile

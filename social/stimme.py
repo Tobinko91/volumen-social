@@ -68,20 +68,38 @@ def woerter_aus_ausrichtung(al: dict) -> list[dict]:
     return out
 
 
+def _gerundet(v: float) -> tuple[str, bool]:
+    """Zahl fuer die Stimme runden (Wunsch Tobias 05.11.2026: „19% statt 19.24%, dann approx“).
+    ab 10: ganze Zahl · 1 bis 10: eine Stelle · unter 1: zwei gueltige Stellen. -> (Text, wurde gerundet)."""
+    if v >= 10:
+        r = f"{round(v):,}"
+    elif v >= 1:
+        r = f"{round(v, 1):g}"
+    else:
+        r = f"{float(f'{v:.2g}'):g}"
+    return r, float(r.replace(",", "")) != v
+
+
 def sprech_wort(w: str) -> list[str]:
-    """Ein angezeigtes Wort -> gesprochene Woerter (Fehler 04.11.2026: Brian nuschelte bei „$12.95“).
-    $12.95 -> 12 dollars 95 · $10,000 -> 10,000 dollars · $0.04512 -> 0.04512 dollars · 6.0x -> 6.0 times.
-    Gilt nur fuer den Ton; Untertitel zeigen weiter „$12.95“."""
+    """Ein angezeigtes Wort -> gesprochene Woerter. Nur fuer den Ton; Untertitel zeigen die genaue Zahl.
+    $12.95 -> about 13 dollars · 19.24% -> about 19% · +17.1% -> about +17% · -0.29% -> about -0.3%
+    $10,000 -> 10,000 dollars · $0.04512 -> about 0.045 dollars · 6.0x -> 6 times (Fehler 04./05.11.2026: Brian
+    nuschelte Preise und sprach Nachkommastellen zu schnell)."""
     import re
-    m = re.fullmatch(r"([(\[]?)\$(\d[\d,]*)(?:\.(\d+))?([%.,:;!?)\]]*)", w)
+    m = re.fullmatch(r"([(\[]?)\$(\d[\d,]*(?:\.\d+)?)([.,:;!?)\]]*)", w)
     if m:
-        vor, ganz, nach, rest = m.groups()
-        if nach and len(nach) == 2 and not ganz.startswith("0"):
-            return [vor + ganz, "dollars", nach + rest]
-        return [vor + ganz + ("." + nach if nach else ""), "dollars" + rest]
+        vor, zahl, rest = m.groups()
+        r, rund = _gerundet(float(zahl.replace(",", "")))
+        return (["about"] if rund else []) + [vor + r, "dollars" + rest]
+    m = re.fullmatch(r"([(\[]?)([+\-−]?)(\d[\d,]*(?:\.\d+)?)%([.,:;!?)\]]*)", w)
+    if m:
+        vor, vz, zahl, rest = m.groups()
+        r, rund = _gerundet(float(zahl.replace(",", "")))
+        return (["about"] if rund else []) + [vor + vz.replace("−", "-") + r + "%" + rest]
     m = re.fullmatch(r"(\d+(?:\.\d+)?)x([.,:;!?]*)", w)
     if m:
-        return [m.group(1), "times" + m.group(2)]
+        r, rund = _gerundet(float(m.group(1)))
+        return (["about"] if rund else []) + [r, "times" + m.group(2)]
     return [w]
 
 

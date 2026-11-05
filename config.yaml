@@ -47,8 +47,8 @@ video:
                              # (taeglich ein anderes); leer = ohne Musik. Alternativ "generiert" oder eine Datei
   untertitel_animiert: true   # Wort fuer Wort im Video (04.11.2026); false = fester Satz-Kasten im Bild
   haken_test: true            # A/B: Tage abwechselnd Frage / Zahl als Einstieg (04.11.2026), Wochenbericht vergleicht
-  untertitel_y: 1745          # Reels aus dem Chat und „🎬 Als Reel“
-  untertitel_y_formate: 1310  # Markt, Wal, Lernen, Willkommen (Platz des frueheren Satz-Kastens)
+  untertitel_y: 1460          # Oberkante Untertitel-Kasten: Reels aus dem Chat und „🎬 Als Reel“ (05.11.: ganzer Satz)
+  untertitel_y_formate: 1230  # Markt, Wal, Lernen, Willkommen (Platz des frueheren Satz-Kastens)
   musik_db: -22              # Lautstaerke unter einer Stimme
   musik_db_ohne_stimme: -3   # Videos ohne Stimme: Musik traegt, Untertitel erzaehlen
   woerter_pro_sekunde: 2.6   # nur fuer die Probe ohne Stimme

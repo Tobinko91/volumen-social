@@ -48,7 +48,7 @@ class ReelTest(unittest.TestCase):
     def test_chart_stimme_video(self):
         q = reel.bauen(self.o, CFG, {"elevenlabs_api_key": "k"}, kerzen_holen=lambda b, i, n: _kerzen(n),
                        sprechen=self._sprechen, schneiden=self._schneiden)
-        self.assertEqual(q, "elevenlabs")
+        self.assertTrue(q.startswith("elevenlabs; Chart BTC:"))
         self.assertEqual(self.gesehen["zeilen"], ["Bitcoin dipped.", "Then it bounced."])
         self.assertEqual(self.gesehen["key"], "k")
         self.assertEqual(self.gesehen["bilder"][0].name, "chart_szene_0.png")   # echter Chart eingezeichnet
@@ -82,6 +82,34 @@ class ReelTest(unittest.TestCase):
         self.assertEqual(len(gesendet), 1)
         self.assertTrue(gesendet[0][2])
         self.assertIn("🎙 Ton: elevenlabs", gesendet[0][1])
+
+
+class ChartZahlTest(unittest.TestCase):
+    """05.11.2026 Tobias: Ein Chart ohne Zahl sagt nichts -> Veraenderung seit Ereignis in den Sprechtext."""
+    def test_prozent_seit_ereignis(self):
+        o = Path(tempfile.mkdtemp())
+        try:
+            Image.new("RGB", (1080, 1920)).save(o / "s.png")
+            (o / "reel.json").write_text(json.dumps({"thema": "t", "szenen": [
+                {"bild": "s.png", "text": "Bitcoin is {chg} since the Senate call, now {bis}.",
+                 "text_ohne": "Here is Bitcoin since the Senate call.",
+                 "chart": {"base": "BTC", "intervall": "1h", "anzahl": 60, "box": [60, 700, 1020, 1500],
+                           "ab_ts": 1_000_000, "ab_text": "the call"}}]}))
+            k = [{"t": (1_000_000 + i * 3600) * 1000, "o": 100 + i, "h": 102 + i, "l": 99 + i, "c": 101 + i, "v": 1}
+                 for i in range(-10, 40)]
+            gesehen = {}
+
+            def sp(z, o_, c, key):
+                gesehen["z"] = z
+                return [Path("a.mp3")], [3.0], "elevenlabs"
+            q = reel.bauen(o, CFG, {}, kerzen_holen=lambda b, i, n: k, sprechen=sp,
+                           schneiden=lambda *a, **kw: None)
+            self.assertEqual(gesehen["z"], ["Bitcoin is +41.4% since the Senate call, now $140."])
+            self.assertIn("Chart BTC: +41.4%", q)
+            reel.bauen(o, CFG, {}, kerzen_holen=lambda b, i, n: [], sprechen=sp, schneiden=lambda *a, **kw: None)
+            self.assertEqual(gesehen["z"], ["Here is Bitcoin since the Senate call."])
+        finally:
+            shutil.rmtree(o)
 
 
 class UntertitelTest(unittest.TestCase):
@@ -127,7 +155,7 @@ class UntertitelTest(unittest.TestCase):
 
     def test_formate_ohne_satzkasten(self):
         from social import video
-        self.assertEqual(video.ut_formate(CFG, ["a"]), {"texte": ["a"], "untertitel_y": 1310})
+        self.assertEqual(video.ut_formate(CFG, ["a"]), {"texte": ["a"], "untertitel_y": 1230})
         self.assertEqual(video.ut_formate({"video": {}}, ["a"]), {})
 
 

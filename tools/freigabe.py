@@ -127,6 +127,16 @@ def posten(g: dict, beitrag_id: str, ziel: str) -> str:
                 _, beschreibung = _tt.titel_und_text(text, design.SPRACHE)
                 tg(g, "sendMessage", chat_id=g.get("telegram_chat_id"), parse_mode="HTML",
                    text="🎵 TikTok-Text (antippen = kopiert):\n<code>" + _html.escape(beschreibung[:3800]) + "</code>")
+            if z in ("telegram", "x"):   # Umfrage unter Hot Topics (05.11.2026), Fehler stoppen nichts
+                from social import umfrage
+                u = umfrage.laden(ordner)
+                if u and f"umfrage_{z}" not in status:
+                    try:
+                        status[f"umfrage_{z}"] = (umfrage.telegram(g, u) if z == "telegram"
+                                                  else umfrage.x(g, u, link))
+                        zeilen.append(f"📊 {z}: Umfrage „{u['frage']}“ gestartet")
+                    except Exception as e:
+                        zeilen.append(f"⚠️ {z}: Umfrage nicht gestartet: {str(e)[:120]}")
             if z == "instagram" and (kanaele._cfg().get("instagram") or {}).get("story", True):
                 try:   # Punkt C: jeden Instagram-Beitrag auch als Story (Fehler hier stoppen nichts)
                     from social import story
