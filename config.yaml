@@ -151,4 +151,4 @@ pruefung:
   zahlen_toleranz: 0.06      # Zahl im Text darf max. 0,06 von einer Datenzahl abweichen (Rundung)
 
 warum:
-  aktiv: false   # 04.11.2026 Tobias: CARV-Video unrealistisch -> pausiert, bis der Fehler gefunden ist
+  aktiv: true    # 05.11.2026 Tobias: wieder an (14:30 Gewinner, 18:30 Verlierer). Pause: false

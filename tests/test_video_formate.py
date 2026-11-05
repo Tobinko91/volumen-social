@@ -5,6 +5,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import unittest.mock
 from pathlib import Path
 
 import yaml
@@ -63,7 +64,11 @@ class WalVideoTest(unittest.TestCase):
     def test_ohne_verlauf_und_holder(self):
         w = {"base": "ABC", "quelle": "anteil", "wal": 12.5, "boerse": None, "wal_7d": None, "boerse_7d": None,
              "holder": None, "holder_7d": None, "chg24": 1.0, "verlauf": []}
-        b = wal.video_szenen(w, "en")
+        import datetime as dt
+        from social import sprache
+        frage_tag = next(dt.date(2026, 11, d) for d in (5, 6) if sprache.haken_art(dt.date(2026, 11, d), True) == "frage")
+        with unittest.mock.patch.object(sprache, "haken_test_an", lambda: True):
+            b = wal.video_szenen(w, "en", tag=frage_tag)   # fester Frage-Tag, sonst haengt der Test vom Datum ab
         self.assertEqual([s["typ"] for s in b["szenen"]], ["wal_haken", "outro"])
         self.assertEqual(b["szenen"][0]["vorlage"], "What are whales doing with ABC? They hold 12.5% of it.")
 
