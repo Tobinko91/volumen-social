@@ -340,7 +340,8 @@ def wal_beitrag(args, cfg, geheim, sperr) -> int:
     (ordner / "post_telegram.txt").write_text(txt["telegram"], encoding="utf-8")
     (ordner / "fakten.json").write_text(json.dumps(f, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"Wal des Tages {w['base']} ({w['quelle']}): Pruefung", fehler or "bestanden")
-    if args.senden:
+    # Seit 05.11.2026 (Tobias: weniger Vorschlaege) geht bei „beides“ nur das Video an Tobias; Bild nur mit --art post
+    if args.senden and getattr(args, "art", "beides") == "post":
         vorschlag(args, geheim, cfg, ordner, "⚠️ " + "; ".join(fehler) if fehler else "", fehler)
     if getattr(args, "art", "beides") in ("video", "beides"):   # Wunsch Tobias 01.11.2026: auch als Video
         fehler += wal_video(w, txt, f, cfg, geheim, sperr, Path(f"{ordner}_video"), lang, args.senden, args)

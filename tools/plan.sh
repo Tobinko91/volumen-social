@@ -10,7 +10,7 @@
 #   15:30 20:30 Kommentar-Vorschlaege (9:30 / 14:30 ET, Tobias postet selbst)
 #   17:30 Folge-Liste an Tobias (X per Knopf, Instagram/YouTube per Link; Wunsch 31.10.)
 #   19:00 Wal des Tages (13:00 ET, US-Mittagspause)
-#   21:30 Lern-Beitrag (15:30 ET; spaeter waere fuer die USA besser, ab 22 Uhr ist aber Ruhezeit)
+#   21:30 Lern-Beitrag + Erinnerung an offene Vorschlaege (15:30 ET; spaeter waere fuer die USA besser, ab 22 Uhr ist aber Ruhezeit)
 #   09:00 Gesundheits-Check an Tobias (gestern: Termine, Vorschlaege, Fehler, Update, Daten)
 #   So 18:30 Wochenbericht an Tobias (Follower, Aufrufe je Format, Empfehlung)
 #   Eilmeldungen: eigener Lauf tools/live.sh alle 10 Minuten rund um die Uhr (seit 30.10.2026)
@@ -59,7 +59,7 @@ case "$SLOT" in
   18:30) lauf warum --richtung runter ;;   # größter Verlierer: „Why did X drop?“ (Wunsch Tobias 04.11.2026)
   16:00) lauf coincheck ;;
   19:00) lauf wal ;;
-  21:30) lauf wissen ;;
+  21:30) lauf wissen; sudo -u redaktion env $UMGEBUNG python3 tools/offen.py --senden ;;   # Abend-Erinnerung offene Vorschlaege
   17:30) sudo -u redaktion env $UMGEBUNG python3 tools/folgen.py --senden ;;
   15:30|20:30) sudo -u redaktion env $UMGEBUNG python3 tools/kommentare.py --senden ;;
 esac
