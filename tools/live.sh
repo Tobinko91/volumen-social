@@ -11,3 +11,6 @@ exec 9>/tmp/volumen-social-live.lock
 flock -n 9 || exit 0
 sudo -u redaktion env TZ=Europe/Berlin SOCIAL_GEHEIM=/opt/volumen-social SOCIAL_AUSGABE=/opt/volumen-social/ausgabe \
   timeout 300 python3 main.py news --eil --senden
+# Kurs-Alarm (Wunsch Tobias 05.11.2026): BTC/ETH +-4 % in 60 Minuten -> sofort Eilmeldung (Bild + Reel)
+sudo -u redaktion env TZ=Europe/Berlin SOCIAL_GEHEIM=/opt/volumen-social SOCIAL_AUSGABE=/opt/volumen-social/ausgabe \
+  timeout 240 python3 tools/kursalarm.py --senden
