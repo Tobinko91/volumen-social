@@ -45,53 +45,61 @@ def _zahl(w: str) -> bool:
 
 def untertitel(text: str, dauer: float, ordner: Path, nr: int, cfg: dict, woerter: list[dict] | None = None,
                y: int | None = None) -> list[tuple[Path, float, float]]:
-    """Animierte Untertitel (Wunsch Tobias 04.11.2026): je Stueck 3 Woerter, das gerade gesprochene Wort auf einer
-    Flieder-Pille, Zahlen in Leuchtminze (negative in Rot). Zeiten aus den Zeitmarken der Stimme (ElevenLabs),
-    sonst geschaetzt. -> [(Bild, Start, Ende)] in Sekunden."""
+    """Untertitel als Textfeld (Wunsch Tobias 05.11.2026, ersetzt die 3-Wort-Stuecke): der ganze Satz der Szene in
+    einem Kasten, die Woerter erscheinen nacheinander, so wie Brian sie spricht, und bleiben stehen. Das gerade
+    gesprochene Wort leuchtet in Flieder, Zahlen in Leuchtminze (negative in Rot).
+    y = Oberkante des Kastens. Zeiten aus den ElevenLabs-Zeitmarken, sonst geschaetzt. -> [(Bild, Start, Ende)]."""
     from PIL import Image, ImageDraw
     from . import design
     W, H = cfg["video"]["breite"], cfg["video"]["hoehe"]
     woerter = woerter or woerter_schaetzen(text, dauer)
-    # Klammern zerfallen auf zwei Einblendungen und sehen unfertig aus (Tobias 04.11.2026) -> weglassen
+    # Klammern zerfallen und sehen unfertig aus (Tobias 04.11.2026) -> weglassen
     woerter = [dict(w, w=w["w"].replace("(", "").replace(")", "")) for w in woerter]
     woerter = [w for w in woerter if w["w"]]
-    mitte = int(y or cfg["video"].get("untertitel_y", 1745))
-    out, alle = [], [w for g in gruppen(woerter) for w in g]
-    for gi, g in enumerate(gruppen(woerter)):
-        probe = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
-        groesse = 66
-        while groesse > 38:
-            f = design.font("Bold", groesse)
-            leer = probe.textlength(" ", font=f) * 1.7   # Platz fuer die Pille des aktiven Worts
-            breite = sum(probe.textlength(w["w"], font=f) for w in g) + leer * (len(g) - 1)
-            if breite <= W - 200:
-                break
-            groesse -= 4
-        for wi, aktiv in enumerate(g):
-            img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-            d = ImageDraw.Draw(img)
-            x0 = (W - breite) / 2
-            d.rounded_rectangle([x0 - 30, mitte - groesse * 0.8, x0 + breite + 30, mitte + groesse * 0.8],
-                                radius=26, fill=design.rgb("#140F2E", 230))
-            x = x0
-            for w in g:
-                bw = d.textlength(w["w"], font=f)
-                if w is aktiv:
-                    d.rounded_rectangle([x - 12, mitte - groesse * 0.68, x + bw + 12, mitte + groesse * 0.68],
-                                        radius=16, fill=design.rgb("#B69CFF"))
-                    farbe = "#140F2E"
-                elif _zahl(w["w"]):
-                    farbe = "#FF7A8F" if w["w"].lstrip("($").startswith(("-", "−")) else "#3CF2C0"
-                else:
-                    farbe = "#F2F0FF"
-                d.text((x, mitte - groesse * 0.62), w["w"], font=f, fill=design.rgb(farbe))
-                x += bw + leer
-            p = ordner / f"ut_{nr:02d}_{gi:02d}_{wi:02d}.png"
-            img.save(p)
-            k = alle.index(aktiv)
-            a = 0.0 if k == 0 else aktiv["a"]
-            e = alle[k + 1]["a"] if k + 1 < len(alle) else dauer
-            out.append((p, a, max(e, a + 0.05)))
+    if not woerter:
+        return []
+    oben = int(y or cfg["video"].get("untertitel_y", 1460))
+    probe = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
+    rand, breite_max = 44, W - 120 - 88
+    for groesse in (50, 46, 42, 38, 34):
+        f = design.font("Bold", groesse)
+        leer = probe.textlength(" ", font=f)
+        zeilen, akt, x = [], [], 0.0
+        for i, w in enumerate(woerter):
+            bw = probe.textlength(w["w"], font=f)
+            if akt and x + bw > breite_max:
+                zeilen.append(akt)
+                akt, x = [], 0.0
+            akt.append((i, x, bw))
+            x += bw + leer
+        zeilen.append(akt)
+        hoch = int(groesse * 1.38)
+        if oben + len(zeilen) * hoch + 2 * rand <= H - 110:
+            break
+    kasten = [60, oben, W - 60, oben + len(zeilen) * hoch + 2 * rand - 14]
+    lage = {i: (60 + rand + x, oben + rand + z * hoch, bw) for z, zl in enumerate(zeilen) for i, x, bw in zl}
+    out = []
+    for k, aktiv in enumerate(woerter):
+        img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        d = ImageDraw.Draw(img)
+        d.rounded_rectangle(kasten, radius=28, fill=design.rgb("#140F2E", 225))
+        for i in range(k + 1):
+            wx, wy, bw = lage[i]
+            wort = woerter[i]["w"]
+            if i == k:
+                d.rounded_rectangle([wx - 8, wy - 4, wx + bw + 8, wy + groesse * 1.18], radius=12,
+                                    fill=design.rgb("#B69CFF"))
+                farbe = "#140F2E"
+            elif _zahl(wort):
+                farbe = "#FF7A8F" if wort.lstrip("($").startswith(("-", "−")) else "#3CF2C0"
+            else:
+                farbe = "#F2F0FF"
+            d.text((wx, wy), wort, font=f, fill=design.rgb(farbe))
+        p = ordner / f"ut_{nr:02d}_{k:03d}.png"
+        img.save(p)
+        a = 0.0 if k == 0 else aktiv["a"]
+        e = woerter[k + 1]["a"] if k + 1 < len(woerter) else dauer
+        out.append((p, a, max(e, a + 0.05)))
     return out
 
 
@@ -99,7 +107,7 @@ def ut_formate(cfg: dict, zeilen: list[str], beitrag: dict | None = None) -> dic
     """Feste Formate (Markt, Wal, Lernen, Willkommen): animierte Untertitel an der Stelle des frueheren
     Satz-Kastens (bilder.py zeichnet ihn dann nicht mehr)."""
     v = cfg["video"]
-    out = {"texte": zeilen, "untertitel_y": v.get("untertitel_y_formate", 1310)} if v.get("untertitel_animiert") else {}
+    out = {"texte": zeilen, "untertitel_y": v.get("untertitel_y_formate", 1230)} if v.get("untertitel_animiert") else {}
     haken = ((beitrag or {}).get("szenen") or [{}])[0].get("haken")
     return dict(out, haken=haken) if haken else out
 

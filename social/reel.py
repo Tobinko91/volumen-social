@@ -10,6 +10,10 @@ reel.json im Ordner:
                          "titel": "BTC · 15m"}}, ...]}
 - "bild" ist Pflicht (fertiges 1080x1920-Bild). Mit "chart" zeichnet der Server den echten Kursverlauf in
   die Box (Kurse holt nur der Server, der Chat erreicht die Boersen nicht). Klappt das nicht, bleibt das Bild.
+- Wunsch Tobias 05.11.2026: Ein Chart ohne Zahl sagt nichts. Mit "ab_ts" (Unix-Sekunden, z. B. Zeitpunkt einer
+  Entscheidung) rechnet der Server die Veraenderung seitdem aus echten Kerzen und setzt sie in den Sprechtext
+  ein: "text": "Bitcoin is {chg} since the Democrats won the Senate." -> "+2.4%". Dazu {von}/{bis} (Preise).
+  Ohne Kurse gilt "text_ohne" (Pflicht, wenn der Text Platzhalter hat).
 """
 from __future__ import annotations
 
@@ -19,18 +23,27 @@ from pathlib import Path
 from PIL import Image
 
 
-def chart_szene(ordner: Path, s: dict, thema: str, kerzen_holen) -> Path:
+def chart_szene(ordner: Path, s: dict, thema: str, kerzen_holen) -> tuple[Path, dict]:
+    """-> (Bild mit echtem Chart, Werte {chg, von, bis} seit ab_ts bzw. seit der ersten Kerze)."""
     from . import design, grafik
     c = s["chart"]
     k = kerzen_holen(c.get("base", "BTC"), c.get("intervall", "15m"), int(c.get("anzahl", 48)))
+    if c.get("ab_ts"):
+        k = [x for x in k if x["t"] >= int(c["ab_ts"]) * 1000 - 3600_000]   # ab der Stunde vor dem Ereignis
     if len(k) < 12:
         raise ValueError(f"zu wenige Kerzen ({len(k)})")
+    von, bis = k[0]["o"], k[-1]["c"]
+    chg = (bis / von - 1) * 100
     img = Image.open(ordner / s["bild"]).convert("RGBA")
     th = design.thema_waehlen("markt", thema)
-    grafik.echt_chart(img, th, tuple(c["box"]), k, "linie", {}, 3, c.get("lang", "en"), c.get("titel", ""))
+    titel = c.get("titel", "")
+    if c.get("ab_ts"):
+        titel = f"{titel} · {chg:+.1f}% since {c.get('ab_text', 'then')}".strip(" ·")
+    grafik.echt_chart(img, th, tuple(c["box"]), k, "linie", {}, 3, c.get("lang", "en"), titel)
     ziel = ordner / f"chart_{Path(s['bild']).stem}.png"
     img.convert("RGB").save(ziel)
-    return ziel
+    preis = lambda x: f"${x:,.0f}" if x >= 100 else f"${x:,.2f}"
+    return ziel, {"chg": f"{chg:+.1f}%", "von": preis(von), "bis": preis(bis)}
 
 
 def bauen(ordner: Path, cfg: dict, geheim: dict, kerzen_holen=None, sprechen=None, schneiden=None) -> str:
@@ -40,16 +53,19 @@ def bauen(ordner: Path, cfg: dict, geheim: dict, kerzen_holen=None, sprechen=Non
     sprechen = sprechen or stimme.sprechen
     schneiden = schneiden or video.bauen
     spec = json.loads((ordner / "reel.json").read_text(encoding="utf-8"))
-    bilder, hinweise = [], []
+    bilder, hinweise, zeilen = [], [], []
     for s in spec["szenen"]:
-        p = ordner / s["bild"]
+        p, text = ordner / s["bild"], s["text"]
         if s.get("chart"):
             try:
-                p = chart_szene(ordner, s, spec.get("thema", ordner.name), kerzen_holen)
+                p, werte = chart_szene(ordner, s, spec.get("thema", ordner.name), kerzen_holen)
+                text = text.format(**werte) if "{" in text else text
+                hinweise.append(f"Chart {s['chart'].get('base', 'BTC')}: {werte['chg']}")
             except Exception as e:   # ohne Kurse trotzdem ein Video, Hinweis an Tobias
                 hinweise.append(f"Chart fehlt ({str(e)[:80]})")
+                text = s.get("text_ohne") or text.replace("{chg}", "").replace("{von}", "").replace("{bis}", "")
         bilder.append(p)
-    zeilen = [s["text"] for s in spec["szenen"]]
+        zeilen.append(text)
     toene, dauern, quelle = sprechen(zeilen, ordner / "ton", cfg, stimme.schluessel(cfg, geheim))
     schneiden(bilder, toene, dauern, ordner / "video.mp4", cfg, texte=zeilen)
     return "; ".join([quelle, *hinweise])
