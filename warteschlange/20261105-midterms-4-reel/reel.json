@@ -1,0 +1,37 @@
+{
+ "thema": "midterms-4",
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "text": "Democrats now control Congress. What does that mean for crypto?"
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "Elizabeth Warren, a long-time crypto critic, is expected to lead the Senate Banking Committee."
+  },
+  {
+   "bild": "szene_2.png",
+   "text": "The CLARITY Act failed in the Senate in September. If it is not passed by January 3, it dies."
+  },
+  {
+   "bild": "szene_3.png",
+   "chart": {
+    "base": "BTC",
+    "intervall": "1h",
+    "anzahl": 60,
+    "box": [
+     60,
+     760,
+     1020,
+     1500
+    ],
+    "titel": "BTC \u00b7 1h \u00b7 real chart"
+   },
+   "text": "Here is Bitcoin since election night, on a real one-hour chart."
+  },
+  {
+   "bild": "szene_4.png",
+   "text": "But more than 70 House Democrats voted for the bill. A new deal in 2027 is possible. Tougher rules or a better deal? Comment below."
+  }
+ ]
+}
