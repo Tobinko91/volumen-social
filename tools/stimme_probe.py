@@ -32,7 +32,42 @@ TEXT = ("Bitcoin just moved +3.2% in one hour. Whales bought 4,000 BTC on exchan
         "Here is what it means. Follow WhaleSqueeze for daily data. Not financial advice.")
 
 
+PROBE_ZAHLEN = ("From $14.23 to a high of $23.90 in 24 hours. Now $23.23, 2.8% below the high. "
+                "Open interest rose 17.1% with funding at -0.29%. Volume was 6.0x the daily average. "
+                "Long/short ratio: 1.5, up from 0.8 a day ago. A small coin at $0.04512.")
+
+
+def kurz(text: str) -> int:
+    """/hoerprobe im Redaktions-Bot (Wunsch Tobias 05.11.2026): den Text mit der eingestellten Stimme sprechen,
+    genau wie im Video (Preise sprechbar), und als Sprachnachricht schicken."""
+    basis = Path(os.environ.get("SOCIAL_GEHEIM", "/opt/volumen-social"))
+    geheim = yaml.safe_load((basis / "secrets.yaml").read_text()) or {}
+    cfg = yaml.safe_load((HIER / "config.yaml").read_text(encoding="utf-8"))
+    key = stimme.schluessel(cfg, geheim)
+    if not key:
+        telegram.text_senden(geheim, "🎙 Hörprobe geht nicht: Stimmen-Schlüssel fehlt.")
+        return 1
+    with tempfile.TemporaryDirectory() as d:
+        f = Path(d) / "hoerprobe.mp3"
+        try:
+            getattr(stimme, stimme.ERZEUGER[cfg["stimme"].get("anbieter", "elevenlabs")])(text, f, cfg, key)
+        except Exception as e:
+            telegram.text_senden(geheim, f"🎙 Hörprobe fehlgeschlagen: {e}")
+            return 1
+        gesprochen, _ = stimme.sprechbar(text)
+        with open(f, "rb") as fh:
+            requests.post(telegram.API.format(token=geheim["telegram_token"], methode="sendAudio"),
+                          data={"chat_id": geheim["telegram_chat_id"], "title": "Hörprobe",
+                                "caption": ("🎙 Hörprobe. Untertitel: " + text)[:1000]
+                                + ("\n\nGesprochen: " + gesprochen)[:1000] if gesprochen != text else ""},
+                          files={"audio": (f.name, fh, "audio/mpeg")}, timeout=60)
+    return 0
+
+
 def main() -> int:
+    if "--text" in sys.argv:
+        i = sys.argv.index("--text")
+        return kurz(" ".join(sys.argv[i + 1:]).strip() or PROBE_ZAHLEN)
     basis = Path(os.environ.get("SOCIAL_GEHEIM", "/opt/volumen-social"))
     geheim = yaml.safe_load((basis / "secrets.yaml").read_text()) or {}
     cfg = yaml.safe_load((HIER / "config.yaml").read_text(encoding="utf-8"))

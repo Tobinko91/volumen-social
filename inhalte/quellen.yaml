@@ -3,7 +3,7 @@
 # (pruefen mit: python3 tools/quellen_test.py).
 # aktiv: false = abgeschaltet. Deutsche Feeds seit 01.11.2026 aus: Kanaele nur Englisch, deutscher Quelltext
 # rutschte in eine Eilmeldung (Hinweis Tobias).
-- {name: CoinDesk, url: "https://www.coindesk.com/arc/outboundfeeds/rss/", land: US, gewicht: 1.0}
+- {name: CoinDesk, url: "https://www.coindesk.com/arc/outboundfeeds/rss/?outputType=xml", land: US, gewicht: 1.0}
 - {name: Cointelegraph, url: "https://cointelegraph.com/rss", land: US, gewicht: 1.0}
 - {name: The Block, url: "https://www.theblock.co/rss.xml", land: US, gewicht: 1.0}
 - {name: Decrypt, url: "https://decrypt.co/feed", land: US, gewicht: 0.9}

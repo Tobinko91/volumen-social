@@ -199,6 +199,14 @@ def befehl(g: dict, text: str) -> str:
         subprocess.Popen([sys.executable, str(app / "main.py"), "coincheck", "--coin", coin, "--senden"],
                          cwd=str(app), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return f"🔎 Coin-Check für {coin} wird erstellt, kommt in etwa einer Minute."
+    if cmd == "/hoerprobe":   # Brian spricht einen Text wie im Video (Preise sprechbar), Wunsch Tobias 05.11.2026
+        import subprocess
+        app = Path(__file__).resolve().parent.parent
+        text = text.strip()[len(teile[0]):].strip()[:600]
+        subprocess.Popen([sys.executable, str(app / "tools" / "stimme_probe.py"), "--text", *text.split()],
+                         cwd=str(app), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return ("🎙 Hörprobe kommt in etwa 20 Sekunden" + ("." if text else
+                " (Beispielsätze mit Preisen, Prozent, Funding, Long/Short).") + " Eigener Text: /hoerprobe Dein Satz")
     if cmd == "/warum" and len(teile) > 1:   # „Why did it move?“ fuer einen Wunsch-Coin (Tobias 04.11.2026)
         import subprocess
         coin = teile[1].upper().strip("$#")
@@ -231,7 +239,7 @@ def befehl(g: dict, text: str) -> str:
     if cmd == "/weiter":
         PAUSE.unlink(missing_ok=True)
         return "▶️ Geht weiter."
-    return "Befehle: /check AKE, /warum CLANKER, /status, /auto (an/aus), /musik, /sperre BTC, /entsperre BTC, /pause, /weiter"
+    return "Befehle: /check AKE, /warum CLANKER, /hoerprobe Text, /status, /auto (an/aus), /musik, /sperre BTC, /entsperre BTC, /pause, /weiter"
 
 
 def musik_speichern(g: dict, m: dict, holen=requests.get) -> str:

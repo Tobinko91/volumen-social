@@ -214,5 +214,22 @@ class StimmePreiseTest(unittest.TestCase):
         self.assertEqual(len(ut), 6)
 
 
+class HoerprobeTest(unittest.TestCase):
+    def test_befehl(self):
+        import sys
+        from unittest import mock
+        sys.path.insert(0, str(HIER / "tools"))
+        import freigabe
+        with mock.patch("subprocess.Popen") as p:
+            t = freigabe.befehl({}, "/hoerprobe Now $23.23.")
+        self.assertIn("Hörprobe", t)
+        self.assertEqual(p.call_args[0][0][-3:], ["--text", "Now", "$23.23."])
+        with mock.patch("subprocess.Popen") as p:
+            self.assertIn("Beispielsätze", freigabe.befehl({}, "/hoerprobe"))
+
+    def test_warum_wieder_an(self):
+        self.assertTrue(CFG["warum"]["aktiv"])
+
+
 if __name__ == "__main__":
     unittest.main()
