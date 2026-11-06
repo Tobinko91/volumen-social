@@ -204,6 +204,7 @@ def nachricht(a: dict, datum: str, kommentare: list[dict] | None = None) -> tupl
     e = html.escape
     kommentare = list(kommentare or [])
     z = [f"👥 <b>Folge-Liste {datum}</b>", ""]
+    nr = 0   # Nummern fuer die Knoepfe „✅ kommentiert“ (06.11.2026)
     if a["x"]:
         z.append(f"<b>X</b> – ein Tipp auf den Knopf, dann folgt @whalesqueeze allen {len(a['x'])}:")
         z += [f"• <a href=\"{LINKS['x'].format(n=k['name'])}\">@{e(k['name'])}</a> – {e(k.get('warum', ''))}"
@@ -213,7 +214,9 @@ def nachricht(a: dict, datum: str, kommentare: list[dict] | None = None) -> tupl
         z.append("<b>Instagram / TikTok / YouTube</b> – selbst antippen, folgen und unter den neuesten Markt-Post "
                  "kommentieren (Kommentar antippen = kopiert):")
         for k in a["andere"]:
-            z.append(f"• {NAMEN[k['plattform']]}: <a href=\"{LINKS[k['plattform']].format(n=k['name'])}\">"
+            nr += 1
+            k["nr"] = nr
+            z.append(f"<b>{nr}.</b> {NAMEN[k['plattform']]}: <a href=\"{LINKS[k['plattform']].format(n=k['name'])}\">"
                      f"{e(k['name'])}</a> – {e(k.get('warum', ''))}" + (" · <i>folgst du schon, nur kommentieren</i>"
                                                                          if k.get("schon") else ""))
             if k.get("video") and k.get("kommentar"):   # YouTube: Kommentar passend zum neuesten Video
@@ -228,7 +231,9 @@ def nachricht(a: dict, datum: str, kommentare: list[dict] | None = None) -> tupl
     if a.get("videos"):
         z.append("<b>🎬 YouTube – frische Videos der letzten 24 Std.</b> (jeden Tag neue, Kommentar antippen = kopiert):")
         for v in a["videos"]:
-            z.append(f"• <a href=\"{e(v['link'])}\">{e(v['titel'][:90])}</a> – {e(v['konto'])}"
+            nr += 1
+            v["nr"] = nr
+            z.append(f"<b>{nr}.</b> <a href=\"{e(v['link'])}\">{e(v['titel'][:90])}</a> – {e(v['konto'])}"
                      + (f" · {v['aufrufe']:,} Aufrufe".replace(",", ".") if v.get("aufrufe") else ""))
             if v.get("kommentar"):
                 z.append(f"<code>{e(v['kommentar'])}</code>")
@@ -241,6 +246,8 @@ def nachricht(a: dict, datum: str, kommentare: list[dict] | None = None) -> tupl
     if not (a["x"] or a["andere"] or a.get("videos")):
         return "👥 Folge-Liste: alle Konten erledigt. Der Redaktions-Chat ergänzt neue in inhalte/folgen.yaml.", None
     z.append("Danach kommentieren: in der ersten Stunde nach einem Post, eigene Zahl, kein Link.")
+    if nr:
+        z.append("Nach dem Kommentieren „✅ Nummer“ tippen, dann sehen wir, welche Konten Follower bringen.")
     reihe = []
     if a["x"]:
         reihe.append({"text": f"✅ X: allen {len(a['x'])} folgen", "callback_data": f"f|x|{datum}"})
