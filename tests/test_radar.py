@@ -165,7 +165,7 @@ class KryptoZeileTest(unittest.TestCase):
         <pubDate>Wed, 28 Oct 2026 18:05:00 GMT</pubDate></item></channel></rss>"""
 
         def laden(url):
-            if "coindesk" in url:
+            if "cointelegraph.com/rss" in url:   # frueher CoinDesk (seit 06.11. aus)
                 return rss
             raise OSError("offline")
         with tempfile.TemporaryDirectory() as d:
@@ -187,7 +187,7 @@ class KryptoZeileTest(unittest.TestCase):
         <pubDate>Wed, 28 Oct 2026 18:05:00 GMT</pubDate></item></channel></rss>"""
 
         def laden(url):
-            if "coindesk" in url:
+            if "cointelegraph.com/rss" in url:   # frueher CoinDesk (seit 06.11. aus)
                 return rss
             raise OSError("offline")
         deutsch = dict(self.D, schlagzeile="Fed hält die Zinsen", kernsatz="Die Fed hat die Zinsen nicht verändert.",
