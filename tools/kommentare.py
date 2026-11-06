@@ -54,7 +54,10 @@ def main(posts_holen=None, schreiber=None, markt="auto", senden=None) -> int:
         _melden(g, senden, f"💬 Kommentar-Assistent: keine Vorschläge, X-Abfrage fehlgeschlagen ({str(e)[:200]}). "
                            "Häufigster Grund: X-Guthaben leer (developer.x.com → Billing).")
         return 1
-    posts = [p for p in posts if p["id"] not in stand["ids"]][: int(k.get("anzahl", 5)) + 3]
+    from social import kommentiert
+    km_p = AUSGABE / "kommentiert.json"
+    posts = kommentiert.sortieren([p for p in posts if p["id"] not in stand["ids"]],
+                                  kommentiert.laden(km_p).get("wert", {}))[: int(k.get("anzahl", 5)) + 3]
     if not posts:
         print("Keine neuen Posts.")
         _melden(g, senden, f"💬 Kommentar-Assistent: keine neuen Posts der Zielkonten in den letzten "
@@ -88,7 +91,10 @@ def main(posts_holen=None, schreiber=None, markt="auto", senden=None) -> int:
     print(text)
     if "--senden" in sys.argv or senden:
         from social import telegram
-        print("Gesendet:", telegram.an_tobias(g, text, post=senden or requests.post))
+        lauf = "x" + time.strftime("%m%d%H%M")   # Knoepfe „✅ 1..n“ (Wunsch Tobias 06.11.2026)
+        kommentiert.lauf_merken(km_p, lauf, [dict(p, plattform="X") for p in fertig])
+        print("Gesendet:", telegram.an_tobias(g, text, kommentiert.knoepfe(lauf, len(fertig)),
+                                              post=senden or requests.post))
         stand["ids"] = (stand["ids"] + [p["id"] for p in fertig])[-500:]
         AUSGABE.mkdir(parents=True, exist_ok=True)
         stand_p.write_text(json.dumps(stand))

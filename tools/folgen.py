@@ -18,6 +18,7 @@ from social import folgen  # noqa: E402
 BASIS = Path(os.environ.get("SOCIAL_GEHEIM", "/opt/volumen-social"))
 AUSGABE = Path(os.environ.get("SOCIAL_AUSGABE", BASIS / "ausgabe"))
 STAND = AUSGABE / "folgen_stand.json"
+NAMEN_PL = folgen.NAMEN
 
 
 def main(senden=None, schreiber=None, yt_holen=None, yt_schreiber=None, yt_suche=None) -> int:
@@ -84,6 +85,14 @@ def main(senden=None, schreiber=None, yt_holen=None, yt_schreiber=None, yt_suche
     for k in a["x"] + a["andere"]:   # gezeigt merken: Reihenfolge und 7-Tage-Sperre (keine Wiederholungen)
         stand.setdefault("gezeigt", {})[f"{k['plattform']}:{k['name'].lower()}"] = datum
     text, knoepfe = folgen.nachricht(a, datum, kommentare)
+    nummern = sorted((k for k in a["andere"] + list(a.get("videos") or []) if k.get("nr")), key=lambda k: k["nr"])
+    if nummern:   # Knoepfe „✅ 1..n“ (Wunsch Tobias 06.11.2026), darunter die bisherigen Knoepfe
+        from social import kommentiert
+        lauf = "f" + datum.replace("-", "")[2:]
+        kommentiert.lauf_merken(AUSGABE / "kommentiert.json", lauf, [
+            {"plattform": NAMEN_PL.get(k.get("plattform"), "YouTube"), "konto": k.get("name") or k.get("konto", ""),
+             "link": k.get("link") or folgen.LINKS[k["plattform"]].format(n=k["name"])} for k in nummern])
+        knoepfe = kommentiert.knoepfe(lauf, len(nummern), (knoepfe or {}).get("inline_keyboard"))
     print(text)
     if "--senden" in sys.argv or senden:
         from social import telegram

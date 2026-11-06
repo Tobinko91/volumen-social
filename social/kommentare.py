@@ -141,5 +141,6 @@ def nachricht(eintraege: list[dict], jetzt: float | None = None) -> str:
               f"🔗 {e(k['link'])}",
               f"<code>{e(k['kommentar'])}</code>",
               f"DE: {e(k.get('deutsch', ''))}", ""]
+    z.append("Nach dem Posten „✅ Nummer“ tippen, dann wissen wir, welche Konten uns Follower bringen.")
     z.append("Regeln: höchstens ca. 20 am Tag, nicht alle in einer Minute, bei Widerspruch einmal sachlich antworten.")
     return "\n".join(z)

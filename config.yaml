@@ -18,11 +18,13 @@ autopost:                    # Freigabe-Tor (Entscheidung Tobias 01.11.2026), De
 
 kommentare:                  # Kommentar-Assistent (Punkt D): 15:30 + 20:30 Vorschlaege an Tobias, er postet selbst
   aktiv: true
-  anzahl: 5                  # Vorschlaege je Lauf (Regel: hoechstens ca. 20 Kommentare am Tag)
+  anzahl: 8                  # Vorschlaege je Lauf, 2 Laeufe = 16 (Regel: hoechstens ca. 20 Kommentare am Tag; 06.11.: 5 -> 8)
+  eigenes_konto: whalesqueeze   # fuer die Kommentar-Bilanz (eigene Antworten auf X, sonntags 18:30)
   stunden: 3                 # nur Posts der letzten 3 Std. (Kommentare in der ersten Stunde werden am meisten gesehen)
   max_posts: 30              # gelesene Posts je X-Suche (ca. 0,005 $ je Post)
   konten: [KobeissiLetter, WatcherGuru, whale_alert, lookonchain, arkham, intocryptoverse, alicharts,
-           rektcapital, CryptoMichNL, spotonchain, glassnode, cryptoquant_com, CoinBureau, tier10k]
+           rektcapital, CryptoMichNL, spotonchain, glassnode, cryptoquant_com, CoinBureau, tier10k,
+           WuBlockchain, santimentfeed, AltcoinDaily, BitcoinMagazine, unusual_whales, DeItaone]   # 06.11.: +6 fuer 8 je Lauf
 
 folgen:                      # Folge-Liste (tools/folgen.py, 16:30 an Tobias; Wunsch 31.10.2026)
   x_pro_tag: 10              # X per Knopf (ca. 0,025 $ je Konto); X verbietet nur massenhaftes Folgen

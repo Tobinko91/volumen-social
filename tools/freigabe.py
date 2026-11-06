@@ -306,6 +306,10 @@ def schleife():
                     tg(g, "answerCallbackQuery", callback_query_id=c["id"], text="Wird erledigt …")
                     tg(g, "sendMessage", chat_id=chef, text=folge_knopf(g, teile[1], teile[2]),
                        disable_web_page_preview=True, reply_to_message_id=c["message"]["message_id"])
+                elif len(teile) == 3 and teile[0] == "k":   # „✅ kommentiert“ (06.11.2026)
+                    from social import kommentiert
+                    tg(g, "answerCallbackQuery", callback_query_id=c["id"],
+                       text=kommentiert.merken(AUSGABE / "kommentiert.json", teile[1], teile[2]))
                 elif len(teile) == 3 and teile[0] == "p":
                     tg(g, "answerCallbackQuery", callback_query_id=c["id"], text="Wird erledigt …")
                     ergebnis = posten(g, teile[2], teile[1])
