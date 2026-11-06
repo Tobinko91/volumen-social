@@ -198,3 +198,65 @@ class EinbauTest(unittest.TestCase):
             self.assertEqual(len(fotos_tg), 1)
         finally:
             shutil.rmtree(d)
+
+
+class TitelbildTest(unittest.TestCase):
+    """06.11.2026 Tobias: Hingucker auch bei „Why did it move?“ und Wal des Tages: Coin-Logo im Titelbild."""
+
+    def test_logo_nur_bei_passendem_marktwert(self):
+        from social import logos
+        rows = [{"symbol": "alt", "image": "a", "market_cap": 5e9}, {"symbol": "alt", "image": "b", "market_cap": 40e6}]
+        self.assertEqual(logos.kandidat(rows, "ALT", 35e6)["image"], "b")
+        self.assertIsNone(logos.kandidat(rows, "ALT", 500e6))   # keiner passt -> lieber kein Logo
+        self.assertIsNone(logos.kandidat(rows, "ALT", None))    # ohne Marktwert nur eindeutige Kuerzel
+        self.assertEqual(logos.kandidat(rows[:1], "ALT", None)["image"], "a")
+
+    def test_logo_holen_und_merken(self):
+        import io
+        from social import logos
+        buf = io.BytesIO()
+        Image.new("RGBA", (250, 250), (255, 200, 0, 255)).save(buf, "PNG")
+
+        class A:
+            content = buf.getvalue()
+
+            def __init__(self, j=None):
+                self.j = j
+
+            def json(self):
+                return self.j
+        aufrufe = []
+
+        def get(url, params=None, timeout=None):
+            aufrufe.append(url)
+            return A([{"symbol": "zk", "image": "https://img/zk.png", "market_cap": 1e8}]) if params else A()
+        with tempfile.TemporaryDirectory() as d:
+            p = logos.logo("ZK", 1.1e8, Path(d), get=get)
+            self.assertEqual(Image.open(p).size, (250, 250))
+            self.assertEqual(logos.logo("ZK", 1.1e8, Path(d), get=get), p)   # aus dem Speicher
+            self.assertEqual(len(aufrufe), 2)
+            self.assertIsNone(logos.logo("XX", 1e8, Path(d), get=lambda *a, **k: A([])))
+            self.assertIsNone(logos.logo("XX", 1e8, Path(d), get=lambda *a, **k: 1 / 0))   # 24 Std. gemerkt
+
+    def test_titelbild_mit_logo(self):
+        import yaml as _y
+        from social import bilder
+        cfg = _y.safe_load((Path(__file__).resolve().parent.parent / "config.yaml").read_text())
+        with tempfile.TemporaryDirectory() as d:
+            Image.new("RGBA", (300, 300), (255, 200, 0, 255)).save(Path(d) / "l.png")
+            b = {"format": "warum", "szenen": [{"typ": "warum_haken", "daten": {"base": "ZK", "chg24": 21.4,
+                                                                               "_logo": str(Path(d) / "l.png")}},
+                                              {"typ": "wal_haken", "daten": {"base": "ZK", "wal_7d": 3.2,
+                                                                             "_logo": str(Path(d) / "l.png")}}]}
+            dateien = bilder.zeichnen(b, ["a", "b"], Path(d) / "b", cfg)
+            for f in dateien:
+                img = Image.open(f).convert("RGB")
+                self.assertEqual(img.getpixel((540, 495)), (255, 200, 0))   # Logo in der Mitte oben
+
+    def test_bericht_trennt_tests(self):
+        from social import bericht
+        prot = [{"ereignis": "gepostet", "kanal": "x", "link": "a", "bildtest": "mit", "bildtest_art": "titelbild"},
+                {"ereignis": "gepostet", "kanal": "x", "link": "b", "bildtest": "mit"}]
+        x = {"a": {"aufrufe": 5}, "b": {"aufrufe": 7}}
+        self.assertEqual(len(bericht.bildtest(prot, x)["mit"]), 1)
+        self.assertEqual(bericht.bildtest(prot, x, "titelbild")["mit"], [(5, 0)])

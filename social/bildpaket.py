@@ -182,7 +182,7 @@ def aus_spec(ordner: Path, fotos_dir: Path) -> Path | None:
 
 # ---------------------------------------------------------------- A/B-Test „mit / ohne Hingucker“ (Wunsch 06.11.2026)
 
-def test_zuteilen(ordner: Path, stand_p: Path) -> str:
+def test_zuteilen(ordner: Path, stand_p: Path, test: str = "hingucker") -> str:
     """Abwechselnd 'mit'/'ohne' je Beitrag mit Hingucker (gleich viele in beiden Gruppen). Schreibt bildtest.json."""
     p = ordner / "bildtest.json"
     if p.exists():
@@ -195,7 +195,7 @@ def test_zuteilen(ordner: Path, stand_p: Path) -> str:
     s["n"] += 1
     stand_p.parent.mkdir(parents=True, exist_ok=True)
     stand_p.write_text(json.dumps(s))
-    p.write_text(json.dumps({"art": art}))
+    p.write_text(json.dumps({"art": art, "test": test}))
     return art
 
 

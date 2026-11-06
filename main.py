@@ -333,6 +333,7 @@ def wal_beitrag(args, cfg, geheim, sperr) -> int:
     txt["telegram"] = links.mit_telegram_link(txt["telegram"], "wal", ordner.name, pfad=f"/coin/{w['base'].lower()}/",
                                               lang=lang)
     f = wal.fakten(w)
+    w.setdefault("mcap", (d.coins.get(w["base"]) or {}).get("mcap"))   # fuer das passende Logo (06.11.2026)
     fehler = pruefung.pruefen([txt["x"], txt["telegram"]], {"fakten": f, "szenen": [0, 0]}, cfg, sperr,
                               erlaubt_fusszeile=True)
     wal.bild(w, cfg, ordner / "post.png", lang)
@@ -428,12 +429,29 @@ def termine_beitrag(args, cfg, geheim, sperr) -> int:
     return 1 if fehler else 0
 
 
+def titelbild(b: dict, base: str, mcap, ordner: Path, ausgabe: Path) -> str:
+    """Hingucker im Titelbild (Wunsch Tobias 06.11.2026): Coin-Logo in der ersten Szene, A/B-Test „titelbild“
+    (abwechselnd mit/ohne). Rueckgabe: Zeile fuer den Hinweis an Tobias."""
+    from social import bildpaket, logos
+    ordner.mkdir(parents=True, exist_ok=True)
+    art = bildpaket.test_zuteilen(ordner, ausgabe / "bildtest_titelbild_stand.json", "titelbild")
+    if art != "mit":
+        return "\n🖼 Bild-Test: Titelbild OHNE Logo (Vergleichsgruppe)"
+    pfad = logos.logo(base, mcap, Path(os.environ.get("SOCIAL_GEHEIM", "/opt/volumen-social")) / "logos")
+    if not pfad:
+        (ordner / "bildtest.json").unlink(missing_ok=True)   # ohne Logo zaehlt der Beitrag nicht im Test
+        return "\n🖼 Kein eindeutiges Logo gefunden, Titelbild ohne Logo (nicht im Test)"
+    b["szenen"][0]["daten"]["_logo"] = str(pfad)
+    return "\n🖼 Bild-Test: Titelbild MIT Coin-Logo"
+
+
 def wal_video(w, txt, f, cfg, geheim, sperr, ordner: Path, lang: str, senden: bool, args=None) -> list[str]:
     """'Whale of the day' als 9:16-Video (Haken mit der Wal-Zahl, Verlauf, Boersen/Holder, Folgen)."""
     b = wal.video_szenen(w, lang)
     zeilen = [sz["vorlage"] for sz in b["szenen"]]
     fehler = pruefung.pruefen(zeilen, {"fakten": f, "szenen": b["szenen"]}, cfg, sperr)
     ordner.mkdir(parents=True, exist_ok=True)
+    bild_hw = "" if getattr(args, "daten", None) else titelbild(b, w["base"], w.get("mcap"), ordner, ordner.parent)
     bild_dateien = bilder.zeichnen(dict(b, ts=time.time()), zeilen, ordner / "bilder", cfg)
     toene, dauern, tonquelle = stimme.sprechen(zeilen, ordner / "ton", cfg, stimme.schluessel(cfg, geheim))
     video.bauen(bild_dateien, toene, dauern, ordner / "video.mp4", cfg, **video.ut_formate(cfg, zeilen, b))
@@ -441,7 +459,7 @@ def wal_video(w, txt, f, cfg, geheim, sperr, ordner: Path, lang: str, senden: bo
     (ordner / "post_telegram.txt").write_text(txt["telegram"], encoding="utf-8")
     print(f"Wal-Video {w['base']}: {round(sum(dauern), 1)} s, Pruefung", fehler or "bestanden")
     if senden:
-        vorschlag(args, geheim, cfg, ordner, "🎬 Video-Vorschlag Whale of the day" + (
+        vorschlag(args, geheim, cfg, ordner, "🎬 Video-Vorschlag Whale of the day" + bild_hw + (
             "\n⚠️ " + "; ".join(fehler) if fehler else ""))
     return fehler
 
@@ -487,6 +505,7 @@ def warum_beitrag(args, cfg, geheim, sperr, kerzen_holen=None) -> int:
                                            erlaubt_fusszeile=True) if f not in fehler]
     ordner = Path(args.out) / f"{time.strftime('%Y%m%d-%H%M')}_warum_{b['base']}_video"
     ordner.mkdir(parents=True, exist_ok=True)
+    bild_hw = "" if probe else titelbild(b, b["base"], (w.get("coin") or {}).get("mcap"), ordner, Path(args.out))
     bild_dateien = bilder.zeichnen(dict(b, ts=time.time()), zeilen, ordner / "bilder", cfg)
     toene, dauern, tonquelle = stimme.sprechen(zeilen, ordner / "ton", cfg, stimme.schluessel(cfg, geheim))
     video.bauen(bild_dateien, toene, dauern, ordner / "video.mp4", cfg, **video.ut_formate(cfg, zeilen, b))
@@ -498,7 +517,7 @@ def warum_beitrag(args, cfg, geheim, sperr, kerzen_holen=None) -> int:
     print(f"Warum-Video {b['base']}: {round(sum(dauern), 1)} s, {len(zeilen)} Szenen, Stimme {tonquelle}, "
           f"Kerzen {len(kerzen)}, Pruefung", fehler or "bestanden")
     if args.senden:
-        vorschlag(args, geheim, cfg, ordner, f"🔍 Why did it move? ({b['base']})\nStimme: {tonquelle}" + (
+        vorschlag(args, geheim, cfg, ordner, f"🔍 Why did it move? ({b['base']})\nStimme: {tonquelle}" + bild_hw + (
             "\n⚠️ " + "; ".join(fehler) if fehler else ""), fehler)
     return 1 if fehler else 0
 

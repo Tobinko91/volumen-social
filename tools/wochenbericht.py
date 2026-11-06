@@ -42,7 +42,8 @@ def main(jetzt: float | None = None, x_holen=None, ig_holen=None, tg_holen=None,
     formate = bericht.auswerten(prot, x, ig)
     prot4 = bericht.protokoll_laden(AUSGABE / "protokoll.jsonl", seit=jetzt - 4 * bericht.WOCHE)
     t = bericht.text(formate, follower, alt.get("follower", {}), bericht.top_beitraege(prot, x, ig), jetzt,
-                     bericht.haltequote(prot4, ig), bericht.haltequote(prot4, ig, "haken"), bericht.bildtest(prot, x))
+                     bericht.haltequote(prot4, ig), bericht.haltequote(prot4, ig, "haken"), bericht.bildtest(prot, x),
+                     bericht.bildtest(prot, x, "titelbild"))
     print(t)
     if "--senden" in sys.argv or senden:
         (senden or telegram.text_senden)(g, t)

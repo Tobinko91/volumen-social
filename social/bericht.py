@@ -49,7 +49,8 @@ def protokollieren(datei: Path, ordner: str, ereignis: str, kanal: str | None = 
     except Exception:
         pass
     try:   # A/B-Test Hingucker-Bild (06.11.2026)
-        e["bildtest"] = json.loads((datei.parent / Path(ordner).name / "bildtest.json").read_text())["art"]
+        bt = json.loads((datei.parent / Path(ordner).name / "bildtest.json").read_text())
+        e["bildtest"], e["bildtest_art"] = bt["art"], bt.get("test", "hingucker")
     except Exception:
         pass
     with open(datei, "a", encoding="utf-8") as f:
@@ -193,11 +194,14 @@ def haltequote(protokoll: list[dict], ig: dict, nach: str = "untertitel") -> dic
     return out
 
 
-def bildtest(protokoll: list[dict], x: dict) -> dict:
-    """X-Posts mit Hingucker-Bild ('mit') gegen ohne ('ohne'): je Gruppe [(aufrufe, likes+reposts+antworten)]."""
+def bildtest(protokoll: list[dict], x: dict, test: str = "hingucker") -> dict:
+    """X-Posts mit Hingucker-Bild ('mit') gegen ohne ('ohne'): je Gruppe [(aufrufe, likes+reposts+antworten)].
+    test: 'hingucker' (2 Bilder bei Redaktions-Beitraegen) oder 'titelbild' (Coin-Logo im ersten Videobild)."""
     out: dict[str, list] = {"mit": [], "ohne": []}
     for e in protokoll:
         if e.get("ereignis") != "gepostet" or e.get("kanal") != "x" or e.get("bildtest") not in out:
+            continue
+        if e.get("bildtest_art", "hingucker") != test:
             continue
         m = x.get(e.get("link")) or {}
         if m.get("aufrufe") is None:
@@ -207,13 +211,13 @@ def bildtest(protokoll: list[dict], x: dict) -> dict:
     return out
 
 
-def bildtest_text(b: dict) -> list[str]:
+def bildtest_text(b: dict, titel: str = "A/B-Test Bilder auf X (Hingucker + Datenkarte gegen nur Datenkarte):") -> list[str]:
     def teil(xs):
         if not xs:
             return "– (n = 0)"
         return (f"Ø {_zahl(round(statistics.mean(a for a, _ in xs)))} Aufrufe, "
                 f"Ø {statistics.mean(i for _, i in xs):.1f} Interaktionen (n = {len(xs)})")
-    z = ["", "A/B-Test Bilder auf X (Hingucker + Datenkarte gegen nur Datenkarte):",
+    z = ["", titel,
          f"• mit Hingucker: {teil(b['mit'])}", f"• ohne: {teil(b['ohne'])}"]
     if len(b["mit"]) >= 5 and len(b["ohne"]) >= 5:
         a, o = statistics.mean(x for x, _ in b["mit"]), statistics.mean(x for x, _ in b["ohne"])
@@ -276,7 +280,7 @@ def _diff(jetzt, vorher) -> str:
 
 def text(formate: dict, follower: dict, follower_alt: dict, top: list[tuple[str, str, int]],
          jetzt: float | None = None, halte: dict | None = None, haken: dict | None = None,
-         bilder: dict | None = None) -> str:
+         bilder: dict | None = None, titelbild: dict | None = None) -> str:
     d = dt.datetime.fromtimestamp(jetzt or time.time())
     z = [f"📊 Wochenbericht bis {d.day}.{d.month}.{d.year}", "", "Follower (Veränderung zur Vorwoche):"]
     for k, name in (("telegram", "Telegram"), ("x", "X"), ("instagram", "Instagram"), ("tiktok", "TikTok")):
@@ -295,6 +299,8 @@ def text(formate: dict, follower: dict, follower_alt: dict, top: list[tuple[str,
         z += haltequote_text(haken, "A/B-Test Einstieg (Instagram-Reels, Ø angesehen / Videolänge):")
     if bilder is not None:
         z += bildtest_text(bilder)
+    if titelbild is not None:
+        z += bildtest_text(titelbild, "A/B-Test Titelbild der Videos auf X (mit Coin-Logo gegen ohne):")
     z += ["", "Empfehlung:"] + empfehlung(formate)
     return "\n".join(z)
 
