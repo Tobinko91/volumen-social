@@ -231,8 +231,21 @@ class AbkuerzungTest(unittest.TestCase):
         self.assertEqual(stimme.sprech_wort("~$13.52"), ["about", "14", "dollars"])   # nur ein „about“
         self.assertEqual(stimme.sprech_wort("2026"), ["2026"])
         text, laengen = stimme.sprechbar("~160M tokens, ~17× the last unlocks")
-        self.assertEqual(text, "about 160 million tokens, about 17 times the last unlocks")
+        self.assertEqual(text, "about one hundred sixty million tokens, about seventeen times the last unlocks")
         self.assertEqual(sum(laengen), len(text.split()))   # Zeitmarken passen weiter zu den Untertiteln
+
+    def test_zahlen_als_woerter(self):
+        """Flash-Modell normalisiert nicht: MEXC-Reel „May 2021“ mit Haken, „$16B“ unklar (Tobias 06.11.2026)."""
+        from social import stimme
+        t = "FinCEN cites at least $16B from May 2021 to May 2026. It takes effect 30 days after Nov 11, 13:30 UTC."
+        sp, n = stimme.sprechbar(t)
+        self.assertEqual(sp, "FinCEN cites at least sixteen billion dollars from May twenty twenty-one to May twenty "
+                             "twenty-six. It takes effect thirty days after November eleventh, thirteen thirty UTC.")
+        self.assertEqual(sum(n), len(sp.split()))
+        self.assertEqual(stimme.zahl_worte(165000), ["one", "hundred", "sixty-five", "thousand"])
+        self.assertEqual(stimme.jahr_worte(2005), ["two", "thousand", "five"])
+        self.assertEqual(stimme.sprechbar("8:05 AM, 2:00 PM, #1, -0.3%")[0],
+                         "eight oh five AM, two PM, number one, minus zero point three percent")
 
     def test_mal_zeichen_bleibt_im_sprechtext(self):
         self.assertEqual(reel.sprechtext("~160M tokens, ~17× the last unlocks"),
