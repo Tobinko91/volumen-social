@@ -216,3 +216,24 @@ class ReelAusBildTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AbkuerzungTest(unittest.TestCase):
+    """06.11.2026 Tobias (ALLO-Reel): Tilde, × und M/B/T klar sprechen (Millionen oder Milliarden?)."""
+
+    def test_sprechen(self):
+        from social import stimme
+        self.assertEqual(stimme.sprech_wort("~160M"), ["about", "160", "million"])
+        self.assertEqual(stimme.sprech_wort("~17×"), ["about", "17", "times"])
+        self.assertEqual(stimme.sprech_wort("$9.3M"), ["9.3", "million", "dollars"])
+        self.assertEqual(stimme.sprech_wort("$1.2T."), ["1.2", "trillion", "dollars."])
+        self.assertEqual(stimme.sprech_wort("-2.5B"), ["minus", "2.5", "billion"])
+        self.assertEqual(stimme.sprech_wort("~$13.52"), ["about", "14", "dollars"])   # nur ein „about“
+        self.assertEqual(stimme.sprech_wort("2026"), ["2026"])
+        text, laengen = stimme.sprechbar("~160M tokens, ~17× the last unlocks")
+        self.assertEqual(text, "about 160 million tokens, about 17 times the last unlocks")
+        self.assertEqual(sum(laengen), len(text.split()))   # Zeitmarken passen weiter zu den Untertiteln
+
+    def test_mal_zeichen_bleibt_im_sprechtext(self):
+        self.assertEqual(reel.sprechtext("~160M tokens, ~17× the last unlocks"),
+                         ["~160M tokens, ~17x the last unlocks."])

@@ -86,6 +86,23 @@ def sprech_wort(w: str) -> list[str]:
     $10,000 -> 10,000 dollars · $0.04512 -> about 0.045 dollars · 6.0x -> 6 times (Fehler 04./05.11.2026: Brian
     nuschelte Preise und sprach Nachkommastellen zu schnell)."""
     import re
+    # 06.11.2026 (ALLO-Reel): „~160M“, „~17×“ las Brian als Tilde/„M“/Zeichen, Tobias hoerte nicht, ob Millionen
+    # oder Milliarden. ~/≈ -> about, K/M/B/T -> thousand/million/billion/trillion, × -> times.
+    m = re.fullmatch(r"([(\[]?)[~≈]([^~≈].*)", w)
+    if m:
+        rest = sprech_wort(m.group(1) + m.group(2))
+        return rest if rest[0] == "about" else ["about"] + rest
+    w = w.replace("×", "x")
+    m = re.fullmatch(r"([(\[]?)([+\-−]?)(\$?)(\d[\d,]*(?:\.\d+)?)([KkMBT]n?)([.,:;!?)\]]*)", w)
+    if m:
+        vor, vz, dollar, zahl, einheit, rest = m.groups()
+        wort = {"K": "thousand", "k": "thousand", "M": "million", "B": "billion", "Bn": "billion",
+                "T": "trillion", "Mn": "million"}.get(einheit)
+        if wort:
+            r, rund = _gerundet(float(zahl.replace(",", "")))
+            minus = ["minus"] if vz in "-−" and vz else []
+            schluss = [wort, "dollars" + rest] if dollar else [wort + rest]
+            return (["about"] if rund else []) + minus + [vor + r] + schluss
     m = re.fullmatch(r"([(\[]?)\$(\d[\d,]*(?:\.\d+)?)([.,:;!?)\]]*)", w)
     if m:
         vor, zahl, rest = m.groups()

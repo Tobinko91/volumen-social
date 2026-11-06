@@ -80,7 +80,7 @@ def bauen(ordner: Path, cfg: dict, geheim: dict, kerzen_holen=None, sprechen=Non
 def sprechtext(x_text: str) -> list[str]:
     """X-Text als Sprechtext: ohne Emojis, Links, Hashtags, Cashtag-$; je Satz/Zeile eine Szene-Zeile."""
     import re
-    t = re.sub(r"https?://\S+", "", x_text)
+    t = re.sub(r"https?://\S+", "", x_text).replace("×", "x")   # × ging sonst verloren (ALLO, 06.11.2026)
     t = re.sub(r"#\w+", "", t)
     t = re.sub(r"\$([A-Za-z]{2,10})\b", r"\1", t)                      # $ZK -> ZK, $75,740 bleibt
     t = "".join(c for c in t if c.isascii() or c.isalpha() or c in "€–—’“”…·")
