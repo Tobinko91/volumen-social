@@ -58,12 +58,17 @@ def main() -> int:
     if not liste or "--senden" not in sys.argv:
         return 0
     namen = bericht.NAMEN
-    telegram.text_senden(g, f"🔔 Noch {len(liste)} Vorschläge von heute ohne Knopfdruck. Die wichtigsten:")
+    telegram.text_senden(g, f"🔔 Noch {len(liste)} Vorschläge von heute ohne Knopfdruck. Die wichtigsten, "
+                            "mit Bild bzw. Video zum Ansehen:")
     for o in liste[:3]:
         fmt = bericht.format_aus_ordner(o.name)
+        art = "🎬 Reel" if (o / "video.mp4").exists() else "🖼 Bild"
+        hinweis = f"🔔 Erinnerung · {art} · {namen.get(fmt, fmt)}"
+        # Tobias 05.11.2026: nur Text mit Knoepfen war unbrauchbar -> Bild/Video noch einmal mitschicken
+        if (o / "post.png").exists() and telegram.vorschlag_senden(g, o, hinweis):
+            continue
         requests.post(telegram.API.format(token=g["telegram_token"], methode="sendMessage"),
-                      data={"chat_id": g["telegram_chat_id"],
-                            "text": f"📌 {namen.get(fmt, fmt)}: {kopfzeile(o)}",
+                      data={"chat_id": g["telegram_chat_id"], "text": f"📌 {hinweis}: {kopfzeile(o)}",
                             "reply_markup": json.dumps(telegram.knoepfe(o.name))}, timeout=30)
     return 0
 
