@@ -27,7 +27,11 @@ kommentare:                  # Kommentar-Assistent (Punkt D): 15:30 + 20:30 Vors
 folgen:                      # Folge-Liste (tools/folgen.py, 16:30 an Tobias; Wunsch 31.10.2026)
   x_pro_tag: 10              # X per Knopf (ca. 0,025 $ je Konto); X verbietet nur massenhaftes Folgen
   andere_pro_tag: 5          # (alt) Instagram/TikTok/YouTube zusammen, wenn je_plattform fehlt
-  je_plattform: {instagram: 10, tiktok: 10, youtube: 10}   # 03.11.2026 Tobias: je 10 (neue zum Folgen, sonst nur kommentieren)
+  je_plattform: {instagram: 5, tiktok: 5, youtube: 2}   # Konten zum Folgen/Kommentieren (06.11.: weniger, dafuer ohne Wiederholung)
+  sperr_tage: 7              # 06.11.2026 Tobias: kein Konto/Link vor Ablauf von 7 Tagen erneut zeigen
+  youtube_videos: 10         # frische Videos der letzten 24 Std. aus der YouTube-Suche, nie doppelt
+  suchbegriffe: [bitcoin news, crypto news, altcoins, bitcoin price, crypto trading, ethereum news,
+                 crypto whales, solana news, bitcoin today, crypto market]
   kommentare: true           # je Instagram/TikTok/YouTube-Konto ein Kommentar zum Einkopieren (eigene Zahlen)
 
 eil:                         # Live-Eilmeldungen (tools/live.sh, alle 10 Min. rund um die Uhr, Wunsch Tobias 30.10.)

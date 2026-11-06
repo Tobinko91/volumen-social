@@ -46,11 +46,19 @@ def stand_speichern(p: Path, s: dict) -> None:
     p.write_text(json.dumps(s, ensure_ascii=False, indent=1))
 
 
+def _frei(k: dict, stand: dict, heute_d: str | None, sperr_tage: int) -> bool:
+    """06.11.2026 Tobias: keine Wiederholungen. Ein Konto erscheint erst wieder, wenn es sperr_tage nicht gezeigt wurde."""
+    zuletzt = stand.get("gezeigt", {}).get(_schluessel(k))
+    if not (zuletzt and heute_d and sperr_tage):
+        return True
+    return (dt.date.fromisoformat(heute_d) - dt.date.fromisoformat(zuletzt)).days >= sperr_tage
+
+
 def auswahl(konten: list[dict], stand: dict, n_x: int = 10, n_andere: int = 5,
-            je_plattform: dict | None = None) -> dict:
+            je_plattform: dict | None = None, heute_d: str | None = None, sperr_tage: int = 0) -> dict:
     """Naechste noch nicht erledigte Konten: bis zu n_x auf X; die anderen Plattformen entweder zusammen bis n_andere
     oder (je_plattform, seit 02.11.2026: Tobias will Instagram- und TikTok-Follower) je Plattform eine eigene Zahl."""
-    offen = [k for k in konten if _schluessel(k) not in stand.get("erledigt", {})]
+    offen = [k for k in konten if _schluessel(k) not in stand.get("erledigt", {}) and _frei(k, stand, heute_d, sperr_tage)]
     x = [k for k in offen if k["plattform"] == "x"][:n_x]
     if je_plattform:
         # Je Plattform zuerst neue Konten (folgen + kommentieren), Rest auffuellen mit Konten, denen wir schon
@@ -58,7 +66,8 @@ def auswahl(konten: list[dict], stand: dict, n_x: int = 10, n_andere: int = 5,
         andere, gezeigt = [], stand.get("gezeigt", {})
         for pl, n in je_plattform.items():
             neu = [k for k in offen if k["plattform"] == pl][:int(n)]
-            alt = sorted((k for k in konten if k["plattform"] == pl and k not in offen),
+            alt = sorted((k for k in konten if k["plattform"] == pl and k not in offen
+                          and _schluessel(k) in stand.get("erledigt", {}) and _frei(k, stand, heute_d, sperr_tage)),
                          key=lambda k: gezeigt.get(_schluessel(k), ""))[:max(0, int(n) - len(neu))]
             andere += neu + [dict(k, schon=True) for k in alt]
     else:
@@ -132,6 +141,64 @@ def youtube_neuestes(handle: str, key: str, get=requests.get, max_tage: float = 
             "likes": 0, "punkte": 0}
 
 
+def youtube_suche(key: str, begriffe: list[str], stunden: float = 24, n: int = 10, ausser: set | None = None,
+                  get=requests.get, jetzt: float | None = None) -> list[dict]:
+    """06.11.2026 Tobias: jeden Tag NEUE Videos zum Kommentieren statt immer derselben Kanaele.
+    YouTube-Suche (100 Einheiten je Begriff von 10.000 am Tag): englische Videos der letzten `stunden`, meistgesehen
+    zuerst, schon gezeigte (ausser) fallen weg."""
+    ab = dt.datetime.fromtimestamp((jetzt or time.time()) - stunden * 3600, dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    ausser, gefunden = ausser or set(), {}
+    for q in begriffe:
+        j = get(f"{YT_API}/search", params={"part": "snippet", "q": q, "type": "video", "order": "viewCount",
+                                            "publishedAfter": ab, "relevanceLanguage": "en", "maxResults": 15,
+                                            "key": key}, timeout=20).json()
+        for it in j.get("items") or []:
+            vid = (it.get("id") or {}).get("videoId")
+            sn = it.get("snippet") or {}
+            if not vid or vid in ausser or vid in gefunden:
+                continue
+            gefunden[vid] = {"id": vid, "konto": sn.get("channelTitle", ""), "titel": html.unescape(sn.get("title", "")),
+                             "text": html.unescape(f"{sn.get('title', '')}\n\n{(sn.get('description') or '')[:400]}"),
+                             "link": f"https://www.youtube.com/watch?v={vid}", "likes": 0, "punkte": 0, "aufrufe": 0}
+    if gefunden:   # Aufrufe fuer die Reihenfolge (1 Einheit je 50 Videos)
+        try:
+            j = get(f"{YT_API}/videos", params={"part": "statistics", "id": ",".join(list(gefunden)[:50]), "key": key},
+                    timeout=20).json()
+            for it in j.get("items") or []:
+                if it.get("id") in gefunden:
+                    gefunden[it["id"]]["aufrufe"] = int((it.get("statistics") or {}).get("viewCount") or 0)
+        except Exception:
+            pass
+    kanaele, out = set(), []
+    for v in sorted(gefunden.values(), key=lambda v: -v["aufrufe"]):
+        if v["konto"] in kanaele:   # je Kanal nur ein Video, damit die Liste abwechslungsreich ist
+            continue
+        kanaele.add(v["konto"])
+        out.append(v)
+    return out[:n]
+
+
+def begriffe_heute(alle: list[str], datum: str, n: int = 2) -> list[str]:
+    """Taeglich wechselnde Suchbegriffe (gleicher Tag = gleiche Begriffe)."""
+    if not alle:
+        return []
+    start = dt.date.fromisoformat(datum).toordinal() * n % len(alle)
+    return [alle[(start + i) % len(alle)] for i in range(min(n, len(alle)))]
+
+
+def suchlinks(begriffe: list[str]) -> list[tuple[str, str, str]]:
+    """TikTok/Instagram haben keine Schnittstelle fuer fremde Posts -> Links auf die Suche: zeigen jeden Tag frische Posts.
+    Rueckgabe: (Plattform, Begriff, Link)."""
+    from urllib.parse import quote
+    out = []
+    for b in begriffe:
+        out.append(("TikTok", b, f"https://www.tiktok.com/search/video?q={quote(b)}"))
+    for b in begriffe:
+        tag = "".join(ch for ch in b.lower() if ch.isalnum())
+        out.append(("Instagram", b, f"https://www.instagram.com/explore/tags/{tag}/"))
+    return out
+
+
 def nachricht(a: dict, datum: str, kommentare: list[dict] | None = None) -> tuple[str, dict | None]:
     """Text (HTML) + Knoepfe fuer den Redaktions-Bot. kommentare: je Instagram/TikTok/YouTube-Konto einer zum Kopieren."""
     e = html.escape
@@ -158,7 +225,20 @@ def nachricht(a: dict, datum: str, kommentare: list[dict] | None = None) -> tupl
             z.append("<i>Passt der neueste Post nicht zum Markt (Meme, Werbung), Kommentar weglassen. "
                      "Jeden Text nur einmal verwenden.</i>")
         z.append("")
-    if not (a["x"] or a["andere"]):
+    if a.get("videos"):
+        z.append("<b>🎬 YouTube – frische Videos der letzten 24 Std.</b> (jeden Tag neue, Kommentar antippen = kopiert):")
+        for v in a["videos"]:
+            z.append(f"• <a href=\"{e(v['link'])}\">{e(v['titel'][:90])}</a> – {e(v['konto'])}"
+                     + (f" · {v['aufrufe']:,} Aufrufe".replace(",", ".") if v.get("aufrufe") else ""))
+            if v.get("kommentar"):
+                z.append(f"<code>{e(v['kommentar'])}</code>")
+        z.append("")
+    if a.get("suche"):
+        z.append("<b>🔎 Frische Posts auf TikTok und Instagram</b> – Link öffnen, einen der neuesten Posts wählen "
+                 "(höchstens 1 Tag alt), Kommentar von oben passend zum Post anpassen:")
+        z += [f"• {pl}: <a href=\"{e(link)}\">{e(b)}</a>" for pl, b, link in a["suche"]]
+        z.append("")
+    if not (a["x"] or a["andere"] or a.get("videos")):
         return "👥 Folge-Liste: alle Konten erledigt. Der Redaktions-Chat ergänzt neue in inhalte/folgen.yaml.", None
     z.append("Danach kommentieren: in der ersten Stunde nach einem Post, eigene Zahl, kein Link.")
     reihe = []
