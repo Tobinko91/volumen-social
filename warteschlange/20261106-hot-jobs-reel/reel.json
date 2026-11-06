@@ -1,0 +1,40 @@
+{
+ "thema": "jobs-okt",
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "text": "The US just added 165,000 jobs in October. Economists expected about 60,000."
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "Unemployment fell to 4.1%. Wages rose 0.4% in one month. September was revised up to 60,000 jobs."
+  },
+  {
+   "bild": "szene_2.png",
+   "text": "Strong hiring and faster wages give the Fed less reason to wait. Its next rate decision comes on December 9."
+  },
+  {
+   "bild": "szene_3.png",
+   "chart": {
+    "base": "BTC",
+    "intervall": "5m",
+    "anzahl": 60,
+    "box": [
+     60,
+     620,
+     1020,
+     1400
+    ],
+    "titel": "BTC \u00b7 5m",
+    "ab_ts": 1793971800,
+    "ab_text": "1h before the report"
+   },
+   "text": "Compared with one hour before the report, Bitcoin is {chg}. It now trades at {bis}.",
+   "text_ohne": "Here is how Bitcoin traded around the report."
+  },
+  {
+   "bild": "szene_4.png",
+   "text": "Will the Fed hike in December? Vote in the poll and comment below."
+  }
+ ]
+}
