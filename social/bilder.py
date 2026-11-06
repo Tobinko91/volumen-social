@@ -155,16 +155,19 @@ class Leinwand:
     def wal_haken(self, w, text):
         img, d = self.neu()
         self.kopf(d)
+        dy = self.coin_logo(w.get("_logo"))
+        d = ImageDraw.Draw(self.img)
+        img = self.img
         wt = self._wt()
-        self.mitte(d, 420, wt["etikett"], _font("Bold", 46), self.f["neben"])
-        self.mitte(d, 490, f"${w['base']}", _font("Black", 150), self.f["text"])
+        self.mitte(d, 420 + dy, wt["etikett"], _font("Bold", 46), self.f["neben"])
+        self.mitte(d, 490 + dy, f"${w['base']}", _font("Black", 150 - dy // 5), self.f["text"])
         if w.get("wal_7d") is not None:
             v = w["wal_7d"]
             gross, farbe = f"{zahl(v, self.lang, True)} {'pp' if self.lang == 'en' else 'PP'}", self.farbe_wert(v)
         else:
             gross, farbe = f"{zahl(w.get('wal') or 0, self.lang)}{self.pz}", self.f["plus"]
-        self.mitte(d, 680, gross, _font("Black", 190), farbe)
-        self.mitte(d, 920, w.get("_frage") or wt["v_frage"], _font("Black", 64), self.f["amber"])
+        self.mitte(d, 680 + dy * 3 // 4, gross, _font("Black", 190 - dy // 5), farbe)
+        self.mitte(d, 920 + dy * 3 // 4, w.get("_frage") or wt["v_frage"], _font("Black", 64), self.f["amber"])
         self.untertitel(d, text)
         return img
 
@@ -362,19 +365,42 @@ class Leinwand:
         return self.img
 
     # ---------- „Why did it move?“ (04.11.2026) ----------
+    def coin_logo(self, pfad) -> int:
+        """Coin-Logo als Hingucker im Titelbild (06.11.2026, A/B-Test „titelbild“). Rueckgabe: Versatz nach unten."""
+        if not pfad:
+            return 0
+        try:
+            from PIL import Image as _I
+            lg = _I.open(pfad).convert("RGBA")
+        except Exception:
+            return 0
+        g = 210
+        lg.thumbnail((g, g))
+        rgba = self.img.convert("RGBA")
+        ring = _I.new("RGBA", rgba.size, (0, 0, 0, 0))
+        ImageDraw.Draw(ring).ellipse([(self.W - g) / 2 - 18, 372, (self.W + g) / 2 + 18, 372 + g + 36],
+                                     fill=self.f["flaeche"])
+        rgba.alpha_composite(ring)
+        rgba.alpha_composite(lg, (int((self.W - lg.width) / 2), 390 + (g - lg.height) // 2))
+        self.img.paste(rgba.convert("RGB"))
+        return 200
+
     def warum_haken(self, daten, text):
         img, d = self.neu()
         self.kopf(d)
+        dy = self.coin_logo(daten.get("_logo"))
+        d = ImageDraw.Draw(self.img)
+        img = self.img
         c = daten["chg24"]
-        self.mitte(d, 430, "WHY DID IT MOVE?", _font("Bold", 46), self.f["neben"])
-        self.mitte(d, 500, f"${daten['base']}", _font("Black", 150), self.f["text"])
+        self.mitte(d, 430 + dy, "WHY DID IT MOVE?", _font("Bold", 46), self.f["neben"])
+        self.mitte(d, 500 + dy, f"${daten['base']}", _font("Black", 150 - dy // 5), self.f["text"])
         wert = f"{zahl(c, self.lang, True)}{self.pz}"
-        self.mitte(d, 680, wert, _font("Black", 200), self.farbe_wert(c))
+        self.mitte(d, 680 + dy * 3 // 4, wert, _font("Black", 200 - dy // 5), self.farbe_wert(c))
         frage = daten.get("_frage") or "24H · HERE IS WHY ↓"
         ff = 70
         while d.textlength(frage, font=_font("Black", ff)) > self.W - 140 and ff > 40:
             ff -= 4
-        self.mitte(d, 940, frage, _font("Black", ff), self.f["amber"])
+        self.mitte(d, 940 + dy * 3 // 4, frage, _font("Black", ff), self.f["amber"])
         self.untertitel(d, text)
         return img
 

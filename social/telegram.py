@@ -133,6 +133,21 @@ def knoepfe(beitrag_id: str, reel: bool = False) -> dict:
     return {"inline_keyboard": reihen}
 
 
+def foto_an_tobias(geheim: dict, bild: Path, text: str = "", post=requests.post) -> bool:
+    """Ein Bild an Tobias (z. B. Hingucker-Vorschau). Fehler stoppen nie den Vorschlag."""
+    token, chat = geheim.get("telegram_token"), geheim.get("telegram_chat_id")
+    if not (token and chat):
+        return False
+    try:
+        with open(bild, "rb") as fh:
+            j = post(API.format(token=token, methode="sendPhoto"), data={"chat_id": chat, "caption": text[:1000]},
+                     files={"photo": (bild.name, fh, "image/png")}, timeout=60).json()
+        return bool(j.get("ok"))
+    except Exception as e:
+        print("Foto an Tobias fehlgeschlagen:", e)
+        return False
+
+
 def vorschlag_senden(geheim: dict, ordner: Path, hinweis: str = "") -> bool:
     """Bild + Telegram-Text mit Freigabe-Knoepfen, danach der X-Text zum Lesen."""
     import json
