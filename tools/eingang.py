@@ -22,6 +22,7 @@ from social import telegram  # noqa: E402
 BASIS = Path(os.environ.get("SOCIAL_GEHEIM", "/opt/volumen-social"))
 AUSGABE = Path(os.environ.get("SOCIAL_AUSGABE", BASIS / "ausgabe"))
 EINGANG = Path(os.environ.get("SOCIAL_EINGANG", BASIS / "eingang"))
+FOTOS = Path(os.environ.get("SOCIAL_FOTOS", BASIS / "fotos"))
 
 
 def pruefen(ordner: Path, cfg: dict, sperr: set[str]) -> list[str]:
@@ -48,6 +49,22 @@ def pruefen(ordner: Path, cfg: dict, sperr: set[str]) -> list[str]:
     return fehler
 
 
+def hingucker(ziel: Path, geheim: dict) -> str:
+    """hingucker.png zeichnen, Test-Gruppe zuteilen, Vorschau an Tobias. Rueckgabe: Zeile fuer den Hinweis."""
+    from social import bildpaket
+    try:
+        bild = bildpaket.aus_spec(ziel, FOTOS)
+    except Exception as e:
+        return f"\n🖼 Hingucker nicht gezeichnet ({str(e)[:100]})"
+    if not bild:
+        return "\n🖼 Kein freies Foto dieser Person in der Bibliothek, X bekommt nur das Beitragsbild."
+    art = bildpaket.test_zuteilen(ziel, AUSGABE / "bildtest_stand.json")
+    if art == "mit":
+        telegram.foto_an_tobias(geheim, bild, "🖼 Hingucker (X bekommt 2 Bilder nebeneinander)")
+        return "\n🖼 Bild-Test: MIT Hingucker auf X (Vorschau oben)"
+    return "\n🖼 Bild-Test: OHNE Hingucker (Vergleichsgruppe, X bekommt nur das Beitragsbild)"
+
+
 def main() -> int:
     cfg = yaml.safe_load((HIER / "config.yaml").read_text(encoding="utf-8"))
     gp = BASIS / "secrets.yaml"
@@ -72,7 +89,11 @@ def main() -> int:
                 ton = "\n🎙 Ton: " + reel.bauen(ziel, cfg, geheim)
             except Exception as e:
                 fehler.append(f"Reel nicht gebaut ({str(e)[:120]}), nur Bild")
-        hinweis = "💬 Aus dem Redaktions-Chat" + ton + ("\n⚠️ " + "; ".join(fehler) if fehler else "")
+        bild_hw = ""
+        if (ziel / "hingucker.json").exists():   # 06.11.2026: Hingucker-Bild fuer X (Foto/Zitat/Vergleich)
+            bild_hw = hingucker(ziel, geheim)
+        hinweis = ("💬 Aus dem Redaktions-Chat" + ton + bild_hw
+                   + ("\n⚠️ " + "; ".join(fehler) if fehler else ""))
         if not (ziel / "post.png").exists():
             gesendet = telegram.text_senden(geheim, hinweis)
         else:

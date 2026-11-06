@@ -127,16 +127,19 @@ def oauth_kopf(methode: str, url: str, geheim: dict, params: dict | None = None,
 def x_posten(geheim: dict, bild: Path, text: str) -> str:
     if not verfuegbar(geheim)["x"]:
         raise NichtEingerichtet("X-Schluessel fehlen (schluessel.py, Punkte 5-8)")
-    with open(bild, "rb") as fh:
-        r = requests.post(X_MEDIA, headers={"Authorization": oauth_kopf("POST", X_MEDIA, geheim)},
-                          files={"media": (bild.name, fh, "image/png")},
-                          data={"media_category": "tweet_image"}, timeout=120)
-    if r.status_code >= 300:
-        raise RuntimeError(f"X-Bild: {r.status_code} {r.text[:200]}")
-    j = r.json()
-    media_id = (j.get("data") or {}).get("id") or j.get("media_id_string")
+    from . import bildpaket
+    ids = []
+    for b in bildpaket.x_bilder(bild)[:4]:   # 06.11.2026: Hingucker + Datenkarte nebeneinander (A/B-Test)
+        with open(b, "rb") as fh:
+            r = requests.post(X_MEDIA, headers={"Authorization": oauth_kopf("POST", X_MEDIA, geheim)},
+                              files={"media": (b.name, fh, "image/png")},
+                              data={"media_category": "tweet_image"}, timeout=120)
+        if r.status_code >= 300:
+            raise RuntimeError(f"X-Bild: {r.status_code} {r.text[:200]}")
+        j = r.json()
+        ids.append(str((j.get("data") or {}).get("id") or j.get("media_id_string")))
     r = requests.post(X_TWEET, headers={"Authorization": oauth_kopf("POST", X_TWEET, geheim)},
-                      json={"text": text[:280], "media": {"media_ids": [str(media_id)]}}, timeout=60)
+                      json={"text": text[:280], "media": {"media_ids": ids}}, timeout=60)
     if r.status_code >= 300:
         raise RuntimeError(f"X-Post: {r.status_code} {r.text[:200]}")
     return f"https://x.com/i/web/status/{r.json()['data']['id']}"

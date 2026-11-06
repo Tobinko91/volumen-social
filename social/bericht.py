@@ -48,6 +48,10 @@ def protokollieren(datei: Path, ordner: str, ereignis: str, kanal: str | None = 
         e["video"] = json.loads((datei.parent / Path(ordner).name / "video_info.json").read_text())
     except Exception:
         pass
+    try:   # A/B-Test Hingucker-Bild (06.11.2026)
+        e["bildtest"] = json.loads((datei.parent / Path(ordner).name / "bildtest.json").read_text())["art"]
+    except Exception:
+        pass
     with open(datei, "a", encoding="utf-8") as f:
         f.write(json.dumps(e, ensure_ascii=False) + "\n")
 
@@ -189,6 +193,39 @@ def haltequote(protokoll: list[dict], ig: dict, nach: str = "untertitel") -> dic
     return out
 
 
+def bildtest(protokoll: list[dict], x: dict) -> dict:
+    """X-Posts mit Hingucker-Bild ('mit') gegen ohne ('ohne'): je Gruppe [(aufrufe, likes+reposts+antworten)]."""
+    out: dict[str, list] = {"mit": [], "ohne": []}
+    for e in protokoll:
+        if e.get("ereignis") != "gepostet" or e.get("kanal") != "x" or e.get("bildtest") not in out:
+            continue
+        m = x.get(e.get("link")) or {}
+        if m.get("aufrufe") is None:
+            continue
+        out[e["bildtest"]].append((m["aufrufe"], (m.get("likes") or 0) + (m.get("reposts") or 0)
+                                   + (m.get("antworten") or 0)))
+    return out
+
+
+def bildtest_text(b: dict) -> list[str]:
+    def teil(xs):
+        if not xs:
+            return "– (n = 0)"
+        return (f"Ø {_zahl(round(statistics.mean(a for a, _ in xs)))} Aufrufe, "
+                f"Ø {statistics.mean(i for _, i in xs):.1f} Interaktionen (n = {len(xs)})")
+    z = ["", "A/B-Test Bilder auf X (Hingucker + Datenkarte gegen nur Datenkarte):",
+         f"• mit Hingucker: {teil(b['mit'])}", f"• ohne: {teil(b['ohne'])}"]
+    if len(b["mit"]) >= 5 and len(b["ohne"]) >= 5:
+        a, o = statistics.mean(x for x, _ in b["mit"]), statistics.mean(x for x, _ in b["ohne"])
+        d = round((a / o - 1) * 100) if o else 0
+        z.append(f"→ Mit Hingucker {'+' if d >= 0 else ''}{d} % Aufrufe. "
+                 + ("Hingucker für alle Beiträge einführen." if d >= 15 else
+                    "Kein klarer Vorteil, weiter testen." if d > -15 else "Hingucker bringt nichts, wieder abschalten."))
+    else:
+        z.append("→ Noch zu wenige Posts (je mindestens 5).")
+    return z
+
+
 NAMEN_HALTE = {"wort": "Wort-Untertitel", "vorher": "vorher", "frage": "Einstieg Frage", "zahl": "Einstieg Zahl"}
 
 
@@ -238,7 +275,8 @@ def _diff(jetzt, vorher) -> str:
 
 
 def text(formate: dict, follower: dict, follower_alt: dict, top: list[tuple[str, str, int]],
-         jetzt: float | None = None, halte: dict | None = None, haken: dict | None = None) -> str:
+         jetzt: float | None = None, halte: dict | None = None, haken: dict | None = None,
+         bilder: dict | None = None) -> str:
     d = dt.datetime.fromtimestamp(jetzt or time.time())
     z = [f"📊 Wochenbericht bis {d.day}.{d.month}.{d.year}", "", "Follower (Veränderung zur Vorwoche):"]
     for k, name in (("telegram", "Telegram"), ("x", "X"), ("instagram", "Instagram"), ("tiktok", "TikTok")):
@@ -255,6 +293,8 @@ def text(formate: dict, follower: dict, follower_alt: dict, top: list[tuple[str,
         z += haltequote_text(halte)
     if haken is not None:
         z += haltequote_text(haken, "A/B-Test Einstieg (Instagram-Reels, Ø angesehen / Videolänge):")
+    if bilder is not None:
+        z += bildtest_text(bilder)
     z += ["", "Empfehlung:"] + empfehlung(formate)
     return "\n".join(z)
 

@@ -30,6 +30,9 @@ mkdir -p /opt/volumen-social/oeffentlich && chown redaktion:redaktion /opt/volum
 [ "$SLOT" = "04:00" ] && sudo -u redaktion env $UMGEBUNG python3 tools/instagram_token.py
 # TikTok-Zugang taeglich erneuern (Access-Token 24 Std., Refresh-Token laeuft sonst nach 365 Tagen ab)
 [ "$SLOT" = "04:00" ] && sudo -u redaktion env $UMGEBUNG python3 tools/tiktok_verbinden.py --erneuern
+# Foto-Bibliothek (freie Lizenzen, Wunsch Tobias 06.11.): sonntags 04:00 auffrischen, beim ersten Lauf sofort
+{ [ "$SLOT" = "04:00" ] && [ "$(date +%u)" = "7" ] || [ ! -f /opt/volumen-social/fotos/fotos.json ]; } && \
+  sudo -u redaktion env $UMGEBUNG python3 tools/fotos_holen.py --senden
 # Gesundheits-Check taeglich 09:00 (auch waehrend Pause): lief gestern alles, welche Fehler? (Wunsch Tobias 02.11.)
 [ "$SLOT" = "09:00" ] && sudo -u redaktion env $UMGEBUNG python3 tools/gesundheit.py --senden
 # Funding/Open-Interest-Verlauf stuendlich mitschreiben (fuer „Why did it move?“, Wunsch 04.11.), auch in der Pause

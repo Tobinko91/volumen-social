@@ -1,0 +1,24 @@
+# Foto-Bibliothek (Wunsch Tobias 06.11.2026): die 20 wichtigsten Personen fuer Krypto-News.
+# tools/fotos_holen.py sucht je Person 5 Fotos mit freier Lizenz auf Wikimedia Commons (gemeinfrei, CC0, CC BY,
+# CC BY-SA; nie NC/ND, nie Pressefotos) und legt sie in /opt/volumen-social/fotos/<slug>/.
+# suche = Suchbegriff auf Commons; nur Dateien, deren Titel den Nachnamen (muss) enthaelt.
+- {slug: trump, name: Donald Trump, rolle: US-Präsident, suche: "Donald Trump official", muss: Trump}
+- {slug: vance, name: JD Vance, rolle: US-Vizepräsident, suche: "JD Vance", muss: Vance}
+- {slug: warsh, name: Kevin Warsh, rolle: Fed-Chef, suche: "Kevin Warsh", muss: Warsh}
+- {slug: powell, name: Jerome Powell, rolle: früherer Fed-Chef, suche: "Jerome Powell", muss: Powell}
+- {slug: bessent, name: Scott Bessent, rolle: US-Finanzminister, suche: "Scott Bessent", muss: Bessent}
+- {slug: lutnick, name: Howard Lutnick, rolle: US-Handelsminister, suche: "Howard Lutnick", muss: Lutnick}
+- {slug: atkins, name: Paul Atkins, rolle: SEC-Chef, suche: "Paul Atkins SEC", muss: Atkins}
+- {slug: sacks, name: David Sacks, rolle: Krypto-Beauftragter Weißes Haus, suche: "David Sacks", muss: Sacks}
+- {slug: warren, name: Elizabeth Warren, rolle: Senatorin, suche: "Elizabeth Warren official", muss: Warren}
+- {slug: lummis, name: Cynthia Lummis, rolle: Senatorin, suche: "Cynthia Lummis", muss: Lummis}
+- {slug: waters, name: Maxine Waters, rolle: Abgeordnete, suche: "Maxine Waters", muss: Waters}
+- {slug: jeffries, name: Hakeem Jeffries, rolle: Demokraten-Führer Repräsentantenhaus, suche: "Hakeem Jeffries", muss: Jeffries}
+- {slug: thune, name: John Thune, rolle: Senats-Mehrheitsführer, suche: "John Thune", muss: Thune}
+- {slug: musk, name: Elon Musk, rolle: Unternehmer, suche: "Elon Musk", muss: Musk}
+- {slug: saylor, name: Michael Saylor, rolle: Strategy, suche: "Michael Saylor", muss: Saylor}
+- {slug: armstrong, name: Brian Armstrong, rolle: Coinbase-Chef, suche: "Brian Armstrong Coinbase", muss: Armstrong}
+- {slug: fink, name: Larry Fink, rolle: BlackRock-Chef, suche: "Larry Fink", muss: Fink}
+- {slug: dimon, name: Jamie Dimon, rolle: JPMorgan-Chef, suche: "Jamie Dimon", muss: Dimon}
+- {slug: xi, name: Xi Jinping, rolle: Chinas Präsident, suche: "Xi Jinping", muss: Xi}
+- {slug: putin, name: Wladimir Putin, rolle: Russlands Präsident, suche: "Vladimir Putin", muss: Putin}
