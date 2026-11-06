@@ -108,6 +108,11 @@ class ChartZahlTest(unittest.TestCase):
             self.assertIn("Chart BTC: +41.4%", q)
             reel.bauen(o, CFG, {}, kerzen_holen=lambda b, i, n: [], sprechen=sp, schneiden=lambda *a, **kw: None)
             self.assertEqual(gesehen["z"], ["Here is Bitcoin since the Senate call."])
+            spec = json.loads((o / "reel.json").read_text())
+            spec["szenen"][0]["chart"]["zahl_ab_ereignis"] = True   # Zahl erst ab Ereignis (Open 100), nicht 1h davor
+            (o / "reel.json").write_text(json.dumps(spec))
+            reel.bauen(o, CFG, {}, kerzen_holen=lambda b, i, n: k, sprechen=sp, schneiden=lambda *a, **kw: None)
+            self.assertEqual(gesehen["z"], ["Bitcoin is +40.0% since the Senate call, now $140."])
         finally:
             shutil.rmtree(o)
 
