@@ -1,0 +1,41 @@
+{
+ "thema": "allo-unlock",
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "text": "What happens when two thirds of a coin unlock at once? About 65% of ALLO's circulating supply unlocks on November 11."
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "160 million tokens go to early backers and core contributors. That is about 17 times bigger than the last monthly unlocks."
+  },
+  {
+   "bild": "szene_2.png",
+   "text": "After all 4 previous ALLO unlocks, the price fell within 7 days, by 2 to 12%. Before them: 2 pumps, 2 drops."
+  },
+  {
+   "bild": "szene_3.png",
+   "chart": {
+    "base": "ALLO",
+    "intervall": "1d",
+    "anzahl": 45,
+    "box": [
+     60,
+     620,
+     1020,
+     1400
+    ],
+    "titel": "ALLO \u00b7 1d",
+    "ab_ts": 1790812800,
+    "ab_text": "Oct 1",
+    "zahl_ab_ereignis": true
+   },
+   "text": "Since October 1, ALLO is {chg}. This unlock is much bigger than all four before.",
+   "text_ohne": "This unlock is much bigger than all four before."
+  },
+  {
+   "bild": "szene_4.png",
+   "text": "Squeeze first, or straight down? Watch November 10 and 11. Vote in the poll and comment below."
+  }
+ ]
+}
