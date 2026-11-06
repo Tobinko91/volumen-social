@@ -20,16 +20,27 @@ AUSGABE = Path(os.environ.get("SOCIAL_AUSGABE", BASIS / "ausgabe"))
 STAND = AUSGABE / "folgen_stand.json"
 
 
-def main(senden=None, schreiber=None, yt_holen=None, yt_schreiber=None) -> int:
+def main(senden=None, schreiber=None, yt_holen=None, yt_schreiber=None, yt_suche=None) -> int:
     cfg = yaml.safe_load((Path(__file__).resolve().parent.parent / "config.yaml").read_text(encoding="utf-8"))
     f = cfg.get("folgen") or {}
     stand = folgen.stand_laden(STAND)
+    datum = folgen.heute()
     a = folgen.auswahl(folgen.liste(), stand, int(f.get("x_pro_tag", 10)), int(f.get("andere_pro_tag", 5)),
-                       f.get("je_plattform"))
+                       f.get("je_plattform"), datum, int(f.get("sperr_tage", 7)))
+    begriffe = folgen.begriffe_heute(f.get("suchbegriffe") or [], datum)
+    a["suche"] = folgen.suchlinks(begriffe)
     gp = BASIS / "secrets.yaml"
     g = (yaml.safe_load(gp.read_text()) if gp.exists() else {}) or {}
     kommentare = []
-    if f.get("kommentare", True) and a["andere"]:   # Wunsch Tobias 02.11.: Kommentare zum Einkopieren
+    # 06.11.2026 Tobias: jeden Tag NEUE Links. YouTube: frische Videos aus der Suche statt immer derselben Kanaele
+    if g.get("youtube_api_key") and int(f.get("youtube_videos", 10)):
+        try:
+            a["videos"] = (yt_suche or folgen.youtube_suche)(g["youtube_api_key"], begriffe or ["bitcoin"], 24,
+                                                             int(f.get("youtube_videos", 10)),
+                                                             set(stand.get("videos", [])))
+        except Exception as e:
+            print("YouTube-Suche fehlgeschlagen:", e)
+    if f.get("kommentare", True) and (a["andere"] or a.get("videos")):   # Wunsch Tobias 02.11.: Kommentare zum Einkopieren
         try:
             from social import daten
             from social import kommentare as km
@@ -39,7 +50,7 @@ def main(senden=None, schreiber=None, yt_holen=None, yt_schreiber=None) -> int:
                 markt = None   # ohne Marktdaten trotzdem Kommentare zum aktuellen Anlass
             fakten = dict(km.fakten_aus_markt(markt), current_events=km.anlaesse())
             # YouTube: neuestes Video lesen und den Kommentar genau dazu schreiben (wie bei X)
-            videos = []
+            videos = list(a.get("videos") or [])
             if g.get("youtube_api_key"):
                 for k in a["andere"]:
                     if k["plattform"] == "youtube":
@@ -58,18 +69,19 @@ def main(senden=None, schreiber=None, yt_holen=None, yt_schreiber=None) -> int:
                     for vor in vs:
                         v = nach_id.get(str(vor.get("id")))
                         if v and not km.pruefen(vor["text"], v["text"], fakten, cfg, set()):
-                            next(k for k in a["andere"] if k.get("video") is v)["kommentar"] = vor["text"]
+                            ziel = next((k for k in a["andere"] if k.get("video") is v), v)
+                            ziel["kommentar"] = vor["text"]
                 except Exception as e:
                     print("YouTube-Kommentare nicht geschrieben:", e)
             rest = sum(1 for k in a["andere"] if not k.get("kommentar"))
             kommentare = (schreiber or folgen.kommentare_schreiben)(rest, fakten, cfg, g.get("anthropic_api_key"))
         except Exception as e:
             print("Kommentare für die Folge-Liste nicht geschrieben:", e)
-    datum = folgen.heute()
     stand.setdefault("heute", {})[datum] = {"x": [k["name"] for k in a["x"]],
                                            "andere": [f"{k['plattform']}:{k['name'].lower()}" for k in a["andere"]]}
     stand["heute"] = dict(list(stand["heute"].items())[-14:])
-    for k in a["andere"]:   # fuer die Reihenfolge der Kommentar-Konten
+    stand["videos"] = (stand.get("videos", []) + [v["id"] for v in a.get("videos") or []])[-2000:]
+    for k in a["x"] + a["andere"]:   # gezeigt merken: Reihenfolge und 7-Tage-Sperre (keine Wiederholungen)
         stand.setdefault("gezeigt", {})[f"{k['plattform']}:{k['name'].lower()}"] = datum
     text, knoepfe = folgen.nachricht(a, datum, kommentare)
     print(text)

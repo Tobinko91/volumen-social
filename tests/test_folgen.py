@@ -109,7 +109,7 @@ class KnopfTest(unittest.TestCase):
                 self.assertEqual(len(stand["heute"][datum]["x"]), 10)
                 self.assertIn("erledigt", freigabe.folge_knopf({}, "ok", datum))
                 stand = folgen.stand_laden(Path(d) / "folgen_stand.json")
-                self.assertEqual(len(stand["erledigt"]), 30)   # je 10 Instagram, TikTok, YouTube (03.11.2026)
+                self.assertEqual(len(stand["erledigt"]), 12)   # je 5 Instagram, TikTok + 2 YouTube (06.11.2026)
                 self.assertIn("X-Schlüssel fehlen", freigabe.folge_knopf({}, "x", datum))
                 self.assertIn("zu alt", freigabe.folge_knopf({}, "x", "2020-01-01"))
             finally:
@@ -242,3 +242,49 @@ class LangeNachrichtTest(unittest.TestCase):
         self.assertTrue(all(len(d["text"]) <= 4096 for d in gesehen))
         self.assertIn("reply_markup", gesehen[-1])
         self.assertNotIn("reply_markup", gesehen[0])
+
+
+class KeineWiederholungTest(unittest.TestCase):
+    """06.11.2026 Tobias: Links von gestern kamen heute wieder. Jetzt: 7 Tage Sperre, YouTube jeden Tag neue Videos."""
+
+    def test_konto_erst_nach_7_tagen_wieder(self):
+        konten = [{"plattform": "tiktok", "name": f"t{i}"} for i in range(3)] + [{"plattform": "x", "name": "a"}]
+        stand = {"erledigt": {"tiktok:t0": 1, "tiktok:t1": 1},
+                 "gezeigt": {"tiktok:t0": "2026-11-05", "tiktok:t1": "2026-10-29", "tiktok:t2": "2026-11-05",
+                             "x:a": "2026-11-05"}}
+        a = folgen.auswahl(konten, stand, 5, 0, {"tiktok": 3}, "2026-11-06", 7)
+        self.assertEqual([k["name"] for k in a["andere"]], ["t1"])   # t0/t2 gestern gezeigt, t1 vor 8 Tagen
+        self.assertEqual(a["x"], [])
+
+    def test_youtube_suche_neu_und_je_kanal_eins(self):
+        class A:
+            def __init__(self, j):
+                self.j = j
+
+            def json(self):
+                return self.j
+
+        def get(url, params=None, timeout=None):
+            if url.endswith("/search"):
+                self.assertEqual(params["order"], "viewCount")
+                return A({"items": [
+                    {"id": {"videoId": "v1"}, "snippet": {"title": "BTC after the jobs report", "channelTitle": "K1"}},
+                    {"id": {"videoId": "v2"}, "snippet": {"title": "Second from K1", "channelTitle": "K1"}},
+                    {"id": {"videoId": "v3"}, "snippet": {"title": "Gestern gezeigt", "channelTitle": "K3"}},
+                    {"id": {"videoId": "v4"}, "snippet": {"title": "Altcoins &amp; whales", "channelTitle": "K4"}}]})
+            return A({"items": [{"id": "v1", "statistics": {"viewCount": "500"}},
+                                {"id": "v2", "statistics": {"viewCount": "900"}},
+                                {"id": "v4", "statistics": {"viewCount": "2000"}}]})
+        v = folgen.youtube_suche("k", ["bitcoin news"], ausser={"v3"}, get=get)
+        self.assertEqual([x["id"] for x in v], ["v4", "v2"])   # meistgesehen zuerst, K1 nur einmal, v3 schon gezeigt
+        self.assertEqual(v[0]["titel"], "Altcoins & whales")
+        a = {"x": [], "andere": [], "videos": v, "suche": folgen.suchlinks(["bitcoin news"])}
+        text, _ = folgen.nachricht(a, "2026-11-06")
+        self.assertIn("watch?v=v4", text)
+        self.assertIn("tiktok.com/search/video?q=bitcoin%20news", text)
+        self.assertIn("instagram.com/explore/tags/bitcoinnews/", text)
+
+    def test_begriffe_wechseln_taeglich(self):
+        alle = ["a", "b", "c", "d", "e"]
+        self.assertNotEqual(folgen.begriffe_heute(alle, "2026-11-06"), folgen.begriffe_heute(alle, "2026-11-07"))
+        self.assertEqual(len(folgen.begriffe_heute(alle, "2026-11-06")), 2)
