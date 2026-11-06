@@ -33,6 +33,10 @@ def chart_szene(ordner: Path, s: dict, thema: str, kerzen_holen) -> tuple[Path, 
     if len(k) < 12:
         raise ValueError(f"zu wenige Kerzen ({len(k)})")
     von, bis = k[0]["o"], k[-1]["c"]
+    if c.get("ab_ts") and c.get("zahl_ab_ereignis"):   # 06.11.: Chart zeigt die Stunde davor, Zahl erst ab Ereignis
+        nach = [x for x in k if x["t"] >= int(c["ab_ts"]) * 1000]
+        if nach:
+            von = nach[0]["o"]
     chg = (bis / von - 1) * 100
     img = Image.open(ordner / s["bild"]).convert("RGBA")
     th = design.thema_waehlen("markt", thema)

@@ -19,13 +19,8 @@ H=$(date +%H); M=$(date +%M)
 SLOT="$H:$([ "$M" -lt 30 ] && echo 00 || echo 30)"
 cd /opt/volumen-social/app || exit 1
 UMGEBUNG="TZ=Europe/Berlin SOCIAL_GEHEIM=/opt/volumen-social SOCIAL_AUSGABE=/opt/volumen-social/ausgabe"
-# Beitraege aus dem Redaktions-Chat (Branch warteschlange) holen und als Vorschlag schicken
-if git fetch -q origin warteschlange 2>/dev/null; then
-  rm -rf /opt/volumen-social/eingang && mkdir -p /opt/volumen-social/eingang
-  git archive origin/warteschlange warteschlange 2>/dev/null | tar -x -C /opt/volumen-social/eingang --strip-components=1
-  chmod -R a+rX /opt/volumen-social/eingang
-  sudo -u redaktion env $UMGEBUNG python3 tools/eingang.py
-fi
+# Beitraege aus dem Redaktions-Chat (Branch warteschlange) holen und als Vorschlag schicken (auch alle 10 Min. aus live.sh)
+bash tools/eingang.sh
 # Musik-Ordner (Tobias schickt Stuecke an den Redaktions-Bot, der speichert sie hier)
 mkdir -p /opt/volumen-social/musik && chown redaktion:redaktion /opt/volumen-social/musik
 # Oeffentlicher Bild-Ordner fuer Instagram (Website liefert ihn unter /medien/ aus, nur fuer Minuten befuellt)
