@@ -97,13 +97,14 @@ def video_szenen(t: dict, lang: str = "en", echt: dict | None = None, tag=None) 
     """S28 Lern-Video: Haken (Titel als Frage/Aussage + grosse Zahl), je Punkt eine Szene, Folgen.
     Gleiche Saetze und Fakten wie der Bild-Beitrag, darum gilt dieselbe Zahlen-Pruefung."""
     from .sprache import T as _T
-    n = len(t["punkte"])
+    punkte = t.get("video_punkte") or t["punkte"]   # 08.11.2026: kurze Saetze fuer 12-15-Sekunden-Reels
+    n = len(punkte)
     from .sprache import haken_art
     art = haken_art(tag) if (lang == "en" and t.get("haken")) else "zahl"   # A/B-Test des Einstiegs (04.11.2026)
     frage = t["haken"] if art == "frage" else None
     szenen = [{"typ": "lern_haken", "haken": art, "daten": dict(t, _echt=echt, _frage=frage),
                "vorlage": frage or t["titel"].rstrip(".") + "."}]
-    for i, p in enumerate(t["punkte"], 1):
+    for i, p in enumerate(punkte, 1):
         szenen.append({"typ": "lern_punkt", "daten": {"nr": i, "von": n, "satz": p,
                                                       "ersatz": "Takeaway" if lang == "en" else "Merke",
                                                       "thema": t, "schritt": i, "echt": echt},   # Grafik je Punkt
@@ -184,6 +185,15 @@ def _grafik(img, t, th, box, schritt=None):
     elif i == "fake-guru":
         g.liste_x(img, th, box, ["never shows losses", "promises fixed returns", "rushes you",
                                  "sells expensive groups", "hides own positions"])
+    elif t.get("grafik", {}).get("art") == "balken":   # 08.11.2026: Grafik-Daten direkt in wissen.yaml
+        gr = t["grafik"]
+        farben = {"akzent": th.akzent, "akzent2": th.akzent2, "minus": th.minus}
+        reihen = [{"label": r[0], "wert": r[1], "text": r[2], "farbe": farben.get(r[3], th.akzent)} for r in gr["reihen"]]
+        n = len(reihen)
+        g.balken(img, th, box, reihen, titel=gr.get("titel"),
+                 sichtbar=None if sb is None else max(1, round(n * sb / 3)))
+    elif t.get("grafik", {}).get("art") == "liste":
+        g.liste_x(img, th, box, t["grafik"]["punkte"])
     else:
         return False
     _ = MINUS
@@ -240,6 +250,15 @@ def _grafik_de(img, t, th, box):
     elif i == "fake-guru":
         g.liste_x(img, th, box, ["zeigt nie Verluste", "verspricht feste Renditen", "drängt zur Eile",
                                  "verkauft teure Gruppen", "verschweigt eigene Positionen"])
+    elif t.get("grafik", {}).get("art") == "balken":   # 08.11.2026: Grafik-Daten direkt in wissen.yaml
+        gr = t["grafik"]
+        farben = {"akzent": th.akzent, "akzent2": th.akzent2, "minus": th.minus}
+        reihen = [{"label": r[0], "wert": r[1], "text": r[2], "farbe": farben.get(r[3], th.akzent)} for r in gr["reihen"]]
+        n = len(reihen)
+        g.balken(img, th, box, reihen, titel=gr.get("titel"),
+                 sichtbar=None if sb is None else max(1, round(n * sb / 3)))
+    elif t.get("grafik", {}).get("art") == "liste":
+        g.liste_x(img, th, box, t["grafik"]["punkte"])
     else:
         return False
     _ = MINUS
