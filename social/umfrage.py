@@ -37,10 +37,10 @@ def telegram(geheim: dict, u: dict, post=requests.post) -> str:
 
 
 def x(geheim: dict, u: dict, antwort_auf_link: str, post=requests.post) -> str:
-    from .kanaele import X_TWEET, oauth_kopf
+    from .kanaele import X_TWEET, ein_cashtag, oauth_kopf
     tweet_id = antwort_auf_link.rstrip("/").split("/")[-1]
     r = post(X_TWEET, headers={"Authorization": oauth_kopf("POST", X_TWEET, geheim)},
-             json={"text": u["frage"], "reply": {"in_reply_to_tweet_id": tweet_id},
+             json={"text": ein_cashtag(u["frage"]), "reply": {"in_reply_to_tweet_id": tweet_id},
                    "poll": {"options": u["optionen"], "duration_minutes": max(5, min(10080, u["stunden"] * 60))}},
              timeout=60)
     if r.status_code >= 300:

@@ -216,3 +216,14 @@ class ReelAusBildTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class EinCashtagTest(unittest.TestCase):
+    """08.11.2026: X lehnte das Wal-Karussell ab („Posts are limited to a maximum of one cashtag“)."""
+
+    def test_nur_erster_cashtag(self):
+        from social import kanaele
+        t = "🐋 Whales of the week: $ZK +6 pp, $BAT +3 pp, $ALLO. BTC at $75,740, $1.2B moved. $zk again"
+        self.assertEqual(kanaele.ein_cashtag(t),
+                         "🐋 Whales of the week: $ZK +6 pp, BAT +3 pp, ALLO. BTC at $75,740, $1.2B moved. zk again")
+        self.assertEqual(kanaele.ein_cashtag("Only $SOL here"), "Only $SOL here")
