@@ -133,11 +133,18 @@ def bauen(bilder: list[Path], toene: list[Path], dauern: list[float], ziel: Path
             woerter = json.loads(marken.read_text()) if marken.exists() else None
             ut = untertitel(texte[i], d, tmp, i, cfg, woerter, untertitel_y)
         eingaenge, kette, letzt = [], f"[0:v]scale={W*2}:{H*2},{zoom}[z0]", "z0"
+        bild_ein = ["-loop", "1", "-i", str(b)]
+        if isinstance(b, (list, tuple)):   # 09.11.2026 (S27): Bildfolge [(png, Sekunden), ...] statt Standbild
+            folge = tmp / f"folge_{i:02d}.txt"
+            folge.write_text("".join(f"file '{Path(png).resolve()}'\nduration {sek:.3f}\n" for png, sek in b)
+                             + f"file '{Path(b[-1][0]).resolve()}'\n")
+            bild_ein = ["-f", "concat", "-safe", "0", "-i", str(folge)]
+            kette = f"[0:v]fps={fps},scale={W}:{H},tpad=stop_mode=clone:stop_duration=120[z0]"
         for k, (png, a, e) in enumerate(ut):
             eingaenge += ["-i", str(png)]
             kette += f";[{letzt}][{k + 2}:v]overlay=0:0:enable='between(t,{a:.2f},{e:.2f})'[z{k + 1}]"
             letzt = f"z{k + 1}"
-        _ff("-loop", "1", "-i", str(b), "-i", str(t), *eingaenge,
+        _ff(*bild_ein, "-i", str(t), *eingaenge,
             "-filter_complex", f"{kette};[{letzt}]format=yuv420p[v];[1:a]apad,aresample=44100[a]",
             "-map", "[v]", "-map", "[a]", "-t", f"{d:.3f}",
             "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-c:a", "aac", "-b:a", "160k",
