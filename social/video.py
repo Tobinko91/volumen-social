@@ -127,17 +127,34 @@ def bauen(bilder: list[Path], toene: list[Path], dauern: list[float], ziel: Path
         out = tmp / f"teil_{i:02d}.mp4"
         # langsamer Zoom (2 %) gegen "Standbild"-Wirkung
         zoom = f"zoompan=z='1+0.02*on/{n}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={n}:s={W}x{H}:fps={fps}"
+        if i == 0:   # 08.11.2026 (Haltequote 8 %): Sekunde 1 bewegt sich, schneller Zoom von 112 % auf 100 %
+            k = max(1, round(0.7 * fps))
+            zoom = (f"zoompan=z='if(lt(on,{k}),1.12-0.12*on/{k},1+0.02*(on-{k})/{n})':x='iw/2-(iw/zoom/2)':"
+                    f"y='ih/2-(ih/zoom/2)':d={n}:s={W}x{H}:fps={fps}")
+        fokus_p = Path(b).with_suffix(".fokus.json") if not isinstance(b, (list, tuple)) else None
+        if fokus_p and fokus_p.exists():   # 10.11.2026 (S24/S28): langsamer Zoom auf den hellsten Cluster
+            fx, fy = json.loads(fokus_p.read_text())["fokus"]
+            fx, fy = fx * 2, fy * 2   # Bild wird vor dem Zoom auf doppelte Groesse skaliert
+            zoom = (f"zoompan=z='1+0.30*on/{n}':x='max(0,min(iw-iw/zoom,{fx}-iw/zoom/2))':"
+                    f"y='max(0,min(ih-ih/zoom,{fy}-ih/zoom/2))':d={n}:s={W}x{H}:fps={fps}")
         ut = []
         if texte and i < len(texte) and texte[i]:
             marken = Path(t).with_suffix(".json")
             woerter = json.loads(marken.read_text()) if marken.exists() else None
             ut = untertitel(texte[i], d, tmp, i, cfg, woerter, untertitel_y)
         eingaenge, kette, letzt = [], f"[0:v]scale={W*2}:{H*2},{zoom}[z0]", "z0"
+        bild_ein = ["-loop", "1", "-i", str(b)]
+        if isinstance(b, (list, tuple)):   # 09.11.2026 (S27): Bildfolge [(png, Sekunden), ...] statt Standbild
+            folge = tmp / f"folge_{i:02d}.txt"
+            folge.write_text("".join(f"file '{Path(png).resolve()}'\nduration {sek:.3f}\n" for png, sek in b)
+                             + f"file '{Path(b[-1][0]).resolve()}'\n")
+            bild_ein = ["-f", "concat", "-safe", "0", "-i", str(folge)]
+            kette = f"[0:v]fps={fps},scale={W}:{H},tpad=stop_mode=clone:stop_duration=120[z0]"
         for k, (png, a, e) in enumerate(ut):
             eingaenge += ["-i", str(png)]
             kette += f";[{letzt}][{k + 2}:v]overlay=0:0:enable='between(t,{a:.2f},{e:.2f})'[z{k + 1}]"
             letzt = f"z{k + 1}"
-        _ff("-loop", "1", "-i", str(b), "-i", str(t), *eingaenge,
+        _ff(*bild_ein, "-i", str(t), *eingaenge,
             "-filter_complex", f"{kette};[{letzt}]format=yuv420p[v];[1:a]apad,aresample=44100[a]",
             "-map", "[v]", "-map", "[a]", "-t", f"{d:.3f}",
             "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-c:a", "aac", "-b:a", "160k",

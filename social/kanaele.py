@@ -124,6 +124,18 @@ def oauth_kopf(methode: str, url: str, geheim: dict, params: dict | None = None,
     return "OAuth " + ", ".join(f'{_q(k)}="{_q(v)}"' for k, v in sorted(o.items()))
 
 
+def ein_cashtag(text: str) -> str:
+    """X erlaubt seit Nov. 2026 nur EINEN Cashtag je Post (Fehler 403 beim Wal-Karussell 08.11.2026).
+    Der erste $COIN bleibt, alle weiteren verlieren das $ (Dollarbetraege wie $75,740 bleiben unberuehrt)."""
+    import re
+    gesehen = []
+
+    def ersetzen(m):
+        gesehen.append(m.group(1))
+        return m.group(0) if len(gesehen) == 1 else m.group(1)
+    return re.sub(r"(?<![\w$])\$([A-Za-z][A-Za-z0-9]{1,14})\b", ersetzen, text)
+
+
 def x_posten(geheim: dict, bild: Path, text: str) -> str:
     if not verfuegbar(geheim)["x"]:
         raise NichtEingerichtet("X-Schluessel fehlen (schluessel.py, Punkte 5-8)")
@@ -139,7 +151,7 @@ def x_posten(geheim: dict, bild: Path, text: str) -> str:
         j = r.json()
         ids.append(str((j.get("data") or {}).get("id") or j.get("media_id_string")))
     r = requests.post(X_TWEET, headers={"Authorization": oauth_kopf("POST", X_TWEET, geheim)},
-                      json={"text": text[:280], "media": {"media_ids": ids}}, timeout=60)
+                      json={"text": ein_cashtag(text)[:280], "media": {"media_ids": ids}}, timeout=60)
     if r.status_code >= 300:
         raise RuntimeError(f"X-Post: {r.status_code} {r.text[:200]}")
     return f"https://x.com/i/web/status/{r.json()['data']['id']}"

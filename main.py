@@ -63,7 +63,7 @@ def lade_sperrliste() -> set[str]:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("format", choices=sorted(formate.FORMATE) + ["wissen", "news", "coincheck", "wal", "karussell", "termine", "willkommen", "warum"])
+    ap.add_argument("format", choices=sorted(formate.FORMATE) + ["wissen", "news", "coincheck", "wal", "karussell", "termine", "willkommen", "warum", "formation", "lehrbuch", "liquiditaet", "liqmap", "signallab"])
     ap.add_argument("--thema", help="nur bei wissen: bestimmtes Thema (id aus inhalte/wissen.yaml)")
     ap.add_argument("--eil", action="store_true", help="nur bei news: nur senden, wenn es eine Eilmeldung gibt")
     ap.add_argument("--nur-mit-stimme", action="store_true", help="nur bei willkommen: ohne Stimme nicht senden")
@@ -103,6 +103,16 @@ def main() -> int:
         return warum_beitrag(args, cfg, geheim, sperr)
     if args.format == "willkommen":
         return willkommen_video(args, cfg, geheim, sperr)
+    if args.format == "formation":
+        return formation_video(args, cfg, geheim, sperr)
+    if args.format == "lehrbuch":
+        return lehrbuch_video(args, cfg, geheim, sperr)
+    if args.format == "liquiditaet":
+        return liquiditaet_beitrag(args, cfg, geheim, sperr)
+    if args.format == "liqmap":
+        return liqmap_beitrag(args, cfg, geheim, sperr)
+    if args.format == "signallab":
+        return signallab_beitrag(args, cfg, geheim, sperr)
     probe = bool(args.daten)
     d = daten.laden(args.daten or cfg["daten"]["dir"],
                     None if probe else cfg["daten"]["max_alter_min"])
@@ -198,6 +208,180 @@ def wissen_beitrag(args, cfg, geheim, sperr) -> int:
     if not args.thema:
         wissen.merken(stand, t["id"], time.time())
     return 1 if fehler else 0
+
+
+def formation_video(args, cfg, geheim, sperr) -> int:
+    """S27 „Formation des Tages: BUY or SELL?“ (Wunsch Tobias 09.11.2026), Daten muster_des_tages.json vom Bot."""
+    import html as _h
+    from social import formation
+    d = formation.laden(args.daten or cfg["daten"]["dir"])
+    if not d:
+        print("Formation: keine (vollstaendigen) Daten in muster_des_tages.json")
+        return 0
+    if d["coin"].upper() in {c.upper() for c in sperr}:
+        print("Formation: Coin auf der Sperrliste, kein Video")
+        return 0
+    stand = Path(args.out) / "formation_stand.json"
+    try:
+        schon = json.loads(stand.read_text())
+    except Exception:
+        schon = {}
+    tag = d.get("datum") or time.strftime("%Y-%m-%d")
+    if not args.daten and schon.get("tag") == tag:
+        print("Formation: heute schon gebaut")
+        return 0
+    ordner = Path(args.out) / f"{time.strftime('%Y%m%d-%H%M')}_formation_{d['coin']}_video"
+    pfad, quelle, tx = formation.video(d, ordner, cfg, geheim)
+    (ordner / "post_x.txt").write_text(tx["x"], encoding="utf-8")
+    e = lambda x: _h.escape(x, quote=False)
+    (ordner / "post_telegram.txt").write_text(
+        "📊 <b>BUY or SELL?</b>\n\n" + "\n".join(e(z) for z in tx["zeilen"]) + "\n\n<i>Not financial advice.</i>",
+        encoding="utf-8")
+    if not args.daten:
+        stand.write_text(json.dumps({"tag": tag}))
+    print(f"Formation {d['muster']} auf {d['coin']}: Stimme {quelle}")
+    if args.senden:
+        vorschlag(args, geheim, cfg, ordner, f"📊 Formation des Tages: {d['name_en']} auf {d['coin']}\nStimme: {quelle}"
+                  + ("" if d.get("statistik") else "\n⚠️ Ohne Trefferquote: einmal tools/muster_statistik.py im "
+                     "Bot ausfuehren (Szene „But here's the catch“ fehlt sonst)."))
+    return 0
+
+
+def lehrbuch_video(args, cfg, geheim, sperr) -> int:
+    """S29 „The textbook is WRONG“ (Wunsch Tobias 10.11.2026): 1 Folge pro Woche statt S27 an diesem Tag.
+    Rueckgabe 3 = keine Folge gebaut (plan.sh baut dann die Formation des Tages)."""
+    import html as _h
+    from social import lehrbuch
+    lc = cfg.get("lehrbuch") or {}
+    if not lc.get("aktiv", True):
+        return 3
+    daten = lehrbuch.laden(args.daten or cfg["daten"]["dir"])
+    stand_p = Path(args.out) / "lehrbuch_stand.json"
+    try:
+        stand = json.loads(stand_p.read_text())
+    except Exception:
+        stand = {}
+    woche = time.strftime("%G-W%V")
+    if not args.daten and stand.get("woche") == woche:
+        print("Lehrbuch: diese Woche schon gebaut")
+        return 3
+    m = lehrbuch.naechste(daten, stand.get("erledigt", []), lc.get("reihe"))
+    if not m:
+        print("Lehrbuch: keine Folge (Reihe fertig oder Beispiel fehlt noch, lehrbuch_falsch vom Bot 9.38)")
+        return 3
+    if m == lehrbuch.ABSCHLUSS:
+        coin, titel = "", "Abschluss: der Hammer"
+    else:
+        e = daten[m]
+        if e["coin"].upper() in {c.upper() for c in sperr}:
+            print("Lehrbuch: Coin auf der Sperrliste")
+            return 3
+        coin, titel = e["coin"], f"{e['name_en']} auf {e['coin']}"
+    ordner = Path(args.out) / f"{time.strftime('%Y%m%d-%H%M')}_lehrbuch_{m}_video"
+    if m == lehrbuch.ABSCHLUSS:
+        folgen, tx = lehrbuch.abschluss_szenen(daten["_statistik"][m], ordner / "bilder")
+    else:
+        folgen, tx = lehrbuch.szenen(daten[m], ordner / "bilder")
+    pfad, quelle = lehrbuch.video(folgen, tx, ordner, cfg, geheim)
+    (ordner / "post_x.txt").write_text(tx["x"], encoding="utf-8")
+    e_ = lambda x: _h.escape(x, quote=False)
+    (ordner / "post_telegram.txt").write_text(
+        "📚 <b>The textbook is WRONG</b>\n\n" + "\n".join(e_(z) for z in tx["zeilen"])
+        + "\n\n<i>Not financial advice.</i>", encoding="utf-8")
+    if not args.daten:
+        stand_p.write_text(json.dumps({"woche": woche, "erledigt": stand.get("erledigt", []) + [m]}))
+    print(f"Lehrbuch {m} {coin}: Stimme {quelle}")
+    if args.senden:
+        vorschlag(args, geheim, cfg, ordner, f"📚 The textbook is WRONG: {titel}\nStimme: {quelle}")
+    return 0
+
+
+def liquiditaet_beitrag(args, cfg, geheim, sperr) -> int:
+    """S24 (Wunsch Tobias 06.11.2026): Top- und Flop-Coin des Tages mit geschaetzten Liquiditaetszonen + Heatmap,
+    je Bild (4:5) und Reel (9:16). Daten: liquiditaet.json vom Bot."""
+    from social import liquiditaet
+    if not (cfg.get("liquiditaet") or {}).get("aktiv", True):
+        return 0
+    d = liquiditaet.laden(Path(args.daten or cfg["daten"]["dir"]))
+    gesperrt = {c.upper() for c in sperr}
+    for rolle in ("top", "flop"):
+        e = next((c for c in d.get("coins") or [] if c.get("rolle") == rolle and c["base"].upper() not in gesperrt
+                  and c.get("kerzen")), None)
+        if not e:
+            continue
+        ordner = Path(args.out) / f"{time.strftime('%Y%m%d-%H%M')}_liquiditaet_{e['base']}"
+        b = liquiditaet.beitrag(e, ordner, cfg, d.get("pruefung"))
+        print(f"Liquiditaet {rolle} {e['base']}: X {len(b['x'])} Zeichen, Heatmap {'ja' if e.get('heatmap') else 'nein'}")
+        if args.senden:
+            vorschlag(args, geheim, cfg, ordner, f"💧 {'Top' if rolle == 'top' else 'Flop'}-Coin mit geschaetzten Zonen")
+        if getattr(args, "art", "beides") in ("video", "beides") and not args.daten:
+            vo = Path(f"{ordner}_video")
+            vo.mkdir(parents=True, exist_ok=True)
+            for f in ("post_x.txt", "post_telegram.txt"):
+                (vo / f).write_text((ordner / f).read_text(encoding="utf-8"), encoding="utf-8")
+            _, quelle = liquiditaet.reel(b, vo, cfg, geheim)
+            if args.senden:
+                vorschlag(args, geheim, cfg, vo, f"💧 {e['base']} Liquiditaet als Reel · Stimme: {quelle}")
+    return 0
+
+
+def liqmap_beitrag(args, cfg, geheim, sperr) -> int:
+    """S28 Liquidity Map of the Day (Wunsch Tobias 09.11.2026): Heatmap-Karussell BTC + Coin des Tages (+ Flop)
+    und Reel. Daten: liquidity_map_des_tages.json vom Bot (ab 06:30)."""
+    from social import liqmap, stimme
+    web = Path(args.daten or cfg["daten"]["dir"])
+    d = liqmap.laden(web)
+    if not d:
+        print("Liquidity Map: keine Daten")
+        return 0
+    for feld in ("top", "flop"):   # Sperrliste: Coin weglassen (fehlt top, nur BTC)
+        if d.get(feld) and d[feld].get("base", "").upper() in {c.upper() for c in sperr}:
+            d[feld] = None
+    if not d.get("top"):
+        d["flop"] = None
+    ordner = Path(args.out) / f"{time.strftime('%Y%m%d-%H%M')}_liqmap"
+    folien, szenen = liqmap.bauen(d, ordner, cfg, web)
+    if not folien:
+        print("Liquidity Map: keine Heatmap zeichenbar")
+        return 0
+    tx = liqmap.texte(d, cfg)
+    (ordner / "post_x.txt").write_text(tx["x"], encoding="utf-8")
+    (ordner / "post_telegram.txt").write_text(tx["telegram"], encoding="utf-8")
+    print(f"Liquidity Map: {len(folien)} Folien, X {len(tx['x'])} Zeichen")
+    if args.senden:
+        vorschlag(args, geheim, cfg, ordner, "🗺 Liquidity Map of the Day (Karussell, Zonen geschaetzt)")
+    if getattr(args, "art", "beides") in ("video", "beides") and szenen and not args.daten:
+        vo = Path(f"{ordner}_video")
+        vo.mkdir(parents=True, exist_ok=True)
+        for f in ("post_x.txt", "post_telegram.txt"):
+            (vo / f).write_text((ordner / f).read_text(encoding="utf-8"), encoding="utf-8")
+        z = tx["sprech"]   # Szenen: BTC (Einstieg + Kurs + Cluster), Coin des Tages, Schluss auf dem letzten Bild
+        zeilen = [" ".join(z[:3]), *(z[3:-1] if len(szenen) > 1 else []), z[-1]]
+        bilder_ = [szenen[0], *(szenen[1:len(zeilen) - 1]), szenen[-1]][:len(zeilen)]
+        toene, dauern, quelle = stimme.sprechen(zeilen, vo / "ton", cfg, stimme.schluessel(cfg, geheim))
+        video.bauen(bilder_, toene, dauern, vo / "video.mp4", cfg, **video.ut_formate(cfg, zeilen))
+        if args.senden:
+            vorschlag(args, geheim, cfg, vo, f"🗺 Liquidity Map als Reel · Stimme: {quelle}")
+    return 0
+
+
+def signallab_beitrag(args, cfg, geheim, sperr) -> int:
+    """S23 Signal Lab · Week N (Wunsch Tobias 04.11.2026), montags. Verlierer werden genauso gezeigt."""
+    from social import signallab
+    d = signallab.laden(Path(args.daten or cfg["daten"]["dir"]))
+    if not d:
+        print("Signal Lab: keine strategien.json")
+        return 0
+    jetzt = time.time()
+    ordner = Path(args.out) / f"{time.strftime('%Y%m%d-%H%M')}_signallab"
+    signallab.bild(d, cfg, ordner / "post.png", jetzt)
+    tx = signallab.texte(d, cfg, jetzt)
+    (ordner / "post_x.txt").write_text(tx["x"], encoding="utf-8")
+    (ordner / "post_telegram.txt").write_text(tx["telegram"], encoding="utf-8")
+    print(f"Signal Lab Woche {signallab.woche_nr(d, jetzt)}: X {len(tx['x'])} Zeichen")
+    if args.senden:
+        vorschlag(args, geheim, cfg, ordner, "🧪 Signal Lab · Wochen-Post (auch Verlierer, wie gewünscht 04.11.)")
+    return 0
 
 
 def wissen_video(t, txt, cfg, geheim, sperr, ordner: Path, args, echt=None) -> list[str]:

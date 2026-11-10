@@ -73,6 +73,7 @@ farben:                      # dunkle Website-Farben (stil.css)
 text:
   modell: claude-sonnet-5-5
   max_woerter: 85            # ca. 30 Sekunden
+  max_woerter_wissen: 50     # Lern-Reels ca. 15-18 Sekunden (08.11.2026: Haltequote 8 % bei 30-Sek.-Reels)
   max_woerter_warum: 150     # „Why did it move?“ ca. 50 Sekunden (Kurs, Futures, Volumen, Halter, Urteil)
 
 stimme:   # Sobald die Stimme laeuft: Tobias an S30 erinnern (Willkommensvideo bauen und anpinnen, ideen-backlog)
@@ -158,3 +159,18 @@ pruefung:
 
 warum:
   aktiv: true    # 05.11.2026 Tobias: wieder an (14:30 Gewinner, 18:30 Verlierer). Pause: false
+
+liquiditaet:                 # S24 (Wunsch Tobias 06.11.2026): Zonen in Top/Flop-Bildern + Eilmeldungen
+  aktiv: true                # taeglich 17:00 (Mo-Sa) Top- und Flop-Coin mit geschaetzten Zonen + Heatmap
+  eil_aktiv: true            # Eilmeldungen aus liquiditaet.json -> eilmeldungen[] (alle 10 Min., Ruhezeit 22-7)
+  eil_max_tag: 4             # mehr nur, wenn Tobias es so will
+
+unlocks:                     # S22 Unlock-Posts + S26 Nachfolge-Reels (Wunsch Tobias 03./06.11.2026), alle 10 Min.
+  aktiv: true
+  schon_gepostet: [ALLO]     # aus dem Redaktions-Chat gepostet (S25, 06.11.) -> Nachfolge-Reels 12.11./18.11.
+
+# S29 „The textbook is WRONG“ (Wunsch Tobias 10.11.2026): donnerstags 21:30 statt S27, 1 Folge pro Woche.
+# Daten: muster_des_tages.json -> lehrbuch_falsch[] (Bot 9.38). Danach Abschluss Hammer (braucht dessen Statistik).
+lehrbuch:
+  aktiv: true
+  reihe: [double_top, range_breakdown, double_bottom, three_white_soldiers]

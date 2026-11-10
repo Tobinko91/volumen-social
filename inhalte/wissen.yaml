@@ -9,6 +9,10 @@
   gross: "90.4%"
   gross_text: left after 10 losses in a row
   fakten: {risiko_klein: 1, risiko_gross: 5, verluste: 10, rest_1: 90.4, rest_5: 59.9}
+  video_punkte:   # kurz fuer 12-15-Sekunden-Reels (08.11.2026)
+    - 'Risk 1% per trade: after 10 losses in a row, 90.4% is left.'
+    - 'Risk 5%: only 59.9%.'
+    - Position size decides if you survive.
   punkte:
     - Risk 1% per trade and after 10 losses in a row you still have 90.4% of your account.
     - Risk 5% per trade and you are down to 59.9%.
@@ -22,6 +26,10 @@
   gross: "+100%"
   gross_text: needed to recover from a 50% loss
   fakten: {v20: 20, g20: 25, v50: 50, g50: 100, v90: 90, g90: 900}
+  video_punkte:   # kurz fuer 12-15-Sekunden-Reels (08.11.2026)
+    - Lose 20%? You need 25% back.
+    - Lose 50%? You need 100%.
+    - Lose 90%? You need 900%.
   punkte:
     - After a 20% loss you need a 25% gain to get back to even.
     - After a 50% loss you need 100%.
@@ -35,6 +43,10 @@
   gross: "10%"
   gross_text: move against you wipes out a 10x position
   fakten: {hebel_10: 10, bewegung_10: 10, hebel_20: 20, bewegung_20: 5}
+  video_punkte:   # kurz fuer 12-15-Sekunden-Reels (08.11.2026)
+    - '10x leverage: a 10% move against you wipes you out.'
+    - '20x: just 5%.'
+    - Simplified, before fees.
   punkte:
     - With 10x leverage a 10% move against you wipes out your stake (simplified, before fees).
     - With 20x leverage 5% is enough.
@@ -48,6 +60,10 @@
   gross: Support
   gross_text: an area where buyers often stepped in before
   fakten: {}
+  video_punkte:   # kurz fuer 12-15-Sekunden-Reels (08.11.2026)
+    - 'Support: where buyers stepped in again and again.'
+    - 'Resistance: where sellers did.'
+    - Broken support often turns into resistance.
   punkte:
     - "Support: a price area where buyers repeatedly stepped in and the price turned."
     - "Resistance: an area where sellers repeatedly stepped in. The more often an area held and the more volume traded there, the more traders watch it."
@@ -61,6 +77,10 @@
   gross: Liquidity
   gross_text: builds up where many orders sit
   fakten: {}
+  video_punkte:   # kurz fuer 12-15-Sekunden-Reels (08.11.2026)
+    - Most traders put stops just below obvious lows.
+    - That is where liquidity sits.
+    - Price often dips there, then turns.
   punkte:
     - Many traders put their stops just below obvious lows or just above obvious highs.
     - That's where orders pile up, which means liquidity. Large players need exactly that liquidity to move size.
@@ -74,6 +94,10 @@
   gross: "19.6 years"
   gross_text: at an assumed 7% return per year
   fakten: {ziel: "100,000", sparrate: 200, jahre_0: 41.7, rendite_5: 5, jahre_5: 22.6, rendite_7: 7, jahre_7: 19.6}
+  video_punkte:   # kurz fuer 12-15-Sekunden-Reels (08.11.2026)
+    - '$200 a month, no return: 41.7 years to $100,000.'
+    - 'At 5% a year: 22.6 years.'
+    - 'At 7%: 19.6 years. Returns assumed.'
   punkte:
     - With no return, saving $200 a month takes 41.7 years to reach $100,000.
     - At an assumed 5% a year it takes 22.6 years, at 7% it takes 19.6 years.
@@ -87,6 +111,10 @@
   gross: "45 months"
   gross_text: for the first $10,000 ($200 a month, 7% assumed)
   fakten: {betrag: "10,000", sparrate: 200, rendite: 7, monate_erste: 45, monate_zweite: 35}
+  video_punkte:   # kurz fuer 12-15-Sekunden-Reels (08.11.2026)
+    - '$200 a month at 7% assumed: the first $10,000 takes 45 months.'
+    - The second takes only 35.
+    - Your money starts working too.
   punkte:
     - Saving $200 a month at an assumed 7% return, the first $10,000 takes 45 months.
     - The second $10,000 takes only 35 months, because the money you already have is working too.
@@ -100,6 +128,10 @@
   gross: "$1,006"
   gross_text: from $100 after 30 years at 8% a year
   fakten: {start: 100, rendite: 8, jahre: 30, ende: "1,006"}
+  video_punkte:   # kurz fuer 12-15-Sekunden-Reels (08.11.2026)
+    - $100 at 8% a year becomes $1,006 in 30 years.
+    - Most of it comes in the last years.
+    - Time is the lever.
   punkte:
     - $100 grows to $1,006 in 30 years at 8% a year.
     - Most of the growth happens in the last years, not at the start.
@@ -113,6 +145,10 @@
   gross: 3 phases
   gross_text: accumulate, promote, sell
   fakten: {phasen: 3}
+  video_punkte:   # kurz fuer 12-15-Sekunden-Reels (08.11.2026)
+    - A group buys a small coin cheap.
+    - Then they hype it everywhere.
+    - They sell to you. The last ones in lose.
   punkte:
     - "Accumulate: a group quietly buys a small coin while it's cheap."
     - "Promote: groups and posts build pressure: new partnership, last chance, it's about to explode."
@@ -126,8 +162,250 @@
   gross: 5 signs
   gross_text: that give away a shady guru
   fakten: {zeichen: 5}
+  video_punkte:   # kurz fuer 12-15-Sekunden-Reels (08.11.2026)
+    - Only wins, never losses.
+    - Fixed returns, rush, expensive groups.
+    - Coins they secretly hold. Walk away.
   punkte:
     - They only show wins, never losses. They promise fixed returns or call anything "safe".
     - They rush you ("today only") and sell expensive groups or courses.
     - They recommend coins without disclosing that they hold them.
   x: "5 signs of a fake crypto guru:\n1. never shows losses\n2. promises fixed returns\n3. rushes you\n4. sells expensive groups\n5. hides their own positions\nNot financial advice."
+
+# ---------------------------------------------------------------- 08.11.2026: 13 neue Themen (Wunsch Tobias: mehr Lern-Reels,
+# Wochenbericht: Lernen = bestes Format). Kurz fuer 12-15-Sekunden-Reels. grafik: Daten fuer die Grafik direkt hier
+# (balken: [Beschriftung, Wert, Text, Farbe akzent|akzent2|minus] · liste: Warnpunkte). Rechnungen in tests/test_wissen.py.
+
+- id: gebuehren
+  saeule: Learn trading
+  titel: How fees eat your account
+  haken: "What do 100 trades cost you in fees?"
+  gross: "90.5%"
+  gross_text: left after 100 trades at 0.1% fee
+  fakten: {gebuehr: 0.1, trades_10: 10, rest_10: 99.0, trades_50: 50, rest_50: 95.1, trades_100: 100, rest_100: 90.5}
+  video_punkte:
+    - '0.1% fee per trade. After 10 trades: 99.0% left.'
+    - 'After 50: 95.1%.'
+    - 'After 100: 90.5%.'
+  punkte:
+    - Pay 0.1% per trade and after 10 trades 99.0% of your account is left.
+    - After 50 trades it is 95.1%. After 100 trades only 90.5%.
+    - Fewer, better trades often beat many small ones.
+  grafik: {art: balken, titel: "Account left at 0.1% fee per trade", reihen: [["10 trades", 99.0, "99.0%", akzent], ["50 trades", 95.1, "95.1%", akzent2], ["100 trades", 90.5, "90.5%", minus]]}
+  x: "Fees add up.\n0.1% per trade:\n10 trades: 99.0% of your account left\n50 trades: 95.1%\n100 trades: 90.5%\nTrade less, trade better.\nNot financial advice."
+
+- id: chance-risiko
+  saeule: Learn trading
+  titel: The win rate you need depends on your risk reward
+  haken: "How often do you need to win to break even?"
+  gross: "33.3%"
+  gross_text: win rate needed at 1 to 2 risk reward
+  fakten: {rr1: 1, rr2: 2, rr3: 3, q1: 50, q2: 33.3, q3: 25}
+  video_punkte:
+    - 'Risk 1 to win 1: you need 50% wins.'
+    - 'Risk 1 to win 2: 33.3%.'
+    - 'Risk 1 to win 3: just 25%.'
+  punkte:
+    - Risk 1 to win 1 and you need to win 50% of your trades to break even.
+    - Risk 1 to win 2 and 33.3% is enough.
+    - Risk 1 to win 3 and you only need 25%. Before fees.
+  grafik: {art: balken, titel: "Win rate needed to break even (before fees)", reihen: [["Risk 1 : win 1", 50, "50%", minus], ["Risk 1 : win 2", 33.3, "33.3%", akzent2], ["Risk 1 : win 3", 25, "25%", akzent]]}
+  x: "Win rate needed to break even:\nRisk 1, win 1: 50%\nRisk 1, win 2: 33.3%\nRisk 1, win 3: 25%\nYou can be wrong most of the time and still not lose. Before fees.\nNot financial advice."
+
+- id: positionsgroesse
+  saeule: Learn trading
+  titel: How to size a position
+  haken: "How big should your position be?"
+  gross: "$200"
+  gross_text: position for $10 risk with a 5% stop
+  fakten: {konto: 1000, risiko: 1, risiko_usd: 10, stop_2: 2, pos_2: 500, stop_5: 5, pos_5: 200, stop_10: 10, pos_10: 100}
+  video_punkte:
+    - '$1,000 account, 1% risk: $10.'
+    - 'Stop 5% away: $200 position.'
+    - 'Stop 10% away: $100.'
+  punkte:
+    - Account $1,000, risk 1%. That is $10 you can lose on this trade.
+    - Stop 5% away? Then your position is $200, because 5% of $200 is $10.
+    - Stop 10% away? Only $100. The stop decides the size, not your feeling.
+  grafik: {art: balken, titel: "Position size for $10 risk", reihen: [["Stop 2% away", 500, "$500", akzent], ["Stop 5% away", 200, "$200", akzent2], ["Stop 10% away", 100, "$100", minus]]}
+  x: "Position size in one rule:\nAccount $1,000, risk 1% = $10.\nStop 2% away: $500 position\nStop 5% away: $200\nStop 10% away: $100\nThe stop decides the size.\nNot financial advice."
+
+- id: funding
+  saeule: Learn trading
+  titel: What funding costs you over time
+  haken: "What does 0.01% funding cost you in a year?"
+  gross: "11%"
+  gross_text: a year at 0.01% every 8 hours
+  fakten: {funding: 0.01, stunden: 8, jahr_1: 11, f5: 0.05, jahr_5: 55, f10: 0.1, jahr_10: 110}
+  video_punkte:
+    - '0.01% every 8 hours: about 11% a year.'
+    - '0.05%: about 55%.'
+    - '0.1%: about 110%.'
+  punkte:
+    - Funding of 0.01% every 8 hours looks tiny. Over a year it adds up to about 11%.
+    - At 0.05% it is about 55% a year.
+    - At 0.1% about 110%. Holding a leveraged position is never free.
+  grafik: {art: balken, titel: "Funding every 8 hours, added up over a year", reihen: [["0.01%", 11, "≈ 11%", akzent], ["0.05%", 55, "≈ 55%", akzent2], ["0.1%", 110, "≈ 110%", minus]]}
+  x: "Funding every 8 hours, added up over a year:\n0.01%: about 11%\n0.05%: about 55%\n0.1%: about 110%\nHolding leverage is never free.\nNot financial advice."
+
+- id: marktwert
+  saeule: Understanding coins
+  titel: Why a cheap coin is not cheap
+  haken: "Can a $1 coin easily go to $10?"
+  gross: "$100B"
+  gross_text: market cap needed at $10 with 10 billion coins
+  fakten: {preis_1: 1, menge: 10, mcap_1: 10, preis_10: 10, mcap_10: 100, preis_100: 100, mcap_100: 1000}
+  video_punkte:
+    - '$1 with 10 billion coins: $10 billion.'
+    - $10 needs $100 billion.
+    - Check market cap, not price.
+  punkte:
+    - A coin at $1 with 10 billion coins is already worth $10 billion.
+    - At $10 it would need $100 billion.
+    - At $100 it would need $1,000 billion. Look at market cap, not price.
+  grafik: {art: balken, titel: "Market cap with 10 billion coins", reihen: [["$1", 10, "$10B", akzent], ["$10", 100, "$100B", akzent2], ["$100", 1000, "$1,000B", minus]]}
+  x: "A $1 coin is not cheap.\nWith 10 billion coins:\n$1 = $10B market cap\n$10 = $100B\n$100 = $1,000B\nCheck market cap, not price.\nNot financial advice."
+
+- id: unlock-verwaesserung
+  saeule: Understanding coins
+  titel: What a token unlock does to your share
+  haken: "What happens to your coins when supply grows 50%?"
+  gross: "−33.3%"
+  gross_text: value per coin at the same market cap
+  fakten: {mehr_25: 25, weniger_25: 20, mehr_50: 50, weniger_50: 33.3, mehr_100: 100, weniger_100: 50}
+  video_punkte:
+    - '25% more coins: each one worth 20% less.'
+    - '50% more: 33.3% less.'
+    - '100% more: half.'
+  punkte:
+    - If supply grows 25% and the market cap stays the same, each coin is worth 20% less.
+    - Plus 50% supply means 33.3% less.
+    - Plus 100% means half. Check the unlock calendar before you buy.
+  grafik: {art: balken, titel: "Value per coin if market cap stays the same", reihen: [["+25% supply", 20, "−20%", akzent2], ["+50% supply", 33.3, "−33.3%", minus], ["+100% supply", 50, "−50%", minus]]}
+  x: "Unlocks dilute holders.\nSame market cap, more coins:\n+25% supply: −20% per coin\n+50%: −33.3%\n+100%: −50%\nCheck the unlock calendar.\nNot financial advice."
+
+- id: seed-phrase
+  saeule: Scams and traps
+  titel: Your seed phrase is your money
+  haken: "Who should ever see your seed phrase?"
+  gross: "Nobody"
+  gross_text: not support, not a website, not a friend
+  fakten: {}
+  video_punkte:
+    - Whoever has your seed phrase owns your coins.
+    - No support will ever ask for it.
+    - Never type it into a website.
+  punkte:
+    - Your seed phrase is your wallet. Whoever has it owns your coins.
+    - No support team, exchange or wallet will ever ask for it.
+    - Never type it into a website and never store it as a photo.
+  grafik: {art: liste, punkte: ["support asks for it", "website wants it", "\"verify your wallet\"", "photo in your cloud", "sent in a chat"]}
+  x: "Your seed phrase = your money.\nNo support, exchange or wallet will ever ask for it.\nNever type it into a website.\nNever keep it as a photo.\nNot financial advice."
+
+- id: fomo-einstieg
+  saeule: Learn trading
+  titel: The math of buying after a pump
+  haken: "You buy after a 100% pump. What if it goes back?"
+  gross: "−50%"
+  gross_text: if a 100% pump fully reverses
+  fakten: {pump_50: 50, rueck_50: 33.3, pump_100: 100, rueck_100: 50, pump_200: 200, rueck_200: 66.7}
+  video_punkte:
+    - 'Buy after +50%. Full reversal: minus 33.3%.'
+    - 'After +100%: minus 50%.'
+    - 'After +200%: minus 66.7%.'
+  punkte:
+    - Buy after a 50% pump and a full reversal costs you 33.3%.
+    - After a 100% pump it costs you 50%.
+    - After a 200% pump 66.7%. The later you enter, the deeper the fall.
+  grafik: {art: balken, titel: "Your loss if the pump fully reverses", reihen: [["after +50%", 33.3, "−33.3%", akzent2], ["after +100%", 50, "−50%", minus], ["after +200%", 66.7, "−66.7%", minus]]}
+  x: "Buying after a pump:\nIf a +50% move fully reverses: −33.3%\n+100%: −50%\n+200%: −66.7%\nLate entries fall the hardest.\nNot financial advice."
+
+- id: trefferquote-falle
+  saeule: Learn trading
+  titel: Why a 70% win rate can still lose money
+  haken: "Can you win 70% of your trades and still lose money?"
+  gross: "−0.2R"
+  gross_text: per trade with 70% wins, 1R wins, 3R losses
+  fakten: {quote: 70, verlust_quote: 30, gewinn: 1, verlust: 3, plus: 0.7, minus: 0.9, ergebnis: 0.2}
+  video_punkte:
+    - Win 70%, but wins are 1R and losses 3R.
+    - That is 0.7R in, 0.9R out.
+    - Minus 0.2R per trade.
+  punkte:
+    - Win 70% of trades, but each win is 1R and each loss is 3R.
+    - Wins bring 0.7R per trade on average, losses cost 0.9R.
+    - Result, minus 0.2R per trade. Win rate alone means nothing.
+  grafik: {art: balken, titel: "70% wins of 1R, 30% losses of 3R", reihen: [["wins", 0.7, "+0.7R", akzent], ["losses", 0.9, "−0.9R", minus], ["result", 0.2, "−0.2R", minus]]}
+  x: "70% win rate, still losing:\nWins: 1R each, losses: 3R each.\nAverage per trade: +0.7R − 0.9R = −0.2R.\nWin rate alone means nothing.\nNot financial advice."
+
+- id: regel-72
+  saeule: Road to $100k
+  titel: The rule of 72
+  haken: "How fast does your money double?"
+  gross: "72"
+  gross_text: divided by the yearly return = years to double
+  fakten: {regel: 72, r6: 6, j6: 12, r8: 8, j8: 9, r12: 12, j12: 6}
+  video_punkte:
+    - '72 divided by your return: years to double.'
+    - '6% a year: about 12 years.'
+    - '12%: about 6. Returns assumed.'
+  punkte:
+    - Divide 72 by the yearly return to see how long money takes to double.
+    - At 6% a year about 12 years, at 8% about 9 years.
+    - At 12% about 6 years. Returns are assumptions, not a promise.
+  grafik: {art: balken, titel: "Years to double (rule of 72, return assumed)", reihen: [["6% a year", 12, "≈ 12 yrs", minus], ["8% a year", 9, "≈ 9 yrs", akzent2], ["12% a year", 6, "≈ 6 yrs", akzent]]}
+  x: "Rule of 72: years to double = 72 ÷ yearly return.\n6%: about 12 years\n8%: about 9 years\n12%: about 6 years\nReturns are assumptions, not a promise.\nNot financial advice."
+
+- id: inflation
+  saeule: Road to $100k
+  titel: What inflation does to cash
+  haken: "What is $1,000 in cash worth after 10 years?"
+  gross: "$744"
+  gross_text: buying power after 10 years at 3% inflation
+  fakten: {start: 1000, inflation: 3, jahre_10: 10, wert_10: 744, jahre_20: 20, wert_20: 554, inflation_5: 5, wert_5: 614}
+  video_punkte:
+    - '3% inflation: $1,000 buys only $744 after 10 years.'
+    - 'After 20 years: $554.'
+    - Cash has a risk too.
+  punkte:
+    - At 3% inflation, $1,000 in cash buys only what $744 buys today after 10 years.
+    - After 20 years it is $554.
+    - At 5% inflation it is $614 after 10 years. Cash carries a risk too.
+  grafik: {art: balken, titel: "Buying power of $1,000 in cash", reihen: [["10 yrs at 3%", 744, "$744", akzent2], ["20 yrs at 3%", 554, "$554", minus], ["10 yrs at 5%", 614, "$614", minus]]}
+  x: "$1,000 in cash, buying power:\n10 years at 3% inflation: $744\n20 years at 3%: $554\n10 years at 5%: $614\nCash has a risk too.\nNot financial advice."
+
+- id: rug-pull
+  saeule: Scams and traps
+  titel: Five signs of a rug pull
+  haken: "How do you spot a rug pull before it happens?"
+  gross: "5"
+  gross_text: warning signs to check first
+  fakten: {anzahl: 5}
+  video_punkte:
+    - Liquidity not locked, few wallets hold most.
+    - Anonymous team, contract can block selling.
+    - One sign is enough. Stay out.
+  punkte:
+    - Liquidity is not locked and a few wallets hold most of the supply.
+    - The team is anonymous and the contract can change fees or block selling.
+    - Hype only, no product. One warning sign is enough to stay out.
+  grafik: {art: liste, punkte: ["liquidity not locked", "few wallets hold most supply", "anonymous team", "contract can block selling", "hype, no product"]}
+  x: "5 signs of a rug pull:\n1. liquidity not locked\n2. few wallets hold most supply\n3. anonymous team\n4. contract can block selling\n5. hype, no product\nNot financial advice."
+
+- id: verdoppeln-falle
+  saeule: Scams and traps
+  titel: Why doubling after a loss breaks accounts
+  haken: "What happens if you double your bet after every loss?"
+  gross: "63"
+  gross_text: units lost after 6 losses in a row
+  fakten: {verluste: 6, einsatz_1: 1, einsatz_2: 2, einsatz_4: 4, einsatz_8: 8, einsatz_16: 16, einsatz_32: 32, gesamt: 63}
+  video_punkte:
+    - 'Double after every loss: 1, 2, 4, 8, 16, 32.'
+    - '6 losses: 63 units gone.'
+    - To win back 1.
+  punkte:
+    - Double your stake after every loss. 1, 2, 4, 8, 16, then 32.
+    - After 6 losses in a row you have lost 63 units to win back 1.
+    - Losing streaks are normal. This system only needs one to break you.
+  grafik: {art: balken, titel: "Stake after each loss (doubling)", reihen: [["loss 1", 1, "1", akzent], ["loss 2", 2, "2", akzent], ["loss 3", 4, "4", akzent2], ["loss 4", 8, "8", akzent2], ["loss 5", 16, "16", minus], ["loss 6", 32, "32", minus]]}
+  x: "Doubling after every loss:\nStakes: 1, 2, 4, 8, 16, 32.\n6 losses in a row: 63 units lost to win back 1.\nOne normal losing streak is enough.\nNot financial advice."

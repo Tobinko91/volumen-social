@@ -90,7 +90,7 @@ def x(geheim: dict, video: Path, text: str, anfrage=requests.request, warten=tim
             raise RuntimeError(f"X-Video nicht verarbeitet: {(info.get('error') or {}).get('message', '')}")
         warten(int(info.get("check_after_secs") or 3))
         info = _x("GET", X_UPLOAD, geheim, anfrage, {"command": "STATUS", "media_id": mid}).get("processing_info")
-    r = _x("POST", kanaele.X_TWEET, geheim, anfrage, json={"text": text[:280], "media": {"media_ids": [str(mid)]}})
+    r = _x("POST", kanaele.X_TWEET, geheim, anfrage, json={"text": kanaele.ein_cashtag(text)[:280], "media": {"media_ids": [str(mid)]}})
     return f"https://x.com/i/web/status/{r['id']}"
 
 

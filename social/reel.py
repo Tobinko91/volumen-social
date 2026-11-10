@@ -27,9 +27,12 @@ def chart_szene(ordner: Path, s: dict, thema: str, kerzen_holen) -> tuple[Path, 
     """-> (Bild mit echtem Chart, Werte {chg, von, bis} seit ab_ts bzw. seit der ersten Kerze)."""
     from . import design, grafik
     c = s["chart"]
-    k = kerzen_holen(c.get("base", "BTC"), c.get("intervall", "15m"), int(c.get("anzahl", 48)))
-    if c.get("ab_ts"):
-        k = [x for x in k if x["t"] >= int(c["ab_ts"]) * 1000 - 3600_000]   # ab der Stunde vor dem Ereignis
+    alle = kerzen_holen(c.get("base", "BTC"), c.get("intervall", "15m"), int(c.get("anzahl", 48)))
+    k = alle
+    if c.get("ab_ts"):   # ab der Stunde vor dem Ereignis (vorlauf_h: mehr Vorgeschichte, z. B. Kurs-Alarm)
+        k = [x for x in alle if x["t"] >= (int(c["ab_ts"]) - float(c.get("vorlauf_h", 1)) * 3600) * 1000]
+        if len(k) < 12 <= len(alle):   # 08.11.2026 ETH-Alarm: zu kurzer Ausschnitt -> leeres Bild. Dann alle Kerzen
+            k = alle[-max(12, len(k)):]
     if len(k) < 12:
         raise ValueError(f"zu wenige Kerzen ({len(k)})")
     von, bis = k[0]["o"], k[-1]["c"]
@@ -80,7 +83,7 @@ def bauen(ordner: Path, cfg: dict, geheim: dict, kerzen_holen=None, sprechen=Non
 def sprechtext(x_text: str) -> list[str]:
     """X-Text als Sprechtext: ohne Emojis, Links, Hashtags, Cashtag-$; je Satz/Zeile eine Szene-Zeile."""
     import re
-    t = re.sub(r"https?://\S+", "", x_text)
+    t = re.sub(r"https?://\S+", "", x_text).replace("×", "x")   # × ging sonst verloren (ALLO, 06.11.2026)
     t = re.sub(r"#\w+", "", t)
     t = re.sub(r"\$([A-Za-z]{2,10})\b", r"\1", t)                      # $ZK -> ZK, $75,740 bleibt
     t = "".join(c for c in t if c.isascii() or c.isalpha() or c in "€–—’“”…·")

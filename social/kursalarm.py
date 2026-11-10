@@ -30,7 +30,10 @@ def pruefen(kerzen_holen, stand: dict, jetzt: float | None = None) -> list[dict]
     out = []
     for b in COINS:
         try:
-            m = bewegung(kerzen_holen(b, "15m", 100))
+            k = kerzen_holen(b, "15m", 100)
+            m = bewegung(k)
+            if m:
+                m["kerzen"] = k[-48:]   # fuer den Chart im Bild (08.11.2026)
         except Exception:
             m = None
         if not m or abs(m["chg1h"]) < SCHWELLE:
@@ -81,8 +84,12 @@ def bauen(alarme: list[dict], ordner_basis: Path, cfg: dict, jetzt: float | None
                else th.plus)
         d.text((96, y + 160), f"Now {_pr(a['jetzt'])} · 24h {a['chg24']:+.1f}%", font=font("Medium", 32), fill=th.neben)
         y += 250
-    absatz(d, th, 80, y + 10, "Why it happened: analysis follows.", W - 160, groesse=34, farbe=th.akzent,
-           gewicht="Bold")
+    y = absatz(d, th, 80, y + 10, "Panic or overreaction? Comment below.", W - 160, groesse=34, farbe=th.akzent,
+               gewicht="Bold")
+    if a0.get("kerzen") and len(a0["kerzen"]) >= 12 and y < 1000:   # echter Chart statt leerer Flaeche (08.11.2026)
+        from . import grafik
+        grafik.echt_chart(img, th, (60, y + 30, W - 60, 1240), a0["kerzen"], "linie", {}, 3, "en",
+                          f"{a0['base']} · 15m · last 12 hours")
     fuss(img, th, cfg["hinweise"]["fusszeile"])
     img.convert("RGB").save(bo / "post.png")
     zeilen = [f"{a['base']}: {a['chg1h']:+.1f}% in one hour, now {_pr(a['jetzt'])} (24h: {a['chg24']:+.1f}%)."
@@ -90,30 +97,56 @@ def bauen(alarme: list[dict], ordner_basis: Path, cfg: dict, jetzt: float | None
     e = lambda s: html.escape(s, quote=False)
     (bo / "post_telegram.txt").write_text("\n".join(
         [f"🚨 <b>{e(kopf)}</b>", "", e(f"{t:%a, %b} {t.day}, {zeit}:"), ""] + [f"• {e(z)}" for z in zeilen]
-        + ["", e("Why it happened: our analysis follows."), "", f"<i>{e(hw)}</i>"]), encoding="utf-8")
-    x = "\n".join([f"🚨 {kopf}", *zeilen, "Analysis follows.", hw])
+        + ["", e("Panic or overreaction? Comment below."), "", f"<i>{e(hw)}</i>"]), encoding="utf-8")
+    x = "\n".join([f"🚨 {kopf}", *zeilen, "Panic or overreaction?", hw])
     (bo / "post_x.txt").write_text(x[:280], encoding="utf-8")
-    # Reel: Kopf, echter Chart mit Prozent seit Beginn der Bewegung, Kommentar-Frage
+    # Reel: Kopf mit grosser Zahl, echter Chart (6 Std. Vorgeschichte, Prozent seit Beginn der Bewegung), Frage.
+    # 08.11.2026 Tobias: kein leeres Bild mehr. Jede Szene traegt Zahlen; der Chart liegt ueber einer Zahlen-Karte,
+    # die nur sichtbar bleibt, wenn keine Kurse kommen.
     ro = ordner_basis / f"{stempel}_redaktion_alarm_video"
     ro.mkdir(parents=True, exist_ok=True)
     W, H = 1080, 1920
-    szenen = []
-    for i, (etik, k) in enumerate((("BREAKING", kopf), ("THE CHART", f"{a0['base']} · last hours"),
+    chg = f"{a0['chg1h']:+.1f}%".replace("-", "−")
+    chg24 = f"{a0['chg24']:+.1f}%".replace("-", "−")
+
+    def gross(img, y, text, fa, g=230):
+        d = ImageDraw.Draw(img)
+        f = font("Bold", g)
+        d.text(((W - d.textlength(text, font=f)) / 2, y), text, font=f, fill=fa)
+
+    def kachel(img, y, zeilen_):
+        karte(img, th, (60, y, W - 60, y + 110 * len(zeilen_) + 50))
+        d = ImageDraw.Draw(img)
+        for j, (l, w_, fa) in enumerate(zeilen_):
+            d.text((110, y + 40 + j * 110), l, font=font("SemiBold", 40), fill=th.neben)
+            f = font("Bold", 60)
+            d.text((W - 110 - d.textlength(w_, font=f), y + 28 + j * 110), w_, font=f, fill=fa)
+
+    for i, (etik, k) in enumerate((("BREAKING", f"{a0['base']} in one hour"), ("THE CHART", f"{a0['base']} · last 7 hours"),
                                    ("WHAT NOW?", "Panic or overreaction?"))):
         img = hintergrund(th, W, H, saat=80 + i)
         marke(img, th, 80, 90, 72)
         d = ImageDraw.Draw(img)
         etikett(d, th, 80, 230, etik, farbe=farbe)
         ueberschrift(d, th, 80, 320, k, W - 160, groesse=74, max_zeilen=3)
+        if i == 0:
+            gross(img, 560, chg, farbe)
+            kachel(img, 880, [("Now", _pr(a0["jetzt"]), th.text), ("24 hours", chg24, th.minus if a0["chg24"] < 0
+                                                                     else th.plus)])
+        elif i == 1:   # Zahlen unter dem Chart (Chart-Box 520..1100), bleiben auch ohne Kurse stehen
+            kachel(img, 1130, [("1 hour", chg, farbe), ("Now", _pr(a0["jetzt"]), th.text)])
+        else:
+            kachel(img, 620, [("1 hour", chg, farbe), ("24 hours", chg24, th.minus if a0["chg24"] < 0 else th.plus)])
         fuss(img, th, cfg["hinweise"]["fusszeile"])
         img.convert("RGB").save(ro / f"szene_{i}.png")
     szenen = [
-        {"bild": "szene_0.png", "text": f"Breaking: {kopf}. It now trades at {_pr(a0['jetzt'])}."},
+        {"bild": "szene_0.png", "text": f"Breaking: {a0['base']} {chg} in one hour. It now trades at {_pr(a0['jetzt'])}."},
         {"bild": "szene_1.png", "text": f"Here is the real chart. {a0['base']} is {{chg}} since the move started.",
-         "text_ohne": f"Here is how {a0['base']} traded in the last hours.",
-         "chart": {"base": a0["base"], "intervall": "15m", "anzahl": 48, "box": [60, 620, 1020, 1400],
-                   "titel": f"{a0['base']} · 15m", "ab_ts": a0["ab_ts"], "ab_text": "the move"}},
-        {"bild": "szene_2.png", "text": "We are checking why. Panic or overreaction? Comment below."},
+         "text_ohne": f"Over 24 hours {a0['base']} is {chg24}.",
+         "chart": {"base": a0["base"], "intervall": "5m", "anzahl": 100, "box": [60, 520, 1020, 1100],
+                   "titel": f"{a0['base']} 5m", "ab_ts": a0["ab_ts"], "ab_text": "the move",
+                   "vorlauf_h": 6, "zahl_ab_ereignis": True}},
+        {"bild": "szene_2.png", "text": f"Over 24 hours: {chg24}. Panic or overreaction? Comment below."},
     ]
     (ro / "reel.json").write_text(json.dumps({"thema": f"alarm-{stempel}", "szenen": szenen}), encoding="utf-8")
     for f in ("post_telegram.txt", "post_x.txt"):
