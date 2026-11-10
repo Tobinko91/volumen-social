@@ -45,6 +45,10 @@ lauf() { sudo -u redaktion env $UMGEBUNG python3 main.py "$@" --senden; }
 [ "$SLOT" = "18:30" ] && [ "$(date +%u)" = "7" ] && sudo -u redaktion env $UMGEBUNG python3 tools/kommentar_bilanz.py --senden
 # S11 Wal-Karussell sonntags 17:00; S13 Termine der KOMMENDEN Woche sonntags 18:00 (vor Wochenbeginn)
 [ "$SLOT" = "17:00" ] && [ "$(date +%u)" = "7" ] && lauf karussell
+# S23 Signal Lab · Week N montags 14:30 (Wunsch Tobias 04.11.2026)
+[ "$SLOT" = "14:30" ] && [ "$(date +%u)" = "1" ] && lauf signallab
+# S24 Top/Flop-Coin mit geschaetzten Liquiditaetszonen Mo-Sa 17:00 (11:00 ET, Wunsch Tobias 06.11.2026)
+[ "$SLOT" = "17:00" ] && [ "$(date +%u)" != "7" ] && lauf liquiditaet
 [ "$SLOT" = "18:00" ] && [ "$(date +%u)" = "7" ] && lauf termine
 # S30 Willkommensvideo EINMAL (sobald die Stimme laeuft), danach Merkdatei; neu: Datei loeschen
 W=/opt/volumen-social/ausgabe/.willkommen_gesendet
@@ -53,7 +57,7 @@ W=/opt/volumen-social/ausgabe/.willkommen_gesendet
 T=/opt/volumen-social/ausgabe/.warum_probe_gesendet
 [ ! -f "$T" ] && [ "$H" -ge 7 ] && [ "$H" -lt 22 ] && [ "$SLOT" != "14:30" ] && { lauf warum; sudo -u redaktion touch "$T"; }
 case "$SLOT" in
-  14:30) lauf wissen; lauf warum ;;   # 08.11.2026 Wochenbericht: Markt-Bild (Ø 2 Aufrufe) raus, zweites Lern-Reel rein
+  14:30) lauf wissen; lauf warum; lauf liqmap ;;   # + S28 Liquidity Map (09.11.)   # 08.11.2026 Wochenbericht: Markt-Bild (Ø 2 Aufrufe) raus, zweites Lern-Reel rein
   # 08.11.2026: News nur noch als Eilmeldung (live.sh, alle 10 Min.), keine festen News-Zeiten mehr (Ø 8 Aufrufe)
   18:30) lauf warum --richtung runter ;;   # größter Verlierer: „Why did X drop?“ (Wunsch Tobias 04.11.2026)
   16:00) lauf coincheck ;;

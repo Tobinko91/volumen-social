@@ -159,3 +159,12 @@ pruefung:
 
 warum:
   aktiv: true    # 05.11.2026 Tobias: wieder an (14:30 Gewinner, 18:30 Verlierer). Pause: false
+
+liquiditaet:                 # S24 (Wunsch Tobias 06.11.2026): Zonen in Top/Flop-Bildern + Eilmeldungen
+  aktiv: true                # taeglich 17:00 (Mo-Sa) Top- und Flop-Coin mit geschaetzten Zonen + Heatmap
+  eil_aktiv: true            # Eilmeldungen aus liquiditaet.json -> eilmeldungen[] (alle 10 Min., Ruhezeit 22-7)
+  eil_max_tag: 4             # mehr nur, wenn Tobias es so will
+
+unlocks:                     # S22 Unlock-Posts + S26 Nachfolge-Reels (Wunsch Tobias 03./06.11.2026), alle 10 Min.
+  aktiv: true
+  schon_gepostet: [ALLO]     # aus dem Redaktions-Chat gepostet (S25, 06.11.) -> Nachfolge-Reels 12.11./18.11.

@@ -16,3 +16,9 @@ sudo -u redaktion env TZ=Europe/Berlin SOCIAL_GEHEIM=/opt/volumen-social SOCIAL_
 # Kurs-Alarm (Wunsch Tobias 05.11.2026): BTC/ETH +-4 % in 60 Minuten -> sofort Eilmeldung (Bild + Reel)
 sudo -u redaktion env TZ=Europe/Berlin SOCIAL_GEHEIM=/opt/volumen-social SOCIAL_AUSGABE=/opt/volumen-social/ausgabe \
   timeout 240 python3 tools/kursalarm.py --senden
+# S24 Liquiditaets-Eilmeldungen (Wunsch Tobias 06.11.2026): Pump/Dump vom Bot -> Bild + Reel mit geschaetzten Zonen
+sudo -u redaktion env TZ=Europe/Berlin SOCIAL_GEHEIM=/opt/volumen-social SOCIAL_AUSGABE=/opt/volumen-social/ausgabe \
+  timeout 300 python3 tools/liq_eil.py --senden
+# S22 Unlock-Posts + S26 Nachfolge-Reels (Wunsch Tobias 03./06.11.2026)
+sudo -u redaktion env TZ=Europe/Berlin SOCIAL_GEHEIM=/opt/volumen-social SOCIAL_AUSGABE=/opt/volumen-social/ausgabe \
+  timeout 300 python3 tools/unlock_post.py --senden
