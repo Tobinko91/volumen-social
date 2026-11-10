@@ -63,7 +63,7 @@ def lade_sperrliste() -> set[str]:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("format", choices=sorted(formate.FORMATE) + ["wissen", "news", "coincheck", "wal", "karussell", "termine", "willkommen", "warum", "formation", "liquiditaet", "liqmap", "signallab"])
+    ap.add_argument("format", choices=sorted(formate.FORMATE) + ["wissen", "news", "coincheck", "wal", "karussell", "termine", "willkommen", "warum", "formation", "lehrbuch", "liquiditaet", "liqmap", "signallab"])
     ap.add_argument("--thema", help="nur bei wissen: bestimmtes Thema (id aus inhalte/wissen.yaml)")
     ap.add_argument("--eil", action="store_true", help="nur bei news: nur senden, wenn es eine Eilmeldung gibt")
     ap.add_argument("--nur-mit-stimme", action="store_true", help="nur bei willkommen: ohne Stimme nicht senden")
@@ -105,6 +105,8 @@ def main() -> int:
         return willkommen_video(args, cfg, geheim, sperr)
     if args.format == "formation":
         return formation_video(args, cfg, geheim, sperr)
+    if args.format == "lehrbuch":
+        return lehrbuch_video(args, cfg, geheim, sperr)
     if args.format == "liquiditaet":
         return liquiditaet_beitrag(args, cfg, geheim, sperr)
     if args.format == "liqmap":
@@ -242,6 +244,55 @@ def formation_video(args, cfg, geheim, sperr) -> int:
         vorschlag(args, geheim, cfg, ordner, f"📊 Formation des Tages: {d['name_en']} auf {d['coin']}\nStimme: {quelle}"
                   + ("" if d.get("statistik") else "\n⚠️ Ohne Trefferquote: einmal tools/muster_statistik.py im "
                      "Bot ausfuehren (Szene „But here's the catch“ fehlt sonst)."))
+    return 0
+
+
+def lehrbuch_video(args, cfg, geheim, sperr) -> int:
+    """S29 „The textbook is WRONG“ (Wunsch Tobias 10.11.2026): 1 Folge pro Woche statt S27 an diesem Tag.
+    Rueckgabe 3 = keine Folge gebaut (plan.sh baut dann die Formation des Tages)."""
+    import html as _h
+    from social import lehrbuch
+    lc = cfg.get("lehrbuch") or {}
+    if not lc.get("aktiv", True):
+        return 3
+    daten = lehrbuch.laden(args.daten or cfg["daten"]["dir"])
+    stand_p = Path(args.out) / "lehrbuch_stand.json"
+    try:
+        stand = json.loads(stand_p.read_text())
+    except Exception:
+        stand = {}
+    woche = time.strftime("%G-W%V")
+    if not args.daten and stand.get("woche") == woche:
+        print("Lehrbuch: diese Woche schon gebaut")
+        return 3
+    m = lehrbuch.naechste(daten, stand.get("erledigt", []), lc.get("reihe"))
+    if not m:
+        print("Lehrbuch: keine Folge (Reihe fertig oder Beispiel fehlt noch, lehrbuch_falsch vom Bot 9.38)")
+        return 3
+    if m == lehrbuch.ABSCHLUSS:
+        coin, titel = "", "Abschluss: der Hammer"
+    else:
+        e = daten[m]
+        if e["coin"].upper() in {c.upper() for c in sperr}:
+            print("Lehrbuch: Coin auf der Sperrliste")
+            return 3
+        coin, titel = e["coin"], f"{e['name_en']} auf {e['coin']}"
+    ordner = Path(args.out) / f"{time.strftime('%Y%m%d-%H%M')}_lehrbuch_{m}_video"
+    if m == lehrbuch.ABSCHLUSS:
+        folgen, tx = lehrbuch.abschluss_szenen(daten["_statistik"][m], ordner / "bilder")
+    else:
+        folgen, tx = lehrbuch.szenen(daten[m], ordner / "bilder")
+    pfad, quelle = lehrbuch.video(folgen, tx, ordner, cfg, geheim)
+    (ordner / "post_x.txt").write_text(tx["x"], encoding="utf-8")
+    e_ = lambda x: _h.escape(x, quote=False)
+    (ordner / "post_telegram.txt").write_text(
+        "📚 <b>The textbook is WRONG</b>\n\n" + "\n".join(e_(z) for z in tx["zeilen"])
+        + "\n\n<i>Not financial advice.</i>", encoding="utf-8")
+    if not args.daten:
+        stand_p.write_text(json.dumps({"woche": woche, "erledigt": stand.get("erledigt", []) + [m]}))
+    print(f"Lehrbuch {m} {coin}: Stimme {quelle}")
+    if args.senden:
+        vorschlag(args, geheim, cfg, ordner, f"📚 The textbook is WRONG: {titel}\nStimme: {quelle}")
     return 0
 
 

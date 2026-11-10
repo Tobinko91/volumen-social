@@ -190,7 +190,7 @@ def szenen(d: dict, ordner: Path) -> tuple[list, dict]:
             (f"Without any pattern: {s['zufall_pct']:.0f}%", th.akzent2),
             (fazit, th.akzent)]), "haken"), 4.5)])
     folgen.append([(speichern(bild(d, 6, "Tomorrow: new pattern", "Follow & guess along", markieren=False,
-                                   gross=("Follow ✓", th.akzent)), "folgen"), 2.5)])
+                                   gross=("Follow", th.akzent)), "folgen"), 2.5)])
     return folgen, tx
 
 

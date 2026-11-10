@@ -62,7 +62,7 @@ case "$SLOT" in
   18:30) lauf warum --richtung runter ;;   # größter Verlierer: „Why did X drop?“ (Wunsch Tobias 04.11.2026)
   16:00) lauf coincheck ;;
   19:00) lauf wal ;;
-  21:30) lauf wissen; lauf formation; sudo -u redaktion env $UMGEBUNG python3 tools/offen.py --senden ;;   # + S27 Formation des Tages (09.11.)
+  21:30) lauf wissen; { [ "$(date +%u)" = "4" ] && lauf lehrbuch; } || lauf formation; sudo -u redaktion env $UMGEBUNG python3 tools/offen.py --senden ;;   # + S27 Formation des Tages (09.11.); donnerstags S29 „The textbook is WRONG“ statt S27 (10.11.)
   17:30) sudo -u redaktion env $UMGEBUNG python3 tools/folgen.py --senden ;;
   15:30|20:30) sudo -u redaktion env $UMGEBUNG python3 tools/kommentare.py --senden ;;
 esac

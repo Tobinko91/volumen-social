@@ -168,3 +168,9 @@ liquiditaet:                 # S24 (Wunsch Tobias 06.11.2026): Zonen in Top/Flop
 unlocks:                     # S22 Unlock-Posts + S26 Nachfolge-Reels (Wunsch Tobias 03./06.11.2026), alle 10 Min.
   aktiv: true
   schon_gepostet: [ALLO]     # aus dem Redaktions-Chat gepostet (S25, 06.11.) -> Nachfolge-Reels 12.11./18.11.
+
+# S29 „The textbook is WRONG“ (Wunsch Tobias 10.11.2026): donnerstags 21:30 statt S27, 1 Folge pro Woche.
+# Daten: muster_des_tages.json -> lehrbuch_falsch[] (Bot 9.38). Danach Abschluss Hammer (braucht dessen Statistik).
+lehrbuch:
+  aktiv: true
+  reihe: [double_top, range_breakdown, double_bottom, three_white_soldiers]
