@@ -204,11 +204,12 @@ class StimmePreiseTest(unittest.TestCase):
         self.assertEqual(stimme.sprech_wort("6.0x"), ["6", "times"])
         t = "Now $23.23, 2.8% below."
         sp, n = stimme.sprechbar(t)
-        self.assertEqual(sp, "Now about 23 dollars, 2.8% below.")
+        self.assertEqual(sp, "Now about twenty-three dollars, two point eight percent below.")   # 06.11.: als Woerter
         gesp = [{"w": w, "a": i, "e": i + 0.5} for i, w in enumerate(sp.split())]
         anz = stimme.zurueck_auf_anzeige(t, gesp, n)
         self.assertEqual([w["w"] for w in anz], ["Now", "$23.23,", "2.8%", "below."])   # Untertitel genau
         self.assertEqual((anz[1]["a"], anz[1]["e"]), (1, 3.5))
+        self.assertEqual((anz[2]["a"], anz[2]["e"]), (4, 7.5))   # „two point eight percent“ = 4 Woerter
 
     def test_abend_erinnerung(self):
         import datetime as dt

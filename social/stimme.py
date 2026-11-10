@@ -86,6 +86,23 @@ def sprech_wort(w: str) -> list[str]:
     $10,000 -> 10,000 dollars · $0.04512 -> about 0.045 dollars · 6.0x -> 6 times (Fehler 04./05.11.2026: Brian
     nuschelte Preise und sprach Nachkommastellen zu schnell)."""
     import re
+    # 06.11.2026 (ALLO-Reel): „~160M“, „~17×“ las Brian als Tilde/„M“/Zeichen, Tobias hoerte nicht, ob Millionen
+    # oder Milliarden. ~/≈ -> about, K/M/B/T -> thousand/million/billion/trillion, × -> times.
+    m = re.fullmatch(r"([(\[]?)[~≈]([^~≈].*)", w)
+    if m:
+        rest = sprech_wort(m.group(1) + m.group(2))
+        return rest if rest[0] == "about" else ["about"] + rest
+    w = w.replace("×", "x")
+    m = re.fullmatch(r"([(\[]?)([+\-−]?)(\$?)(\d[\d,]*(?:\.\d+)?)([KkMBT]n?)([.,:;!?)\]]*)", w)
+    if m:
+        vor, vz, dollar, zahl, einheit, rest = m.groups()
+        wort = {"K": "thousand", "k": "thousand", "M": "million", "B": "billion", "Bn": "billion",
+                "T": "trillion", "Mn": "million"}.get(einheit)
+        if wort:
+            r, rund = _gerundet(float(zahl.replace(",", "")))
+            minus = ["minus"] if vz in "-−" and vz else []
+            schluss = [wort, "dollars" + rest] if dollar else [wort + rest]
+            return (["about"] if rund else []) + minus + [vor + r] + schluss
     m = re.fullmatch(r"([(\[]?)\$(\d[\d,]*(?:\.\d+)?)([.,:;!?)\]]*)", w)
     if m:
         vor, zahl, rest = m.groups()
@@ -103,9 +120,110 @@ def sprech_wort(w: str) -> list[str]:
     return [w]
 
 
+EINER = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve",
+         "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"]
+ZEHNER = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
+MONATE = {"Jan": "January", "Feb": "February", "Mar": "March", "Apr": "April", "Jun": "June", "Jul": "July",
+          "Aug": "August", "Sep": "September", "Sept": "September", "Oct": "October", "Nov": "November",
+          "Dec": "December"}
+
+
+def _unter_tausend(n: int) -> list[str]:
+    out = []
+    if n >= 100:
+        out += [EINER[n // 100], "hundred"]
+        n %= 100
+    if n >= 20:
+        out.append(ZEHNER[n // 10] + (f"-{EINER[n % 10]}" if n % 10 else ""))
+    elif n or not out:
+        out.append(EINER[n])
+    return out
+
+
+def zahl_worte(n: int) -> list[str]:
+    """165000 -> one hundred sixty-five thousand (bis Billionen)."""
+    if n == 0:
+        return ["zero"]
+    out = []
+    for wert, name in ((10 ** 12, "trillion"), (10 ** 9, "billion"), (10 ** 6, "million"), (1000, "thousand")):
+        if n >= wert:
+            out += _unter_tausend(n // wert) + [name]
+            n %= wert
+    if n:
+        out += _unter_tausend(n)
+    return out
+
+
+def jahr_worte(j: int) -> list[str]:
+    """2021 -> twenty twenty-one · 2005 -> two thousand five · 1999 -> nineteen ninety-nine."""
+    if 2000 <= j <= 2009:
+        return zahl_worte(j)
+    a, b = divmod(j, 100)
+    return _unter_tausend(a) + (["hundred"] if b == 0 else (["oh", EINER[b]] if b < 10 else _unter_tausend(b)))
+
+
+def worte(t: str) -> list[str]:
+    """06.11.2026 (MEXC-Reel: „May 2021“ mit Haken, „$16B“ unklar): Das Flash-Modell von ElevenLabs normalisiert
+    Zahlen nicht selbst (nur im Enterprise-Tarif). Darum schreiben wir jede Zahl als Woerter aus."""
+    import re
+    m = re.fullmatch(r"([(\[\"“]?)(.*?)([.,:;!?)\]\"”]*)", t)
+    vor, kern, nach = m.groups()
+    if kern in MONATE:
+        return [vor + MONATE[kern] + nach]
+    m = re.fullmatch(r"#(\d+)", kern)
+    if m:
+        return [vor + "number"] + zahl_worte(int(m.group(1)))[:-1] + [zahl_worte(int(m.group(1)))[-1] + nach]
+    m = re.fullmatch(r"(\d{1,2}):(\d{2})", kern)
+    if m:
+        h, mi = int(m.group(1)), int(m.group(2))
+        z = zahl_worte(h) + (["hundred"] if mi == 0 and (h >= 13 or h == 0) else [] if mi == 0
+                              else (["oh", EINER[mi]] if mi < 10 else _unter_tausend(mi)))
+        z[0], z[-1] = vor + z[0], z[-1] + nach
+        return z
+    m = re.fullmatch(r"([+\-−]?)(\d[\d,]*)(?:\.(\d+))?(%?)", kern)
+    if not m:
+        return [t]
+    vz, ganz, dez, pz = m.groups()
+    n = int(ganz.replace(",", ""))
+    if not dez and not pz and not vz and "," not in ganz and 1900 <= n <= 2099 and len(ganz) == 4:
+        z = jahr_worte(n)
+    else:
+        z = (["minus"] if vz in ("-", "−") else ["plus"] if vz == "+" else []) + zahl_worte(n)
+        if dez:
+            z += ["point"] + [EINER[int(c)] for c in dez]
+        if pz:
+            z.append("percent")
+    z[0], z[-1] = vor + z[0], z[-1] + nach
+    return z
+
+
+ORDINAL = {"one": "first", "two": "second", "three": "third", "five": "fifth", "eight": "eighth", "nine": "ninth",
+           "twelve": "twelfth"}
+
+
+def _ordinal(w: str) -> str:
+    """nine -> ninth, twenty-one -> twenty-first, eleven -> eleventh, thirty -> thirtieth."""
+    vorn, _, letzt = w.rpartition("-")
+    if letzt in ORDINAL:
+        o = ORDINAL[letzt]
+    elif letzt.endswith("y"):
+        o = letzt[:-1] + "ieth"
+    else:
+        o = letzt + "th"
+    return f"{vorn}-{o}" if vorn else o
+
+
 def sprechbar(text: str) -> tuple[str, list[int]]:
     """-> (Text fuer die Stimme, Anzahl gesprochener Woerter je angezeigtem Wort)."""
-    gruppen = [sprech_wort(w) for w in text.split()]
+    import re
+    gruppen, vorher = [], ""
+    for w in text.split():
+        g = [x for t in sprech_wort(w) for x in worte(t)]
+        tag = re.fullmatch(r"(\d{1,2})([.,:;!?)]*)", w)
+        if tag and vorher.strip("(") in MONATE.values() | MONATE.keys() and 1 <= int(tag.group(1)) <= 31:
+            g[-1] = _ordinal(g[-1].rstrip(".,:;!?)")) + tag.group(2)   # Nov 11 -> November eleventh
+        gruppen.append(g)
+        vorher = w
     return " ".join(t for g in gruppen for t in g), [len(g) for g in gruppen]
 
 

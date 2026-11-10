@@ -216,3 +216,37 @@ class ReelAusBildTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AbkuerzungTest(unittest.TestCase):
+    """06.11.2026 Tobias (ALLO-Reel): Tilde, × und M/B/T klar sprechen (Millionen oder Milliarden?)."""
+
+    def test_sprechen(self):
+        from social import stimme
+        self.assertEqual(stimme.sprech_wort("~160M"), ["about", "160", "million"])
+        self.assertEqual(stimme.sprech_wort("~17×"), ["about", "17", "times"])
+        self.assertEqual(stimme.sprech_wort("$9.3M"), ["9.3", "million", "dollars"])
+        self.assertEqual(stimme.sprech_wort("$1.2T."), ["1.2", "trillion", "dollars."])
+        self.assertEqual(stimme.sprech_wort("-2.5B"), ["minus", "2.5", "billion"])
+        self.assertEqual(stimme.sprech_wort("~$13.52"), ["about", "14", "dollars"])   # nur ein „about“
+        self.assertEqual(stimme.sprech_wort("2026"), ["2026"])
+        text, laengen = stimme.sprechbar("~160M tokens, ~17× the last unlocks")
+        self.assertEqual(text, "about one hundred sixty million tokens, about seventeen times the last unlocks")
+        self.assertEqual(sum(laengen), len(text.split()))   # Zeitmarken passen weiter zu den Untertiteln
+
+    def test_zahlen_als_woerter(self):
+        """Flash-Modell normalisiert nicht: MEXC-Reel „May 2021“ mit Haken, „$16B“ unklar (Tobias 06.11.2026)."""
+        from social import stimme
+        t = "FinCEN cites at least $16B from May 2021 to May 2026. It takes effect 30 days after Nov 11, 13:30 UTC."
+        sp, n = stimme.sprechbar(t)
+        self.assertEqual(sp, "FinCEN cites at least sixteen billion dollars from May twenty twenty-one to May twenty "
+                             "twenty-six. It takes effect thirty days after November eleventh, thirteen thirty UTC.")
+        self.assertEqual(sum(n), len(sp.split()))
+        self.assertEqual(stimme.zahl_worte(165000), ["one", "hundred", "sixty-five", "thousand"])
+        self.assertEqual(stimme.jahr_worte(2005), ["two", "thousand", "five"])
+        self.assertEqual(stimme.sprechbar("8:05 AM, 2:00 PM, #1, -0.3%")[0],
+                         "eight oh five AM, two PM, number one, minus zero point three percent")
+
+    def test_mal_zeichen_bleibt_im_sprechtext(self):
+        self.assertEqual(reel.sprechtext("~160M tokens, ~17× the last unlocks"),
+                         ["~160M tokens, ~17x the last unlocks."])
