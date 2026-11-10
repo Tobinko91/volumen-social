@@ -131,6 +131,12 @@ def bauen(bilder: list[Path], toene: list[Path], dauern: list[float], ziel: Path
             k = max(1, round(0.7 * fps))
             zoom = (f"zoompan=z='if(lt(on,{k}),1.12-0.12*on/{k},1+0.02*(on-{k})/{n})':x='iw/2-(iw/zoom/2)':"
                     f"y='ih/2-(ih/zoom/2)':d={n}:s={W}x{H}:fps={fps}")
+        fokus_p = Path(b).with_suffix(".fokus.json") if not isinstance(b, (list, tuple)) else None
+        if fokus_p and fokus_p.exists():   # 10.11.2026 (S24/S28): langsamer Zoom auf den hellsten Cluster
+            fx, fy = json.loads(fokus_p.read_text())["fokus"]
+            fx, fy = fx * 2, fy * 2   # Bild wird vor dem Zoom auf doppelte Groesse skaliert
+            zoom = (f"zoompan=z='1+0.30*on/{n}':x='max(0,min(iw-iw/zoom,{fx}-iw/zoom/2))':"
+                    f"y='max(0,min(ih-ih/zoom,{fy}-ih/zoom/2))':d={n}:s={W}x{H}:fps={fps}")
         ut = []
         if texte and i < len(texte) and texte[i]:
             marken = Path(t).with_suffix(".json")

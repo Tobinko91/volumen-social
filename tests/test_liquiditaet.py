@@ -56,6 +56,10 @@ class LiquiditaetTest(unittest.TestCase):
             b = L.beitrag(self.top, o, CFG, self.d["pruefung"])
             self.assertEqual(Image.open(o / "post.png").size, (1080, 1350))
             self.assertEqual(Image.open(o / "heatmap.png").size, (1080, 1350))
+            import json as _j
+            self.assertEqual(_j.loads((o / "karussell.json").read_text())["folien"], ["post.png", "heatmap.png"])
+            fokus = _j.loads(b["szenen"][2][0].with_suffix(".fokus.json").read_text())["fokus"]
+            self.assertTrue(0 < fokus[0] < 1080 and 0 < fokus[1] < 1920)
             self.assertEqual(Image.open(b["szenen"][0][0]).size, (1080, 1920))
             self.assertEqual(len(b["szenen"]), 3)                   # Zonen, naechste Zonen, Heatmap
             self.assertIn("brightest band", b["szenen"][2][1].lower())

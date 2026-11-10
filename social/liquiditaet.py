@@ -270,6 +270,11 @@ def heatmap_bild(e: dict, ziel: Path, W: int = 1080, H: int = 1350, titel: str |
             d.text((px1 + 14, Y(p) - 12), pr(p), font=fl, fill=th.neben)
     d.text((px0, by1 - 34), "WhaleSqueeze · estimated liquidation heatmap · brighter = more estimated liquidations",
            font=font("Medium", 20), fill=th.neben)
+    h = hellster(e)
+    if h:   # Mittelpunkt des hellsten Bandes fuer den Zoom im Reel
+        ziel.parent.mkdir(parents=True, exist_ok=True)
+        ziel.with_suffix(".fokus.json").write_text(json.dumps({"fokus": [round(px0 + (px1 - px0) * 0.75),
+                                                                         round(Y(h["preis"]))]}))
     design.fuss(img, th, "Not financial advice.")
     ziel.parent.mkdir(parents=True, exist_ok=True)
     img.convert("RGB").save(ziel)
@@ -311,7 +316,8 @@ def beitrag(e: dict, ordner: Path, cfg: dict, pruefung: list | None, eil: bool =
     if hb and h:
         szenen.append((hb, f"The brightest band is the biggest estimated liquidation cluster, "
                            f"{abs(h['abstand_pct']):.1f}% {'above' if h['abstand_pct'] >= 0 else 'below'} the price."))
-        heatmap_bild(e, ordner / "heatmap.png")   # 4:5 fuer Karussell / zweites Bild
+        heatmap_bild(e, ordner / "heatmap.png")   # 4:5: zweites Bild (Pflicht laut S24, wenn vorhanden)
+        (ordner / "karussell.json").write_text(json.dumps({"folien": ["post.png", "heatmap.png"]}), encoding="utf-8")
     szenen[-1] = (szenen[-1][0], szenen[-1][1] + " Estimated zones, not targets. Follow for more.")
     return dict(tx, szenen=szenen)
 
