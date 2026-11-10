@@ -62,7 +62,7 @@ def x(geheim: dict, ordner: Path, text: str, post=requests.post) -> str:
         j = r.json()
         ids.append(str((j.get("data") or {}).get("id") or j.get("media_id_string")))
     r = post(kanaele.X_TWEET, headers={"Authorization": kanaele.oauth_kopf("POST", kanaele.X_TWEET, geheim)},
-             json={"text": text[:280], "media": {"media_ids": ids}}, timeout=60)
+             json={"text": kanaele.ein_cashtag(text)[:280], "media": {"media_ids": ids}}, timeout=60)
     if r.status_code >= 300:
         raise RuntimeError(f"X-Post: {r.status_code} {r.text[:200]}")
     return f"https://x.com/i/web/status/{r.json()['data']['id']}"
