@@ -41,6 +41,8 @@ lauf() { sudo -u redaktion env $UMGEBUNG python3 main.py "$@" --senden; }
 [ "$SLOT" = "18:30" ] && [ "$(date +%u)" = "7" ] && sudo -u redaktion env $UMGEBUNG python3 tools/wochenbericht.py --senden
 # S11 Wal-Karussell sonntags 17:00; S13 Termine der KOMMENDEN Woche sonntags 18:00 (vor Wochenbeginn)
 [ "$SLOT" = "17:00" ] && [ "$(date +%u)" = "7" ] && lauf karussell
+# S24 Top/Flop-Coin mit geschaetzten Liquiditaetszonen Mo-Sa 17:00 (11:00 ET, Wunsch Tobias 06.11.2026)
+[ "$SLOT" = "17:00" ] && [ "$(date +%u)" != "7" ] && lauf liquiditaet
 [ "$SLOT" = "18:00" ] && [ "$(date +%u)" = "7" ] && lauf termine
 # S30 Willkommensvideo EINMAL (sobald die Stimme laeuft), danach Merkdatei; neu: Datei loeschen
 W=/opt/volumen-social/ausgabe/.willkommen_gesendet
