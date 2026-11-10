@@ -51,7 +51,7 @@ W=/opt/volumen-social/ausgabe/.willkommen_gesendet
 T=/opt/volumen-social/ausgabe/.warum_probe_gesendet
 [ ! -f "$T" ] && [ "$H" -ge 7 ] && [ "$H" -lt 22 ] && [ "$SLOT" != "14:30" ] && { lauf warum; sudo -u redaktion touch "$T"; }
 case "$SLOT" in
-  14:30) lauf markt --art post; lauf warum ;;   # 04.11.2026: Markt nur noch als Bild, Video = „Why did it move?“
+  14:30) lauf markt --art post; lauf warum; lauf liqmap ;;   # + S28 Liquidity Map of the Day (09.11.)   # 04.11.2026: Markt nur noch als Bild, Video = „Why did it move?“
   15:00|20:00|21:00) lauf news ;;
   18:30) lauf warum --richtung runter ;;   # größter Verlierer: „Why did X drop?“ (Wunsch Tobias 04.11.2026)
   16:00) lauf coincheck ;;
