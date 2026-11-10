@@ -110,7 +110,8 @@ def bild(d: dict, n_nach: int, titel: str, unter: str = "", pfeile: bool = False
         oben, unten = min(y(o), y(c)), max(y(o), y(c))
         dr.rectangle([xm - breite * 0.33, oben, xm + breite * 0.33, max(unten, oben + 2)], fill=farbe)
     if markieren:   # Formation = die letzten 1-3 Kerzen von kerzen_vorher
-        m = max(1, min(3, len(d.get("muster_kerzen") or [1])))
+        mk = d.get("muster_kerzen") or 1   # Bot 9.36 liefert die Anzahl (1-3), aeltere Beispiele eine Liste
+        m = max(1, min(3, mk if isinstance(mk, int) else len(mk)))
         a = innen[0] + (len(vor) - m) * breite
         e = innen[0] + len(vor) * breite
         hs = [y(k[2]) for k in vor[-m:]]

@@ -25,6 +25,8 @@ def laden(ordner: Path) -> dict | None:
 
 def _e(feld: dict, base: str) -> dict:
     e = dict(feld, base=feld.get("base") or base)
+    if e.get("chg24") is None:   # Bot liefert chg24 manchmal leer
+        e["chg24"] = 0.0
     e.setdefault("mit_liquidationen", bool(e.get("heatmap")))   # Heatmap gibt es nur mit Futures-Daten
     return e
 
@@ -83,10 +85,10 @@ def bauen(d: dict, ordner: Path, cfg: dict, web_dir: Path | None = None) -> tupl
     teile = [("btc", "BTC", "Where the liquidity sits for $BTC today")]
     if d.get("top"):
         b = d["top"].get("base", "")
-        teile.append(("top", b, f"${b} {d['top'].get('chg24', 0):+.1f}%: here's where the liquidations are stacked"))
+        teile.append(("top", b, f"${b} {(d['top'].get('chg24') or 0):+.1f}%: here's where the liquidations are stacked"))
         if d.get("flop"):
             b = d["flop"].get("base", "")
-            teile.append(("flop", b, f"Flop of the day: ${b} {d['flop'].get('chg24', 0):+.1f}%"))
+            teile.append(("flop", b, f"Flop of the day: ${b} {(d['flop'].get('chg24') or 0):+.1f}%"))
     for i, (feld, base, titel) in enumerate(teile):
         e = _e(d[feld], base)
         f = L.heatmap_bild(e, ordner / f"folie_{i:02d}.png", titel=titel)

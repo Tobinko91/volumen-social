@@ -30,6 +30,10 @@ class LiqMapTest(unittest.TestCase):
         for z in tx["sprech"]:
             self.assertNotIn("(", z)
 
+    def test_chg24_leer(self):
+        d = dict(self.d, top=dict(self.d["top"], chg24=None))
+        self.assertIn("+0.0%", liqmap.texte(d, CFG)["x"])
+
     def test_karussell(self):
         o = Path(tempfile.mkdtemp())
         try:

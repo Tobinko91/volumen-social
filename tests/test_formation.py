@@ -81,6 +81,10 @@ class FormationTest(unittest.TestCase):
         b = formation.bild(self.d, 0, "Watch the chart", markieren=False, n_vor=10)
         self.assertNotEqual(a.tobytes(), b.tobytes())
 
+    def test_muster_kerzen_als_zahl(self):
+        """Bot 9.36 liefert muster_kerzen als Anzahl (int)."""
+        formation.bild(dict(self.d, muster_kerzen=2), 0, "BUY or SELL?")
+
     def test_format_name(self):
         from social import bericht
         self.assertEqual(bericht.format_aus_ordner("20261109-2130_formation_ZK_video"), "formation_video")

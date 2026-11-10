@@ -15,7 +15,12 @@ if [ -f deploy/$D ] && ! cmp -s deploy/$D /etc/systemd/system/$D; then
   systemctl restart $D && echo "$(date '+%F %T') Freigabe-Dienst eingespielt"
 fi
 systemctl is-active -q $D 2>/dev/null || systemctl start $D 2>/dev/null
-git fetch -q origin main || exit 1
+# 10.11.2026 GitHub schonend: main kommt mit der Sammelabfrage aus tools/eingang.sh (alle 10 Min.). Nur wenn die
+# laenger als 30 Minuten nicht gelaufen ist, fragt auto_update selbst nach.
+STEMPEL=/tmp/volumen-social-fetch.stamp
+if ! [ -f "$STEMPEL" ] || [ $(( $(date +%s) - $(stat -c %Y "$STEMPEL") )) -gt 1800 ]; then
+  git fetch -q origin main || exit 1
+fi
 ALT=$(git rev-parse HEAD)
 NEU=$(git rev-parse origin/main)
 [ "$ALT" = "$NEU" ] && exit 0

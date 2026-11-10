@@ -82,7 +82,8 @@ def texte(e: dict, cfg: dict, pruefung: list[dict] | None = None, eil: bool = Fa
         ch = e.get("chg1h") if "1h" in bew else e.get("chg24")
         kopf = f"${b} {ch:+.1f}% in {'1h' if '1h' in bew else '24h'}: where the liquidity sits"
     else:
-        kopf = f"${b} {e['chg24']:+.1f}% today: where the liquidity sits"
+        kopf = (f"${b} {e['chg24']:+.1f}% today: where the liquidity sits" if e.get("chg24") is not None
+                else f"${b}: where the liquidity sits")
     satz = []
     r = erreicht(e)
     preis = pr(e["preis"])
