@@ -127,6 +127,10 @@ def bauen(bilder: list[Path], toene: list[Path], dauern: list[float], ziel: Path
         out = tmp / f"teil_{i:02d}.mp4"
         # langsamer Zoom (2 %) gegen "Standbild"-Wirkung
         zoom = f"zoompan=z='1+0.02*on/{n}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={n}:s={W}x{H}:fps={fps}"
+        if i == 0:   # 08.11.2026 (Haltequote 8 %): Sekunde 1 bewegt sich, schneller Zoom von 112 % auf 100 %
+            k = max(1, round(0.7 * fps))
+            zoom = (f"zoompan=z='if(lt(on,{k}),1.12-0.12*on/{k},1+0.02*(on-{k})/{n})':x='iw/2-(iw/zoom/2)':"
+                    f"y='ih/2-(ih/zoom/2)':d={n}:s={W}x{H}:fps={fps}")
         ut = []
         if texte and i < len(texte) and texte[i]:
             marken = Path(t).with_suffix(".json")

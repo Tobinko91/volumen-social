@@ -59,7 +59,9 @@ class LernVideoTest(unittest.TestCase):
         cfg = _y.safe_load((Path(__file__).resolve().parent.parent / "config.yaml").read_text(encoding="utf-8"))
         for t in wissen.themen():
             b = wissen.video_szenen(t, "en")
-            self.assertEqual(len(b["szenen"]), len(t["punkte"]) + 2)
+            self.assertEqual(len(b["szenen"]), len(t.get("video_punkte") or t["punkte"]) + 2)
+            woerter = sum(len(sz["vorlage"].split()) for sz in b["szenen"])
+            self.assertLessEqual(woerter, cfg["text"]["max_woerter_wissen"], t["id"])   # 08.11.: 15-18-Sek.-Reels
             self.assertEqual(b["szenen"][0]["typ"], "lern_haken")
             zeilen = [s["vorlage"] for s in b["szenen"]]
             self.assertEqual(_p.pruefen(zeilen, {"fakten": b["fakten"], "szenen": b["szenen"]}, cfg, set()), [], t["id"])
@@ -67,6 +69,26 @@ class LernVideoTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class NeueThemenTest(unittest.TestCase):
+    """08.11.2026 Tobias: mehr Lern-Reels. Jede Zahl der neuen Themen nachgerechnet."""
+
+    def test_rechnungen(self):
+        import math
+        self.assertEqual([round(0.999 ** n * 100, 1) for n in (10, 50, 100)], [99.0, 95.1, 90.5])   # Gebuehren
+        self.assertEqual([round(100 / (1 + r), 1) for r in (1, 2, 3)], [50.0, 33.3, 25.0])          # Chance/Risiko
+        self.assertEqual([round(10 / (s / 100)) for s in (2, 5, 10)], [500, 200, 100])              # Positionsgroesse
+        self.assertEqual([round(f * 3 * 365) for f in (0.01, 0.05, 0.1)], [11, 55, 110])            # Funding (einfach)
+        self.assertEqual([round(100 * (1 - 1 / (1 + m / 100)), 1) for m in (25, 50, 100)], [20.0, 33.3, 50.0])  # Unlock
+        self.assertEqual([round(100 * (1 - 1 / (1 + p / 100)), 1) for p in (50, 100, 200)], [33.3, 50.0, 66.7])  # FOMO
+        self.assertAlmostEqual(0.7 * 1 - 0.3 * 3, -0.2)                                              # Trefferquote
+        self.assertEqual([round(math.log(2) / math.log(1 + r / 100)) for r in (6, 8, 12)], [12, 9, 6])  # Regel 72
+        self.assertEqual([round(1000 / 1.03 ** 10), round(1000 / 1.03 ** 20), round(1000 / 1.05 ** 10)], [744, 554, 614])
+        self.assertEqual(sum(2 ** i for i in range(6)), 63)                                          # Verdoppeln
+
+    def test_genug_themen_fuer_zwei_am_tag(self):
+        self.assertGreaterEqual(len(wissen.themen()), 23)
 
 
 class LernGrafikTest(unittest.TestCase):

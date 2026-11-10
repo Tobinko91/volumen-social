@@ -3,14 +3,14 @@
 # Laeuft per cron um :00 und :30. Zeiten in deutscher Zeit, Ruhe von 22 bis 7 Uhr.
 # Seit 27.10.2026 auf das englischsprachige Publikum (USA) ausgerichtet. Seit 1.11.2026 US-Winterzeit:
 # Abstand zur US-Ostkueste 6 Std. (bis 8.3.2027; danach 5 Std., dann alles eine Stunde frueher). In Klammern ET:
-#   14:30 Markt-Beitrag als Bild + Video „Why did it move?“ (8:30 ET, vor US-Boersenstart)
-#   15:00 20:00 21:00 News (9:00 / 14:00 / 15:00 ET)
+#   14:30 Lern-Reel + Video „Why did it move?“ (8:30 ET; seit 08.11. statt Markt-Bild)
+#   News nur noch als Eilmeldung ueber live.sh (seit 08.11., feste News-Zeiten brachten Ø 8 Aufrufe)
 #   16:00 Coin-Check (10:00 ET)
 #   18:30 „Why did it move?“ fuer den groessten Verlierer (12:30 ET)
 #   15:30 20:30 Kommentar-Vorschlaege (9:30 / 14:30 ET, Tobias postet selbst)
 #   17:30 Folge-Liste an Tobias (X per Knopf, Instagram/YouTube per Link; Wunsch 31.10.)
 #   19:00 Wal des Tages (13:00 ET, US-Mittagspause)
-#   21:30 Lern-Beitrag + Erinnerung an offene Vorschlaege (15:30 ET; spaeter waere fuer die USA besser, ab 22 Uhr ist aber Ruhezeit)
+#   21:30 zweites Lern-Reel + Erinnerung an offene Vorschlaege (15:30 ET; spaeter waere fuer die USA besser, ab 22 Uhr ist aber Ruhezeit)
 #   09:00 Gesundheits-Check an Tobias (gestern: Termine, Vorschlaege, Fehler, Update, Daten)
 #   So 18:30 Wochenbericht an Tobias (Follower, Aufrufe je Format, Empfehlung)
 #   Eilmeldungen: eigener Lauf tools/live.sh alle 10 Minuten rund um die Uhr (seit 30.10.2026)
@@ -53,8 +53,8 @@ W=/opt/volumen-social/ausgabe/.willkommen_gesendet
 T=/opt/volumen-social/ausgabe/.warum_probe_gesendet
 [ ! -f "$T" ] && [ "$H" -ge 7 ] && [ "$H" -lt 22 ] && [ "$SLOT" != "14:30" ] && { lauf warum; sudo -u redaktion touch "$T"; }
 case "$SLOT" in
-  14:30) lauf markt --art post; lauf warum ;;   # 04.11.2026: Markt nur noch als Bild, Video = „Why did it move?“
-  15:00|20:00|21:00) lauf news ;;
+  14:30) lauf wissen; lauf warum ;;   # 08.11.2026 Wochenbericht: Markt-Bild (Ø 2 Aufrufe) raus, zweites Lern-Reel rein
+  # 08.11.2026: News nur noch als Eilmeldung (live.sh, alle 10 Min.), keine festen News-Zeiten mehr (Ø 8 Aufrufe)
   18:30) lauf warum --richtung runter ;;   # größter Verlierer: „Why did X drop?“ (Wunsch Tobias 04.11.2026)
   16:00) lauf coincheck ;;
   19:00) lauf wal ;;
