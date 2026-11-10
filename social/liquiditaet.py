@@ -238,7 +238,7 @@ def heatmap_bild(e: dict, ziel: Path, W: int = 1080, H: int = 1350, titel: str |
     nt, npr = len(zeiten), len(preise)
     import math
     lo, hi = math.log(preise[0]), math.log(preise[-1])
-    Y = lambda p: py1 - (py1 - py0) * (math.log(max(p, preise[0])) - lo) / (hi - lo)
+    Y = lambda p: min(py1, max(py0, py1 - (py1 - py0) * (math.log(max(p, 1e-12)) - lo) / (hi - lo)))   # im Rahmen
     def farbe(w):   # 0..1 -> Mitternacht -> Flieder -> Minze
         w = max(0.0, min(1.0, w)) ** 0.6
         a, b, c = (28, 22, 64), (182, 156, 255), (60, 242, 192)
