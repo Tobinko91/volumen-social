@@ -42,7 +42,8 @@ def texte(d: dict) -> dict:
     stimmt = e.get("lehrbuch_stimmt")
     coin, name = d["coin"], d["name_en"]
     zeilen = [
-        f"Buy or sell? A {name} on {coin}.",
+        f"Watch {coin} on the 4 hour chart.",   # 10.11.2026 Tobias: erst die Bewegung, dann die Frage
+        f"A {name}. Buy or sell?",
         "Comment your answer now.",
         "Here is what happened next.",
         f"{coin} moved {_pz(e['r6'])} in 24 hours. " + ("The textbook was right." if stimmt
@@ -77,11 +78,13 @@ def _skala(kerzen: list, box):
 
 
 def bild(d: dict, n_nach: int, titel: str, unter: str = "", pfeile: bool = False, zahl: int | None = None,
+         n_vor: int | None = None,
          gross: tuple | None = None, karte_zeilen: list | None = None, markieren: bool = True, saat: int = 7):
     from . import design
     from .design import font, rgb
     th = design.THEMEN["nacht"]
-    vor = [list(k) for k in d["kerzen_vorher"][-26:]]
+    alle_vor = [list(k) for k in d["kerzen_vorher"][-26:]]
+    vor = alle_vor[:n_vor] if n_vor else alle_vor   # Aufbau Kerze fuer Kerze
     nach = [list(k) for k in d["kerzen_nachher"][:6]]
     img = design.hintergrund(th, W, H, saat=saat)
     design.marke(img, th, 80, 90, 72)
@@ -95,8 +98,8 @@ def bild(d: dict, n_nach: int, titel: str, unter: str = "", pfeile: bool = False
     dr = ImageDraw.Draw(img)
     x0, y0, x1, y1 = BOX
     innen = (x0 + 30, y0 + 70, x1 - 30, y1 - 30)
-    y = _skala(vor + nach, innen)
-    slots = len(vor) + 6 + 1
+    y = _skala(vor + nach[:n_nach], innen)   # nur sichtbare Kerzen: die Skala verraet nichts ueber die Zukunft
+    slots = len(alle_vor) + 6 + 1
     breite = (innen[2] - innen[0]) / slots
     dr.text((x0 + 30, y0 + 20), f"${d['coin']} · 4h · real chart", font=font("SemiBold", 28), fill=th.neben)
     for i, k in enumerate(vor + nach[:n_nach]):
@@ -162,7 +165,13 @@ def szenen(d: dict, ordner: Path) -> tuple[list, dict]:
         img.convert("RGB").save(p)
         return p
 
-    folgen = [[(speichern(bild(d, 0, "BUY or SELL?", f"Pattern: {d['name_en']}", pfeile=True), "intro"), 2.5)]]
+    n = len(d["kerzen_vorher"][-26:])
+    schritte = list(range(3, n, 1))   # Kerze fuer Kerze, ohne Markierung und ohne Frage
+    folgen = [[(speichern(bild(d, 0, "Watch the chart", f"${d['coin']} · 4h", markieren=False, n_vor=k), f"auf_{k:02d}"),
+                0.13) for k in schritte]
+              + [(speichern(bild(d, 0, "Watch the chart", f"${d['coin']} · 4h", markieren=False), "auf_fertig"), 0.5)]]
+    folgen.append([(speichern(bild(d, 0, "BUY or SELL?", f"Pattern: {d['name_en']}"), "muster"), 0.9),
+                   (speichern(bild(d, 0, "BUY or SELL?", f"Pattern: {d['name_en']}", pfeile=True), "frage"), 1.6)])
     folgen.append([(speichern(bild(d, 0, "BUY or SELL?", "Comment your answer!", pfeile=True, zahl=n), f"count_{n}"),
                     1.0) for n in (5, 4, 3, 2, 1)])
     folgen.append([(speichern(bild(d, n, "What happened next?", "the next 24 hours"), f"nach_{n}"), 0.45)
@@ -208,7 +217,7 @@ def video(d: dict, ordner: Path, cfg: dict, geheim: dict, sprechen=None, schneid
     toene, dauern, quelle = sprechen(tx["zeilen"], ordner / "ton", cfg, stimme.schluessel(cfg, geheim))
     dauern = [max(du, sum(sek for _, sek in f) + 0.2) for du, f in zip(dauern, folgen)]
     try:   # Countdown: Ticken unter die Stimme
-        toene[1] = ticken(Path(toene[1]), Path(toene[1]).with_name("countdown_tick.mp3"), dauern[1])
+        toene[2] = ticken(Path(toene[2]), Path(toene[2]).with_name("countdown_tick.mp3"), dauern[2])
     except Exception as e:
         print("Ticken nicht gemischt:", e)
     schneiden(folgen, toene, dauern, ordner / "video.mp4", cfg, texte=tx["zeilen"],
