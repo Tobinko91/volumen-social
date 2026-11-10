@@ -1,0 +1,24 @@
+📊 <b>We tested 12 candlestick patterns on 1.27 million candles. Only ONE beat chance.</b>
+
+779 Bitunix coins, 365 days, 4h candles, result after 24 hours. Without any pattern, 45.0% of candles were followed by a rise.
+
+<b>Textbook right vs. no pattern</b>
+• Hammer (up): 51.9% vs 45.0% · +6.8 pts · 12,518 cases
+• Morning Star (up): 45.9% vs 45.0% · +0.8 pts · 3,524 cases
+• Shooting Star (down): 54.5% vs 55.0% · -0.4 pts · 12,201 cases
+• Evening Star (down): 54.3% vs 55.0% · -0.6 pts · 3,125 cases
+• Range Breakout (up): 44.3% vs 45.0% · -0.7 pts · 8,751 cases
+• Bullish Engulfing (up): 44.2% vs 45.0% · -0.8 pts · 24,364 cases
+• Bearish Engulfing (down): 53.8% vs 55.0% · -1.2 pts · 20,948 cases
+• Three Black Crows (down): 53.2% vs 55.0% · -1.7 pts · 6,340 cases
+• Three White Soldiers (up): 42.7% vs 45.0% · -2.4 pts · 5,280 cases
+• Double Bottom (up): 41.5% vs 45.0% · -3.5 pts · 24,586 cases
+• Double Top (down): 49.5% vs 55.0% · -5.5 pts · 26,598 cases
+• Range Breakdown (down): 49.4% vs 55.0% · -5.5 pts · 10,013 cases
+
+Only the Hammer is clearly above chance. Double Top and Range Breakdown are clearly below: price turned against the textbook more often. Everything else is within normal noise.
+Not yet tested as a trade after fees.
+
+From tomorrow: one pattern a day, live on a real chart. BUY or SELL? Comment below.
+
+<i>Not financial advice</i>

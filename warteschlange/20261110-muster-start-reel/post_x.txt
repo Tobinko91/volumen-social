@@ -1,0 +1,5 @@
+We tested 12 famous candlestick patterns on 1.27M candles.
+Only ONE beat chance: the Hammer, +6.8 pts.
+Double Top & Range Breakdown were WRONG more often than random.
+From tomorrow: one pattern a day, live.
+Not financial advice

@@ -1,0 +1,33 @@
+{
+ "thema": "muster-start",
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "text": "We tested twelve famous candlestick patterns on one point two seven million real candles. Only one of them beat chance."
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "Worst first. Range Breakdown, Double Top, Double Bottom and Three White Soldiers all did worse than no pattern at all."
+  },
+  {
+   "bild": "szene_2.png",
+   "text": "Three Black Crows, both Engulfing patterns and the Range Breakout: all within chance."
+  },
+  {
+   "bild": "szene_3.png",
+   "text": "Evening Star, Shooting Star and Morning Star: no real edge either."
+  },
+  {
+   "bild": "szene_4.png",
+   "text": "Number one: the Hammer. Price rose after it fifty one point nine percent of the time, versus forty five percent with no pattern. Six point eight points better. Not yet tested as a trade after fees."
+  },
+  {
+   "bild": "szene_5.png",
+   "text": "And the twist: after a Double Top or a Range Breakdown, price went against the textbook more often than with no pattern at all."
+  },
+  {
+   "bild": "szene_6.png",
+   "text": "Every day we test one pattern live on a real chart. Guess along and follow."
+  }
+ ]
+}
