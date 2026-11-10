@@ -63,7 +63,7 @@ def lade_sperrliste() -> set[str]:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("format", choices=sorted(formate.FORMATE) + ["wissen", "news", "coincheck", "wal", "karussell", "termine", "willkommen", "warum"])
+    ap.add_argument("format", choices=sorted(formate.FORMATE) + ["wissen", "news", "coincheck", "wal", "karussell", "termine", "willkommen", "warum", "formation"])
     ap.add_argument("--thema", help="nur bei wissen: bestimmtes Thema (id aus inhalte/wissen.yaml)")
     ap.add_argument("--eil", action="store_true", help="nur bei news: nur senden, wenn es eine Eilmeldung gibt")
     ap.add_argument("--nur-mit-stimme", action="store_true", help="nur bei willkommen: ohne Stimme nicht senden")
@@ -103,6 +103,8 @@ def main() -> int:
         return warum_beitrag(args, cfg, geheim, sperr)
     if args.format == "willkommen":
         return willkommen_video(args, cfg, geheim, sperr)
+    if args.format == "formation":
+        return formation_video(args, cfg, geheim, sperr)
     probe = bool(args.daten)
     d = daten.laden(args.daten or cfg["daten"]["dir"],
                     None if probe else cfg["daten"]["max_alter_min"])
@@ -198,6 +200,43 @@ def wissen_beitrag(args, cfg, geheim, sperr) -> int:
     if not args.thema:
         wissen.merken(stand, t["id"], time.time())
     return 1 if fehler else 0
+
+
+def formation_video(args, cfg, geheim, sperr) -> int:
+    """S27 „Formation des Tages: BUY or SELL?“ (Wunsch Tobias 09.11.2026), Daten muster_des_tages.json vom Bot."""
+    import html as _h
+    from social import formation
+    d = formation.laden(args.daten or cfg["daten"]["dir"])
+    if not d:
+        print("Formation: keine (vollstaendigen) Daten in muster_des_tages.json")
+        return 0
+    if d["coin"].upper() in {c.upper() for c in sperr}:
+        print("Formation: Coin auf der Sperrliste, kein Video")
+        return 0
+    stand = Path(args.out) / "formation_stand.json"
+    try:
+        schon = json.loads(stand.read_text())
+    except Exception:
+        schon = {}
+    tag = d.get("datum") or time.strftime("%Y-%m-%d")
+    if not args.daten and schon.get("tag") == tag:
+        print("Formation: heute schon gebaut")
+        return 0
+    ordner = Path(args.out) / f"{time.strftime('%Y%m%d-%H%M')}_formation_{d['coin']}_video"
+    pfad, quelle, tx = formation.video(d, ordner, cfg, geheim)
+    (ordner / "post_x.txt").write_text(tx["x"], encoding="utf-8")
+    e = lambda x: _h.escape(x, quote=False)
+    (ordner / "post_telegram.txt").write_text(
+        "📊 <b>BUY or SELL?</b>\n\n" + "\n".join(e(z) for z in tx["zeilen"]) + "\n\n<i>Not financial advice.</i>",
+        encoding="utf-8")
+    if not args.daten:
+        stand.write_text(json.dumps({"tag": tag}))
+    print(f"Formation {d['muster']} auf {d['coin']}: Stimme {quelle}")
+    if args.senden:
+        vorschlag(args, geheim, cfg, ordner, f"📊 Formation des Tages: {d['name_en']} auf {d['coin']}\nStimme: {quelle}"
+                  + ("" if d.get("statistik") else "\n⚠️ Ohne Trefferquote: einmal tools/muster_statistik.py im "
+                     "Bot ausfuehren (Szene „But here's the catch“ fehlt sonst)."))
+    return 0
 
 
 def wissen_video(t, txt, cfg, geheim, sperr, ordner: Path, args, echt=None) -> list[str]:
