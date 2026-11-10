@@ -259,3 +259,44 @@ class EinCashtagTest(unittest.TestCase):
         self.assertEqual(kanaele.ein_cashtag(t),
                          "🐋 Whales of the week: $ZK +6 pp, BAT +3 pp, ALLO. BTC at $75,740, $1.2B moved. zk again")
         self.assertEqual(kanaele.ein_cashtag("Only $SOL here"), "Only $SOL here")
+class KursAlarmChartTest(unittest.TestCase):
+    """08.11.2026 Tobias: ETH-Alarm-Reel zeigte ein leeres Bild statt Chart (Ausschnitt ab 1 Std. vor der Bewegung
+    hatte nur 8 Kerzen). Jetzt 5-Min-Kerzen mit 6 Std. Vorgeschichte, Ersatz-Zahlen unter dem Chart."""
+
+    def test_alarm_reel_hat_chart_und_zahlen(self):
+        from social import kursalarm
+        t0 = 1_794_200_000
+        k = [{"t": (t0 - (99 - i) * 300) * 1000, "o": 2230 - i * 1.0, "h": 2231 - i, "l": 2229 - i, "c": 2229 - i * 1.0,
+              "v": 1} for i in range(100)]
+        with tempfile.TemporaryDirectory() as d:
+            a = {"base": "ETH", "jetzt": 2126.0, "chg1h": -4.5, "chg24": -6.2, "ts": t0, "ab_ts": t0 - 3600}
+            bo, ro = kursalarm.bauen([a], Path(d), CFG, jetzt=t0)
+            spec = json.loads((ro / "reel.json").read_text())
+            self.assertIn("−4.5%", spec["szenen"][0]["text"])
+            c = spec["szenen"][1]["chart"]
+            self.assertEqual((c["intervall"], c["vorlauf_h"]), ("5m", 6))
+            gesehen = {}
+
+            def sp(z, o_, c_, key):
+                gesehen["z"] = z
+                return [Path("a.mp3")] * 3, [3.0] * 3, "elevenlabs"
+            q = reel.bauen(ro, CFG, {}, kerzen_holen=lambda b, i, n: k, sprechen=sp, schneiden=lambda *x, **kw: None)
+            self.assertIn("Chart ETH", q)
+            self.assertIn("since the move started", gesehen["z"][1])
+            self.assertNotIn("{chg}", gesehen["z"][1])
+
+    def test_zu_kurzer_ausschnitt_nimmt_alle_kerzen(self):
+        o = Path(tempfile.mkdtemp())
+        try:
+            Image.new("RGB", (1080, 1920)).save(o / "s.png")
+            (o / "reel.json").write_text(json.dumps({"thema": "t", "szenen": [
+                {"bild": "s.png", "text": "BTC {chg}.", "text_ohne": "x",
+                 "chart": {"base": "BTC", "intervall": "15m", "anzahl": 48, "box": [60, 700, 1020, 1500],
+                           "ab_ts": 1_000_000}}]}))
+            k = [{"t": (1_000_000 + i * 900 - 40 * 900) * 1000, "o": 100, "h": 101, "l": 99, "c": 100, "v": 1}
+                 for i in range(48)]   # nur 8 Kerzen ab 1 Std. vor dem Ereignis
+            q = reel.bauen(o, CFG, {}, kerzen_holen=lambda b, i, n: k,
+                           sprechen=lambda z, *a: ([Path("a.mp3")], [2.0], "e"), schneiden=lambda *a, **kw: None)
+            self.assertIn("Chart BTC", q)
+        finally:
+            shutil.rmtree(o)
