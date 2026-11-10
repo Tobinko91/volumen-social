@@ -63,7 +63,7 @@ def lade_sperrliste() -> set[str]:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("format", choices=sorted(formate.FORMATE) + ["wissen", "news", "coincheck", "wal", "karussell", "termine", "willkommen", "warum", "liquiditaet", "liqmap"])
+    ap.add_argument("format", choices=sorted(formate.FORMATE) + ["wissen", "news", "coincheck", "wal", "karussell", "termine", "willkommen", "warum", "liquiditaet", "liqmap", "signallab"])
     ap.add_argument("--thema", help="nur bei wissen: bestimmtes Thema (id aus inhalte/wissen.yaml)")
     ap.add_argument("--eil", action="store_true", help="nur bei news: nur senden, wenn es eine Eilmeldung gibt")
     ap.add_argument("--nur-mit-stimme", action="store_true", help="nur bei willkommen: ohne Stimme nicht senden")
@@ -107,6 +107,8 @@ def main() -> int:
         return liquiditaet_beitrag(args, cfg, geheim, sperr)
     if args.format == "liqmap":
         return liqmap_beitrag(args, cfg, geheim, sperr)
+    if args.format == "signallab":
+        return signallab_beitrag(args, cfg, geheim, sperr)
     probe = bool(args.daten)
     d = daten.laden(args.daten or cfg["daten"]["dir"],
                     None if probe else cfg["daten"]["max_alter_min"])
@@ -270,6 +272,25 @@ def liqmap_beitrag(args, cfg, geheim, sperr) -> int:
         video.bauen(bilder_, toene, dauern, vo / "video.mp4", cfg, **video.ut_formate(cfg, zeilen))
         if args.senden:
             vorschlag(args, geheim, cfg, vo, f"🗺 Liquidity Map als Reel · Stimme: {quelle}")
+    return 0
+
+
+def signallab_beitrag(args, cfg, geheim, sperr) -> int:
+    """S23 Signal Lab · Week N (Wunsch Tobias 04.11.2026), montags. Verlierer werden genauso gezeigt."""
+    from social import signallab
+    d = signallab.laden(Path(args.daten or cfg["daten"]["dir"]))
+    if not d:
+        print("Signal Lab: keine strategien.json")
+        return 0
+    jetzt = time.time()
+    ordner = Path(args.out) / f"{time.strftime('%Y%m%d-%H%M')}_signallab"
+    signallab.bild(d, cfg, ordner / "post.png", jetzt)
+    tx = signallab.texte(d, cfg, jetzt)
+    (ordner / "post_x.txt").write_text(tx["x"], encoding="utf-8")
+    (ordner / "post_telegram.txt").write_text(tx["telegram"], encoding="utf-8")
+    print(f"Signal Lab Woche {signallab.woche_nr(d, jetzt)}: X {len(tx['x'])} Zeichen")
+    if args.senden:
+        vorschlag(args, geheim, cfg, ordner, "🧪 Signal Lab · Wochen-Post (auch Verlierer, wie gewünscht 04.11.)")
     return 0
 
 

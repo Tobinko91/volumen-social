@@ -41,6 +41,8 @@ lauf() { sudo -u redaktion env $UMGEBUNG python3 main.py "$@" --senden; }
 [ "$SLOT" = "18:30" ] && [ "$(date +%u)" = "7" ] && sudo -u redaktion env $UMGEBUNG python3 tools/wochenbericht.py --senden
 # S11 Wal-Karussell sonntags 17:00; S13 Termine der KOMMENDEN Woche sonntags 18:00 (vor Wochenbeginn)
 [ "$SLOT" = "17:00" ] && [ "$(date +%u)" = "7" ] && lauf karussell
+# S23 Signal Lab · Week N montags 14:30 (Wunsch Tobias 04.11.2026)
+[ "$SLOT" = "14:30" ] && [ "$(date +%u)" = "1" ] && lauf signallab
 # S24 Top/Flop-Coin mit geschaetzten Liquiditaetszonen Mo-Sa 17:00 (11:00 ET, Wunsch Tobias 06.11.2026)
 [ "$SLOT" = "17:00" ] && [ "$(date +%u)" != "7" ] && lauf liquiditaet
 [ "$SLOT" = "18:00" ] && [ "$(date +%u)" = "7" ] && lauf termine
