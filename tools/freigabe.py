@@ -272,6 +272,29 @@ def musik_speichern(g: dict, m: dict, holen=requests.get) -> str:
     return f"🎵 Gespeichert: {sauber}\n" + musik_liste()
 
 
+def stimme_wartet() -> bool:
+    from social import eigenstimme
+    return eigenstimme.wartet(AUSGABE)
+
+
+def stimme_speichern(g: dict, m: dict, holen=requests.get) -> str:
+    """Sprachnachricht (oder Sprachmemo als Datei) von Tobias -> Aufnahme fuer das Abend-Video."""
+    from social import eigenstimme
+    datei = m.get("voice") or m.get("audio") or m.get("document") or {}
+    if not eigenstimme.skript_laden(AUSGABE):
+        return "Heute gibt es kein Skript zum Einsprechen (kommt um 18:00 Uhr)."
+    if int(datei.get("duration") or 0) > 120:
+        return "Die Aufnahme ist länger als 2 Minuten. Bitte nur das Skript vorlesen (etwa 30–40 Sekunden)."
+    info = tg(g, "getFile", file_id=datei["file_id"])
+    if not info.get("ok"):
+        return "Aufnahme nicht abrufbar, bitte noch einmal schicken."
+    r = holen(f"https://api.telegram.org/file/bot{g['telegram_token']}/{info['result']['file_path']}", timeout=120)
+    r.raise_for_status()
+    eigenstimme.speichern(AUSGABE, r.content)
+    return ("🎙️ Danke, Aufnahme gespeichert. Sie kommt ins Video um 21:30 Uhr. "
+            "Neue Aufnahme schicken = die alte wird ersetzt.")
+
+
 def musik_liste() -> str:
     from social import musik
     stuecke = sorted(f.name for f in MUSIK.glob("*") if f.suffix.lower() in musik.ENDUNGEN) if MUSIK.exists() else []
@@ -319,6 +342,13 @@ def schleife():
                 m = u["message"]
                 if str(m["chat"]["id"]) == chef and (m.get("text") or "").startswith("/"):
                     tg(g, "sendMessage", chat_id=chef, text=befehl(g, m["text"]))
+                elif str(m["chat"]["id"]) == chef and (m.get("voice") or (
+                        (m.get("audio") or m.get("document")) and stimme_wartet())):
+                    try:   # 11.11.2026: Aufnahme fuer die Formation des Tages (eigene Stimme statt Brian)
+                        antwort = stimme_speichern(g, m)
+                    except Exception as e:
+                        antwort = f"❌ Aufnahme nicht gespeichert: {e}"
+                    tg(g, "sendMessage", chat_id=chef, text=antwort)
                 elif str(m["chat"]["id"]) == chef and (m.get("audio") or m.get("document")):
                     try:
                         antwort = musik_speichern(g, m)

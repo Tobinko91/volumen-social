@@ -180,3 +180,10 @@ lehrbuch:
 formation:
   aufloesung: morgen
   community_min: 20
+
+# Eigene Stimme (Test 2 Wochen, Entscheidung Tobias 11.11.2026): 18:00 Skript an Tobias, er schickt eine Sprachnachricht,
+# 21:30 spricht er statt Brian. Ohne Aufnahme: Brian. Wochenbericht: „Formation (Stimme Tobias)“ gegen „Formation“.
+eigene_stimme:
+  aktiv: true
+  bis: "2026-11-25"
+  bis_uhr: "21:15"

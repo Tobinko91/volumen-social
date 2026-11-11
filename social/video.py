@@ -172,7 +172,8 @@ def bauen(bilder: list[Path], toene: list[Path], dauern: list[float], ziel: Path
     except OSError:
         pass
     from . import musik as _musik
-    musik = _musik.pfad(cfg, ziel.parent.parent)
+    import datetime as _dt   # 11.11.2026 „mehr Abwechslung“: je Video ein anderes Stueck, nicht nur je Tag
+    musik = _musik.pfad(cfg, ziel.parent.parent, _dt.date.today().toordinal() + sum(map(ord, ziel.parent.name)))
     if musik:
         mit_stimme = any(Path(t).suffix == ".mp3" for t in toene)   # echte Stimme = mp3, Stille = m4a
         db = v["musik_db"] if mit_stimme else v.get("musik_db_ohne_stimme", 0)

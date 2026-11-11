@@ -72,6 +72,7 @@ def main() -> int:
     ap.add_argument("--richtung", choices=["hoch", "runter"], help="nur bei warum: Gewinner (Standard) oder Verlierer")
     ap.add_argument("--sprache", choices=["de", "en"], default=None,
                     help="Sprache (Standard: config.yaml). Englisch nur Probe/Schattenlauf: wird nie gesendet.")
+    ap.add_argument("--skript", action="store_true", help="nur bei formation: Sprechtext an Tobias (eigene Stimme)")
     ap.add_argument("--daten", help="Datenordner (Standard: config.yaml daten.dir)")
     ap.add_argument("--out", default=os.environ.get("SOCIAL_AUSGABE", str(HIER / "ausgabe")))
     ap.add_argument("--senden", action="store_true", help="Video per Telegram an Tobias schicken")
@@ -231,9 +232,43 @@ def formation_video(args, cfg, geheim, sperr) -> int:
         print("Formation: heute schon gebaut")
         return 0
     modus = (cfg.get("formation") or {}).get("aufloesung", "morgen")
-    ordner = Path(args.out) / f"{time.strftime('%Y%m%d-%H%M')}_formation_{d['coin']}_video"
+    from social import eigenstimme
+    es = cfg.get("eigene_stimme") or {}
+    es_aktiv = bool(es.get("aktiv")) and time.strftime("%Y-%m-%d") <= str(es.get("bis", "2000-01-01"))
+    if getattr(args, "skript", False):   # 18:00: Sprechtext an Tobias, Community-Zahl wird dabei festgelegt
+        if not es_aktiv:
+            return 0
+        g, erg, _ = (_formation_gestern(args, cfg, geheim, schon, markieren=False) if modus == "morgen"
+                     else (None, None, ""))
+        zeilen = formation.zeilen_gesamt(d, modus, g, erg)
+        eigenstimme.skript_speichern(Path(args.out), zeilen, erg, schon.get("ordner") if g else None)
+        if args.senden:
+            from social import telegram
+            telegram.an_tobias(geheim, eigenstimme.skript_text(zeilen, es.get("bis_uhr", "21:15")))
+        print("Skript fuer die eigene Stimme:", len(zeilen), "Saetze")
+        return 0
+    skript = eigenstimme.skript_laden(Path(args.out)) if es_aktiv else None
+    rec = eigenstimme.aufnahme(Path(args.out)) if skript else None
     gestern, community, c_hinweis = _formation_gestern(args, cfg, geheim, schon) if modus == "morgen" else (None, None, "")
-    pfad, quelle, tx = formation.video(d, ordner, cfg, geheim, modus=modus, gestern=gestern, community=community)
+    if rec and gestern is not None and skript.get("gestern_ordner"):
+        community = skript.get("community")   # dieselbe Zahl wie im Skript, das Tobias gesprochen hat
+    name = "formationich" if rec else "formation"   # eigenes Format im Wochenbericht (Haltequote gegen Brian)
+    ordner = Path(args.out) / f"{time.strftime('%Y%m%d-%H%M')}_{name}_{d['coin']}_video"
+    pfad = None
+    if rec:
+        try:
+            key = geheim.get("elevenlabs_api_key") or ""
+            pfad, quelle, tx = formation.video(d, ordner, cfg, geheim, modus=modus, gestern=gestern,
+                                               community=community,
+                                               sprechen=eigenstimme.sprecher(rec, key, skript.get("zeilen")))
+        except Exception as e:
+            print("Eigene Stimme nicht genutzt:", e)
+            c_hinweis = (c_hinweis + f"\n⚠️ Deine Aufnahme ging nicht ({str(e)[:80]}), Brian spricht.").strip()
+            import shutil as _sh
+            _sh.rmtree(ordner, ignore_errors=True)
+            ordner = Path(args.out) / f"{time.strftime('%Y%m%d-%H%M')}_formation_{d['coin']}_video"
+    if pfad is None:
+        pfad, quelle, tx = formation.video(d, ordner, cfg, geheim, modus=modus, gestern=gestern, community=community)
     (ordner / "daten.json").write_text(json.dumps(d), encoding="utf-8")   # fuer die Aufloesung morgen
     (ordner / "post_x.txt").write_text(tx["x"], encoding="utf-8")
     e = lambda x: _h.escape(x, quote=False)
@@ -251,7 +286,7 @@ def formation_video(args, cfg, geheim, sperr) -> int:
     return 0
 
 
-def _formation_gestern(args, cfg, geheim, schon: dict) -> tuple[dict | None, dict | None, str]:
+def _formation_gestern(args, cfg, geheim, schon: dict, markieren: bool = True) -> tuple[dict | None, dict | None, str]:
     """Offene Aufloesung der letzten Formation (hoechstens 3 Tage alt) + Community-Ergebnis. Markiert sie als
     aufgeloest (ausser bei Probelaeufen mit --daten)."""
     from social import community
@@ -268,7 +303,7 @@ def _formation_gestern(args, cfg, geheim, schon: dict) -> tuple[dict | None, dic
         erg, hinweis = community.holen(alt, geheim, cfg)
     except Exception as e:
         erg, hinweis = None, f"Community nicht gezählt: {str(e)[:60]}"
-    if not args.daten:
+    if markieren and not args.daten:
         p = Path(args.out) / "formation_stand.json"
         p.write_text(json.dumps(dict(schon, aufgeloest=True)))
     return g, erg, hinweis

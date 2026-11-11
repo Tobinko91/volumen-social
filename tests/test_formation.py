@@ -139,7 +139,17 @@ class CliffhangerTest(unittest.TestCase):
         self.assertEqual(gerufen["n"], len(gerufen["zeilen"]))
         self.assertTrue(gerufen["zeilen"][3].startswith("Now today's pattern."))
         # Countdown = 3 Vorspann-Szenen + 2 -> Index 5 (Ticken scheitert hier an der Attrappe, darf nicht abbrechen)
-        self.assertEqual(gerufen["zeilen"][5], "Comment your answer now.")
+        self.assertIn(gerufen["zeilen"][5], formation.AUFRUF)
+        self.assertEqual(gerufen["zeilen"], formation.zeilen_gesamt(
+            self.d, "morgen", self.d, {"n": 30, "mehrheit": "sell", "pct": 70}))   # Skript = Video
+
+    def test_thema_und_saetze_wechseln(self):
+        themen = {formation.thema(dict(self.d, datum=f"2026-11-{t:02d}")).name for t in range(1, 15)}
+        self.assertGreater(len(themen), 2)
+        fragen = {formation.texte(dict(self.d, datum=f"2026-11-{t:02d}"), "morgen")["zeilen"][1] for t in range(1, 15)}
+        self.assertGreater(len(fragen), 2)
+        for f in fragen:
+            self.assertIn("Shooting Star", f)
 
     def test_einstieg_wechselt(self):
         saetze = {formation.einstieg(dict(self.d, datum=f"2026-11-{t:02d}")) for t in range(1, 15)}
