@@ -50,6 +50,8 @@ lauf() { sudo -u redaktion env $UMGEBUNG python3 main.py "$@" --senden; }
 # S24 Top/Flop-Coin mit geschaetzten Liquiditaetszonen Mo-Sa 17:00 (11:00 ET, Wunsch Tobias 06.11.2026)
 [ "$SLOT" = "17:00" ] && [ "$(date +%u)" != "7" ] && lauf liquiditaet
 [ "$SLOT" = "18:00" ] && [ "$(date +%u)" = "7" ] && lauf termine
+# Eigene Stimme (Test, Entscheidung Tobias 11.11.2026): Skript fuer die Formation um 18:00, nicht donnerstags (S29)
+[ "$SLOT" = "18:00" ] && [ "$(date +%u)" != "4" ] && lauf formation --skript
 # S30 Willkommensvideo EINMAL (sobald die Stimme laeuft), danach Merkdatei; neu: Datei loeschen
 W=/opt/volumen-social/ausgabe/.willkommen_gesendet
 [ ! -f "$W" ] && [ "$SLOT" = "14:00" -o "$SLOT" = "16:30" -o "$SLOT" = "18:30" ] && lauf willkommen --nur-mit-stimme && sudo -u redaktion touch "$W"

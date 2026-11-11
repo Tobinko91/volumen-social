@@ -89,3 +89,91 @@ class FormationTest(unittest.TestCase):
         from social import bericht
         self.assertEqual(bericht.format_aus_ordner("20261109-2130_formation_ZK_video"), "formation_video")
         self.assertIn("formation_video", bericht.NAMEN)
+
+
+class CliffhangerTest(unittest.TestCase):
+    """Entscheidung Tobias 10.11.2026: Aufloesung erst im naechsten Video, mit Community-Tipp."""
+
+    def setUp(self):
+        self.d = formation.laden(HIER / "beispieldaten")
+        self.o = Path(tempfile.mkdtemp())
+
+    def tearDown(self):
+        shutil.rmtree(self.o, ignore_errors=True)
+
+    def test_heute_ohne_aufloesung(self):
+        folgen, tx = formation.szenen(self.d, self.o, "morgen")
+        self.assertEqual(len(folgen), len(tx["zeilen"]))
+        self.assertEqual(len(folgen), 4)   # Aufbau, Frage, Countdown, „Answer tomorrow“
+        alles = " ".join(tx["zeilen"]) + tx["x"]
+        self.assertIn("tomorrow", alles)
+        self.assertNotIn("−8.7%", alles)        # Ergebnis wird heute nicht verraten
+        self.assertNotIn("textbook was", alles.lower())
+        self.assertTrue(tx["x"].endswith("Not financial advice."))
+
+    def test_vorspann_mit_community(self):
+        folgen, zeilen = formation.vorspann(self.d, self.o, {"n": 38, "mehrheit": "sell", "pct": 64})
+        self.assertEqual(len(folgen), len(zeilen))
+        self.assertEqual(len(folgen[0]), 7)      # Start + 6 Kerzen nacheinander
+        self.assertIn("64% of 38 of you said SELL. You were right.", zeilen[1])   # ZK fiel −8.7 %
+        self.assertIn("Without any pattern: 61%", zeilen[2])                     # Haken bleibt
+        _, z2 = formation.vorspann(self.d, self.o, {"n": 25, "mehrheit": "buy", "pct": 56})
+        self.assertIn("The chart said otherwise.", z2[1])
+        _, z3 = formation.vorspann(self.d, self.o, None)       # unter der Mindestzahl: keine Prozentzahl
+        self.assertNotIn("%  of", z3[1])
+        self.assertNotIn("of you", z3[1])
+
+    def test_video_mit_vorspann_tickt_am_richtigen_platz(self):
+        gerufen = {}
+
+        def sprechen(zeilen, ordner, cfg, key):
+            gerufen["zeilen"] = zeilen
+            return [self.o / f"t{i}.mp3" for i in range(len(zeilen))], [1.0] * len(zeilen), "probe"
+
+        def schneiden(folgen, toene, dauern, ziel, cfg, texte=None, untertitel_y=None):
+            gerufen["n"] = len(folgen)
+            gerufen["toene"] = toene
+
+        formation.video(self.d, self.o, CFG, {}, sprechen, schneiden, modus="morgen", gestern=self.d,
+                        community={"n": 30, "mehrheit": "sell", "pct": 70})
+        self.assertEqual(gerufen["n"], len(gerufen["zeilen"]))
+        self.assertTrue(gerufen["zeilen"][3].startswith("Now today's pattern."))
+        # Countdown = 3 Vorspann-Szenen + 2 -> Index 5 (Ticken scheitert hier an der Attrappe, darf nicht abbrechen)
+        self.assertIn(gerufen["zeilen"][5], formation.AUFRUF)
+        self.assertEqual(gerufen["zeilen"], formation.zeilen_gesamt(
+            self.d, "morgen", self.d, {"n": 30, "mehrheit": "sell", "pct": 70}))   # Skript = Video
+
+    def test_thema_und_saetze_wechseln(self):
+        themen = {formation.thema(dict(self.d, datum=f"2026-11-{t:02d}")).name for t in range(1, 15)}
+        self.assertGreater(len(themen), 2)
+        fragen = {formation.texte(dict(self.d, datum=f"2026-11-{t:02d}"), "morgen")["zeilen"][1] for t in range(1, 15)}
+        self.assertGreater(len(fragen), 2)
+        for f in fragen:
+            self.assertIn("Shooting Star", f)
+
+    def test_einstieg_wechselt(self):
+        saetze = {formation.einstieg(dict(self.d, datum=f"2026-11-{t:02d}")) for t in range(1, 15)}
+        self.assertGreater(len(saetze), 2)
+        self.assertNotEqual(formation.saat(dict(self.d, datum="2026-11-11")),
+                            formation.saat(dict(self.d, datum="2026-11-12")))
+
+
+class GesternStandTest(unittest.TestCase):
+    def test_aufloesung_nur_einmal(self):
+        import types
+        import main
+        with tempfile.TemporaryDirectory() as t:
+            alt = Path(t) / "20261110-2130_formation_ZK_video"
+            alt.mkdir()
+            d = formation.laden(HIER / "beispieldaten")
+            (alt / "daten.json").write_text(json.dumps(d))
+            schon = {"tag": "2026-11-10", "ordner": str(alt), "aufgeloest": False}
+            (Path(t) / "formation_stand.json").write_text(json.dumps(schon))
+            args = types.SimpleNamespace(out=t, daten=None)
+            g, erg, hinweis = main._formation_gestern(args, CFG, {}, schon)
+            self.assertEqual(g["coin"], "ZK")
+            self.assertIsNone(erg)                         # nicht gepostet -> keine Prozentzahl
+            self.assertIn("nicht gepostet", hinweis)
+            neu = json.loads((Path(t) / "formation_stand.json").read_text())
+            self.assertTrue(neu["aufgeloest"])
+            self.assertIsNone(main._formation_gestern(args, CFG, {}, neu)[0])   # Freitag nicht noch einmal
