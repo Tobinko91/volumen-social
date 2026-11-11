@@ -230,21 +230,48 @@ def formation_video(args, cfg, geheim, sperr) -> int:
     if not args.daten and schon.get("tag") == tag:
         print("Formation: heute schon gebaut")
         return 0
+    modus = (cfg.get("formation") or {}).get("aufloesung", "morgen")
     ordner = Path(args.out) / f"{time.strftime('%Y%m%d-%H%M')}_formation_{d['coin']}_video"
-    pfad, quelle, tx = formation.video(d, ordner, cfg, geheim)
+    gestern, community, c_hinweis = _formation_gestern(args, cfg, geheim, schon) if modus == "morgen" else (None, None, "")
+    pfad, quelle, tx = formation.video(d, ordner, cfg, geheim, modus=modus, gestern=gestern, community=community)
+    (ordner / "daten.json").write_text(json.dumps(d), encoding="utf-8")   # fuer die Aufloesung morgen
     (ordner / "post_x.txt").write_text(tx["x"], encoding="utf-8")
     e = lambda x: _h.escape(x, quote=False)
     (ordner / "post_telegram.txt").write_text(
         "📊 <b>BUY or SELL?</b>\n\n" + "\n".join(e(z) for z in tx["zeilen"]) + "\n\n<i>Not financial advice.</i>",
         encoding="utf-8")
     if not args.daten:
-        stand.write_text(json.dumps({"tag": tag}))
-    print(f"Formation {d['muster']} auf {d['coin']}: Stimme {quelle}")
+        stand.write_text(json.dumps({"tag": tag, "ordner": str(ordner), "aufgeloest": modus != "morgen"}))
+    print(f"Formation {d['muster']} auf {d['coin']}: Stimme {quelle}", c_hinweis)
     if args.senden:
         vorschlag(args, geheim, cfg, ordner, f"📊 Formation des Tages: {d['name_en']} auf {d['coin']}\nStimme: {quelle}"
+                  + (f"\nAuflösung von gestern ({gestern['coin']}) vorne dran. {c_hinweis}" if gestern else "")
                   + ("" if d.get("statistik") else "\n⚠️ Ohne Trefferquote: einmal tools/muster_statistik.py im "
                      "Bot ausfuehren (Szene „But here's the catch“ fehlt sonst)."))
     return 0
+
+
+def _formation_gestern(args, cfg, geheim, schon: dict) -> tuple[dict | None, dict | None, str]:
+    """Offene Aufloesung der letzten Formation (hoechstens 3 Tage alt) + Community-Ergebnis. Markiert sie als
+    aufgeloest (ausser bei Probelaeufen mit --daten)."""
+    from social import community
+    if schon.get("aufgeloest", True) or not schon.get("ordner"):
+        return None, None, ""
+    alt = Path(schon["ordner"])
+    try:
+        g = json.loads((alt / "daten.json").read_text())
+    except Exception:
+        return None, None, ""
+    if time.time() - alt.stat().st_mtime > 3 * 86400 or len(g.get("kerzen_nachher") or []) < 6:
+        return None, None, ""
+    try:
+        erg, hinweis = community.holen(alt, geheim, cfg)
+    except Exception as e:
+        erg, hinweis = None, f"Community nicht gezählt: {str(e)[:60]}"
+    if not args.daten:
+        p = Path(args.out) / "formation_stand.json"
+        p.write_text(json.dumps(dict(schon, aufgeloest=True)))
+    return g, erg, hinweis
 
 
 def lehrbuch_video(args, cfg, geheim, sperr) -> int:
@@ -282,6 +309,18 @@ def lehrbuch_video(args, cfg, geheim, sperr) -> int:
         folgen, tx = lehrbuch.abschluss_szenen(daten["_statistik"][m], ordner / "bilder")
     else:
         folgen, tx = lehrbuch.szenen(daten[m], ordner / "bilder")
+    v_hinweis = ""
+    if (cfg.get("formation") or {}).get("aufloesung", "morgen") == "morgen":   # Aufloesung von gestern nicht verlieren
+        from social import formation
+        try:
+            f_stand = json.loads((Path(args.out) / "formation_stand.json").read_text())
+        except Exception:
+            f_stand = {}
+        g, erg, v_hinweis = _formation_gestern(args, cfg, geheim, f_stand)
+        if g:
+            vf, vz = formation.vorspann(g, ordner / "bilder", erg)
+            folgen, tx = vf + folgen, dict(tx, zeilen=vz + ["Now, this week's myth. " + tx["zeilen"][0]]
+                                           + tx["zeilen"][1:])
     pfad, quelle = lehrbuch.video(folgen, tx, ordner, cfg, geheim)
     (ordner / "post_x.txt").write_text(tx["x"], encoding="utf-8")
     e_ = lambda x: _h.escape(x, quote=False)
@@ -292,7 +331,8 @@ def lehrbuch_video(args, cfg, geheim, sperr) -> int:
         stand_p.write_text(json.dumps({"woche": woche, "erledigt": stand.get("erledigt", []) + [m]}))
     print(f"Lehrbuch {m} {coin}: Stimme {quelle}")
     if args.senden:
-        vorschlag(args, geheim, cfg, ordner, f"📚 The textbook is WRONG: {titel}\nStimme: {quelle}")
+        vorschlag(args, geheim, cfg, ordner, f"📚 The textbook is WRONG: {titel}\nStimme: {quelle}"
+                  + (f"\nAuflösung der Formation von gestern vorne dran. {v_hinweis}" if v_hinweis else ""))
     return 0
 
 

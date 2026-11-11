@@ -174,3 +174,9 @@ unlocks:                     # S22 Unlock-Posts + S26 Nachfolge-Reels (Wunsch To
 lehrbuch:
   aktiv: true
   reihe: [double_top, range_breakdown, double_bottom, three_white_soldiers]
+
+# S27 Formation des Tages (Entscheidung Tobias 10.11.2026): Aufloesung erst im naechsten Video, davor zaehlt der Server
+# BUY/SELL-Kommentare (YouTube + Instagram). "sofort" = alter Ablauf mit Aufloesung im selben Video.
+formation:
+  aufloesung: morgen
+  community_min: 20

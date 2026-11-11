@@ -35,14 +35,39 @@ def _pz(x: float) -> str:
     return f"{x:+.1f}%".replace("-", "−")
 
 
-def texte(d: dict) -> dict:
-    """Sprechtext je Szene (englisch, ohne Klammern) und die Texte fuer X/Telegram."""
+EINSTIEG = ["Watch {coin} on the 4 hour chart.", "Here is {coin} on the 4 hour chart.",
+            "Today's chart: {coin}, 4 hours per candle.", "Look at {coin} on the 4 hour chart.",
+            "New day, new pattern. Watch {coin}."]   # 11.11.2026: weniger Schablone, Satz wechselt je Tag
+
+
+def einstieg(d: dict) -> str:
+    tag = str(d.get("datum") or "")
+    i = sum(map(ord, tag)) % len(EINSTIEG) if tag else 0
+    return EINSTIEG[i].format(coin=d["coin"])
+
+
+def saat(d: dict) -> int:
+    """Hintergrund wechselt je Tag (gleiches Datum = gleiches Bild)."""
+    return 7 + sum(map(ord, str(d.get("datum") or ""))) % 40
+
+
+def texte(d: dict, modus: str = "sofort") -> dict:
+    """Sprechtext je Szene (englisch, ohne Klammern) und die Texte fuer X/Telegram.
+    modus "morgen" (Entscheidung Tobias 10.11.2026): Video endet nach dem Countdown, die Aufloesung kommt im
+    naechsten Video (vorspann()), damit die Kommentare echte Tipps sind."""
+    if modus == "morgen":
+        coin, name = d["coin"], d["name_en"]
+        zeilen = [einstieg(d), f"A {name}. Buy or sell?", "Comment your answer now.",
+                  "The answer comes tomorrow. Follow so you don't miss it."]
+        x = (f"BUY or SELL? 📊\n{name} on ${coin}, 4h chart.\nComment your answer. The real result comes "
+             "tomorrow.\nNot financial advice.")
+        return {"zeilen": zeilen, "titel_erg": "", "x": x[:280]}
     e, s = d["ergebnis"], d.get("statistik")
     runter = d["lehrbuch"] == "down"
     stimmt = e.get("lehrbuch_stimmt")
     coin, name = d["coin"], d["name_en"]
     zeilen = [
-        f"Watch {coin} on the 4 hour chart.",   # 10.11.2026 Tobias: erst die Bewegung, dann die Frage
+        einstieg(d),   # 10.11.2026 Tobias: erst die Bewegung, dann die Frage
         f"A {name}. Buy or sell?",
         "Comment your answer now.",
         "Here is what happened next.",
@@ -77,7 +102,7 @@ def _skala(kerzen: list, box):
     return lambda p: y1 - (p - lo) / (hi - lo) * (y1 - y0)
 
 
-def bild(d: dict, n_nach: int, titel: str, unter: str = "", pfeile: bool = False, zahl: int | None = None,
+def _bild(d: dict, n_nach: int, titel: str, unter: str = "", pfeile: bool = False, zahl: int | None = None,
          n_vor: int | None = None,
          gross: tuple | None = None, karte_zeilen: list | None = None, markieren: bool = True, saat: int = 7):
     from . import design
@@ -152,12 +177,17 @@ def bild(d: dict, n_nach: int, titel: str, unter: str = "", pfeile: bool = False
     return img
 
 
-def szenen(d: dict, ordner: Path) -> tuple[list, dict]:
+bild = _bild
+
+
+def szenen(d: dict, ordner: Path, modus: str = "sofort") -> tuple[list, dict]:
     """-> (Bildfolgen je Szene [(png, Sekunden), ...], Texte). Mindestdauern stehen in den Folgen."""
     from . import design
     th = design.THEMEN["nacht"]
     ordner.mkdir(parents=True, exist_ok=True)
-    tx = texte(d)
+    tx = texte(d, modus)
+    sa = saat(d)
+    bild = lambda *a, **k: _bild(*a, **{"saat": sa, **k})
     e, s = d["ergebnis"], d.get("statistik")
     runter = d["lehrbuch"] == "down"
 
@@ -175,6 +205,10 @@ def szenen(d: dict, ordner: Path) -> tuple[list, dict]:
                    (speichern(bild(d, 0, "BUY or SELL?", f"Pattern: {d['name_en']}", pfeile=True), "frage"), 1.6)])
     folgen.append([(speichern(bild(d, 0, "BUY or SELL?", "Comment your answer!", pfeile=True, zahl=n), f"count_{n}"),
                     1.0) for n in (5, 4, 3, 2, 1)])
+    if modus == "morgen":
+        folgen.append([(speichern(bild(d, 0, "Answer tomorrow", "Comment BUY or SELL", pfeile=True,
+                                       gross=("Follow", th.akzent)), "morgen"), 2.5)])
+        return folgen, tx
     folgen.append([(speichern(bild(d, n, "What happened next?", "the next 24 hours"), f"nach_{n}"), 0.45)
                    for n in range(1, 7)])
     farbe = th.minus if e["r6"] < 0 else th.plus
@@ -194,6 +228,52 @@ def szenen(d: dict, ordner: Path) -> tuple[list, dict]:
     return folgen, tx
 
 
+def vorspann(g: dict, ordner: Path, community: dict | None = None) -> tuple[list, list]:
+    """Aufloesung von gestern als Vorspann (modus "morgen"): die 6 Kerzen danach, Ergebnis + Community, Haken.
+    community = {"n", "mehrheit": "buy"|"sell", "pct"} oder None (unter der Mindestzahl)."""
+    from . import design
+    th = design.THEMEN["nacht"]
+    ordner.mkdir(parents=True, exist_ok=True)
+    e, s = g["ergebnis"], g.get("statistik")
+    runter = g["lehrbuch"] == "down"
+    sa = saat(g)
+
+    def sp(img, n):
+        p = ordner / f"gestern_{n}.png"
+        img.convert("RGB").save(p)
+        return p
+
+    stieg = e["r6"] > 0
+    zeilen = [f"Yesterday's {g['name_en']} on {g['coin']}. Here is what happened."]
+    folgen = [[(sp(_bild(g, 0, "Yesterday's answer", f"{g['name_en']} · ${g['coin']}", saat=sa), "start"), 1.0)]
+              + [(sp(_bild(g, n, "Yesterday's answer", "the next 24 hours", saat=sa), f"nach_{n}"), 0.4)
+                 for n in range(1, 7)]]
+    satz = f"{g['coin']} moved {_pz(e['r6'])} in 24 hours."
+    karte = [(f"{_pz(e['r6'])} in 24h · {'BUY' if stieg else 'SELL'} was right" if e["r6"] else
+              "Flat after 24h", th.plus if stieg else th.minus)]
+    if community and e["r6"]:
+        recht = (community["mehrheit"] == "buy") == stieg
+        satz += (f" {community['pct']:.0f}% of {community['n']} of you said {community['mehrheit'].upper()}. "
+                 + ("You were right." if recht else "The chart said otherwise."))
+        karte.append((f"{community['pct']:.0f}% of {community['n']} said {community['mehrheit'].upper()}", th.text))
+        karte.append(("→ you were right" if recht else "→ the chart said otherwise", th.akzent if recht else th.neben))
+    zeilen.append(satz)
+    folgen.append([(sp(_bild(g, 6, "Yesterday's answer", f"Textbook: {g['lehrbuch_en']}", saat=sa,
+                             karte_zeilen=karte), "ergebnis"), 3.0)])
+    if s:   # Regel S27: der Haken bleibt, wenn es die Statistik gibt
+        vor = s.get("vorsprung_pp", s["treffer_pct"] - s["zufall_pct"])
+        urteil = ("A small edge, not a guarantee." if vor >= 5 else "Worse than random." if vor <= -5
+                  else "No real edge.")
+        zeilen.append(f"The catch: after a {g['name_en']}, price {'fell' if runter else 'rose'} "
+                      f"{s['treffer_pct']:.0f}% of the time. Without any pattern: {s['zufall_pct']:.0f}%. {urteil}")
+        folgen.append([(sp(_bild(g, 6, "But here's the catch", "", markieren=False, saat=sa, karte_zeilen=[
+            (f"{g['name_en']}: {s['n']:,} cases", th.text),
+            (f"Price {'fell' if runter else 'rose'} after it: {s['treffer_pct']:.0f}%", th.text),
+            (f"Without any pattern: {s['zufall_pct']:.0f}%", th.akzent2),
+            ("→ " + urteil.rstrip(".").lower(), th.akzent)]), "haken"), 4.0)])
+    return folgen, zeilen
+
+
 def ticken(ton: Path, ziel: Path, dauer: float = 5.0) -> Path:
     """Stimme der Countdown-Szene + 5 Ticks (je 1 s). Zeitmarken-Datei bleibt fuer die Untertitel erhalten."""
     import shutil
@@ -208,17 +288,24 @@ def ticken(ton: Path, ziel: Path, dauer: float = 5.0) -> Path:
     return ziel
 
 
-def video(d: dict, ordner: Path, cfg: dict, geheim: dict, sprechen=None, schneiden=None) -> tuple[Path, str, dict]:
-    """Baut ordner/video.mp4. -> (Video, Tonquelle, Texte)."""
+def video(d: dict, ordner: Path, cfg: dict, geheim: dict, sprechen=None, schneiden=None, modus: str = "sofort",
+          gestern: dict | None = None, community: dict | None = None) -> tuple[Path, str, dict]:
+    """Baut ordner/video.mp4. -> (Video, Tonquelle, Texte). Mit gestern (modus "morgen"): Vorspann davor."""
     from . import stimme
     from . import video as _video
     sprechen = sprechen or stimme.sprechen
     schneiden = schneiden or _video.bauen
-    folgen, tx = szenen(d, ordner / "bilder")
+    folgen, tx = szenen(d, ordner / "bilder", modus)
+    v = 0
+    if gestern:
+        vf, vz = vorspann(gestern, ordner / "bilder", community)
+        v = len(vf)
+        tx = dict(tx, zeilen=vz + ["Now today's pattern. " + tx["zeilen"][0]] + tx["zeilen"][1:])
+        folgen = vf + folgen
     toene, dauern, quelle = sprechen(tx["zeilen"], ordner / "ton", cfg, stimme.schluessel(cfg, geheim))
     dauern = [max(du, sum(sek for _, sek in f) + 0.2) for du, f in zip(dauern, folgen)]
     try:   # Countdown: Ticken unter die Stimme
-        toene[2] = ticken(Path(toene[2]), Path(toene[2]).with_name("countdown_tick.mp3"), dauern[2])
+        toene[v + 2] = ticken(Path(toene[v + 2]), Path(toene[v + 2]).with_name("countdown_tick.mp3"), dauern[v + 2])
     except Exception as e:
         print("Ticken nicht gemischt:", e)
     schneiden(folgen, toene, dauern, ordner / "video.mp4", cfg, texte=tx["zeilen"],
