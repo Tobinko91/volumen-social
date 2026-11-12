@@ -22,3 +22,6 @@ sudo -u redaktion env TZ=Europe/Berlin SOCIAL_GEHEIM=/opt/volumen-social SOCIAL_
 # S22 Unlock-Posts + S26 Nachfolge-Reels (Wunsch Tobias 03./06.11.2026)
 sudo -u redaktion env TZ=Europe/Berlin SOCIAL_GEHEIM=/opt/volumen-social SOCIAL_AUSGABE=/opt/volumen-social/ausgabe \
   timeout 300 python3 tools/unlock_post.py --senden
+# Schnell-Antworten unter grossen Posts (Wunsch Tobias 12.11.2026: schnellere Reichweite auf X)
+sudo -u redaktion env TZ=Europe/Berlin SOCIAL_GEHEIM=/opt/volumen-social SOCIAL_AUSGABE=/opt/volumen-social/ausgabe \
+  timeout 180 python3 tools/schnellantwort.py --senden
