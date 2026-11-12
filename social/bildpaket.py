@@ -97,6 +97,41 @@ def _text_passend(d, x: int, y: int, text: str, breite: int, hoehe: int, farbe, 
     return y
 
 
+def foto_titel(foto: dict, kopf: str, unter: str = "", etikett: str | None = "BREAKING", th=None) -> Image.Image:
+    """Hochformat 1080x1350 (Instagram/Telegram/X-Karussell, Wunsch Tobias 12.11.2026): Foto oben gross,
+    weich auslaufend, Schlagzeile darunter. Foto nur zugeschnitten, nicht veraendert; Credit klein im Bild."""
+    from . import design
+    th = th or design.THEMEN["nacht"]
+    w, h, fh = 1080, 1350, 880
+    img = design.hintergrund(th, w, h, saat=5)
+    f = _foto(foto["pfad"], w, fh)
+    maske = Image.new("L", f.size, 255)
+    dm = ImageDraw.Draw(maske)
+    for i in range(320):   # unten weich in den Hintergrund
+        dm.line([(0, fh - 1 - i), (w, fh - 1 - i)], fill=int(255 * (i / 320) ** 1.4))
+    f.putalpha(maske)
+    img.alpha_composite(f, (0, 0))
+    ebene = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    ImageDraw.Draw(ebene).rectangle([0, 0, w, 96], fill=design.rgb(design.MITTERNACHT, 205))
+    img.alpha_composite(ebene)
+    design.marke(img, th, 40, 20, 56)
+    d = ImageDraw.Draw(img)
+    if etikett:
+        fe = design.font("Bold", 28)
+        b = d.textlength(etikett, font=fe) + 44
+        d.rounded_rectangle([w - 40 - b, 24, w - 40, 74], radius=25, fill=design.rgb(th.minus))
+        d.text((w - 40 - b + 22, 32), etikett, font=fe, fill=design.MITTERNACHT)
+    if foto.get("credit"):
+        fc = design.font("Medium", 18)
+        t = f"Photo: {foto['credit']}"[:90]
+        d.text((w - 30 - d.textlength(t, font=fc), 108), t, font=fc, fill=design.NEBEN)
+    y = _text_passend(d, 60, fh - 40, kopf, w - 120, 260, th.text, 84, 50)
+    if unter:
+        d.text((60, y + 18), unter, font=design.font("SemiBold", 40), fill=th.akzent)
+    design.fuss(img, th, "Not financial advice.")
+    return img
+
+
 def foto_karte(foto: dict, kopf: str, unter: str = "", etikett: str | None = "BREAKING", th=None) -> Image.Image:
     """Foto rechts gross, Schlagzeile links, Verlauf dazwischen."""
     from . import design
