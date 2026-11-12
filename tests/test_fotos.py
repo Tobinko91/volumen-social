@@ -260,3 +260,43 @@ class TitelbildTest(unittest.TestCase):
         x = {"a": {"aufrufe": 5}, "b": {"aufrufe": 7}}
         self.assertEqual(len(bericht.bildtest(prot, x)["mit"]), 1)
         self.assertEqual(bericht.bildtest(prot, x, "titelbild")["mit"], [(5, 0)])
+
+
+class TitelbildTest(unittest.TestCase):
+    """Wunsch Tobias 12.11.2026: Foto (Saylor) auf allen Kanaelen als erstes Bild, Person bei Bedarf nachladen."""
+
+    def test_titelbild_und_nachladen(self):
+        import sys
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
+        import eingang
+        with tempfile.TemporaryDirectory() as t:
+            t = Path(t)
+            eingang.FOTOS = t / "fotos"
+            ziel = t / "post"
+            ziel.mkdir()
+            Image.new("RGB", (1080, 1350), "navy").save(ziel / "post.png")
+            (ziel / "hingucker.json").write_text(json.dumps({"art": "foto", "person": "saylor", "titelbild": True,
+                                                             "kopf": "Saylor's Strategy kicked out of MSCI",
+                                                             "unter": "Index funds must sell by Nov 30"}))
+            (ziel / "bildtest.json").write_text(json.dumps({"art": "mit", "test": "wunsch"}))
+            geholt = []
+
+            def holen(ordner, personen):   # Attrappe fuer Wikimedia Commons
+                geholt.append(personen[0]["slug"])
+                (ordner / "saylor").mkdir(parents=True)
+                Image.new("RGB", (1600, 2000), "gray").save(ordner / "saylor" / "1.jpg")
+                (ordner / "fotos.json").write_text(json.dumps({"saylor": [{
+                    "datei": "saylor/1.jpg", "lizenz": "CC BY-SA 4.0", "credit": "Jane Doe, CC BY-SA 4.0",
+                    "seite": "", "titel": "", "name": "Michael Saylor"}]}))
+
+            hinweis = eingang.hingucker(ziel, {}, holen)
+            self.assertEqual(geholt, ["saylor"])
+            self.assertIn("allen Kanälen", hinweis)
+            self.assertIn("nachgeladen", hinweis)
+            self.assertEqual(json.loads((ziel / "karussell.json").read_text())["folien"], ["titelbild.png", "post.png"])
+            self.assertEqual(Image.open(ziel / "titelbild.png").size, (1080, 1350))
+            self.assertFalse((ziel / "bildtest.json").exists())
+            self.assertFalse((ziel / "hingucker.png").exists())
+            # schon in der Bibliothek -> nicht noch einmal laden
+            self.assertFalse(eingang.foto_nachladen({"person": "saylor"}, holen))
+            self.assertEqual(geholt, ["saylor"])

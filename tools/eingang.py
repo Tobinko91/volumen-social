@@ -49,19 +49,56 @@ def pruefen(ordner: Path, cfg: dict, sperr: set[str]) -> list[str]:
     return fehler
 
 
-def hingucker(ziel: Path, geheim: dict) -> str:
-    """hingucker.png zeichnen, Test-Gruppe zuteilen, Vorschau an Tobias. Rueckgabe: Zeile fuer den Hinweis."""
+def foto_nachladen(spec: dict, holen=None) -> bool:
+    """12.11.2026 (MSTR-Eilmeldung ohne Saylor-Foto): fehlt die Person in der Bibliothek, sofort bei Wikimedia
+    Commons nachladen (nur freie Lizenzen, wie fotos_holen.py), statt ohne Foto zu posten."""
+    from social import fotos
+    slug = str(spec.get("person", "")).lower()
+    if not slug or fotos.waehlen(FOTOS, slug):
+        return False
+    personen = yaml.safe_load((HIER / "inhalte" / "personen.yaml").read_text(encoding="utf-8")) or []
+    p = [x for x in personen if x.get("slug") == slug]
+    if not p:
+        return False
+    try:
+        (holen or fotos.holen)(FOTOS, p)
+    except Exception as e:
+        print("Foto nicht nachgeladen:", slug, e)
+        return False
+    return bool(fotos.waehlen(FOTOS, slug))
+
+
+def hingucker(ziel: Path, geheim: dict, holen=None) -> str:
+    """hingucker.png zeichnen, Test-Gruppe zuteilen, Vorschau an Tobias. Rueckgabe: Zeile fuer den Hinweis.
+    Mit "titelbild": true (Wunsch Tobias 12.11.2026) wird das Foto auf ALLEN Kanaelen das erste Bild
+    (Karussell: Foto, dann Beitragsbild), ohne Bild-Test."""
     from social import bildpaket
+    try:
+        spec = json.loads((ziel / "hingucker.json").read_text(encoding="utf-8"))
+    except Exception:
+        spec = {}
+    nachgeladen = spec.get("art") != "vergleich" and foto_nachladen(spec, holen)
     try:
         bild = bildpaket.aus_spec(ziel, FOTOS)
     except Exception as e:
         return f"\n🖼 Hingucker nicht gezeichnet ({str(e)[:100]})"
     if not bild:
         return "\n🖼 Kein freies Foto dieser Person in der Bibliothek, X bekommt nur das Beitragsbild."
+    zusatz = " (Foto eben nachgeladen)" if nachgeladen else ""
+    if spec.get("titelbild"):   # Hochformat-Titelbild statt 16:9-Hingucker (Instagram schneidet sonst zu)
+        from social import fotos
+        foto = fotos.waehlen(FOTOS, str(spec.get("person", "")), ziel.name)
+        titel = ziel / "titelbild.png"
+        bildpaket.foto_titel(foto, spec.get("kopf", ""), spec.get("unter", ""), spec.get("etikett", "BREAKING")
+                             ).convert("RGB").save(titel)
+        (ziel / "karussell.json").write_text(json.dumps({"folien": [titel.name, "post.png"]}), encoding="utf-8")
+        (ziel / "bildtest.json").unlink(missing_ok=True)
+        bild.unlink(missing_ok=True)   # X bekommt das Karussell, nicht zusaetzlich den 16:9-Hingucker
+        return f"\n🖼 Foto als erstes Bild auf allen Kanälen, danach das Beitragsbild{zusatz}"
     art = bildpaket.test_zuteilen(ziel, AUSGABE / "bildtest_stand.json")
     if art == "mit":
         telegram.foto_an_tobias(geheim, bild, "🖼 Hingucker (X bekommt 2 Bilder nebeneinander)")
-        return "\n🖼 Bild-Test: MIT Hingucker auf X (Vorschau oben)"
+        return "\n🖼 Bild-Test: MIT Hingucker auf X (Vorschau oben)" + zusatz
     return "\n🖼 Bild-Test: OHNE Hingucker (Vergleichsgruppe, X bekommt nur das Beitragsbild)"
 
 
