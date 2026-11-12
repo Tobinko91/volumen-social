@@ -26,6 +26,15 @@ kommentare:                  # Kommentar-Assistent (Punkt D): 15:30 + 20:30 Vors
            rektcapital, CryptoMichNL, spotonchain, glassnode, cryptoquant_com, CoinBureau, tier10k,
            WuBlockchain, santimentfeed, AltcoinDaily, BitcoinMagazine, unusual_whales, DeItaone]   # 06.11.: +6 fuer 8 je Lauf
 
+schnellantwort:               # Wunsch Tobias 12.11.2026: Antwort-Vorschlag Minuten nach einem grossen Post (live.sh, alle 10 Min.)
+  aktiv: true
+  konten: [KobeissiLetter, WatcherGuru, lookonchain, BitcoinMagazine, unusual_whales]   # wenige, grosse Konten (Kosten)
+  minuten: 15                # nur ganz frische Posts
+  max_posts: 10              # gelesene Posts je Suche (ca. 0,005 $ je Post)
+  max_pro_tag: 12            # zusammen mit den 16 Kommentaren der Liste bleibt es bei etwa 20-25 am Tag
+  min_likes: 0
+  ruhe: [23, 7]              # keine Vorschlaege nachts (deutsche Zeit)
+
 folgen:                      # Folge-Liste (tools/folgen.py, 16:30 an Tobias; Wunsch 31.10.2026)
   x_pro_tag: 10              # X per Knopf (ca. 0,025 $ je Konto); X verbietet nur massenhaftes Folgen
   andere_pro_tag: 5          # (alt) Instagram/TikTok/YouTube zusammen, wenn je_plattform fehlt
