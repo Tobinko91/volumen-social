@@ -49,6 +49,29 @@ def pruefen(ordner: Path, cfg: dict, sperr: set[str]) -> list[str]:
     return fehler
 
 
+def post_chart(ziel: Path, kerzen_holen=None) -> str:
+    """13.11.2026 (Wunsch Tobias: „Bilder vom Kursverlauf“): post_chart.json = {"chart": {...wie im Reel}} zeichnet
+    den ECHTEN Kursverlauf (Kurse nur vom Server) in post.png und setzt {chg}, {ema}, {hoch} ... in post_x.txt und
+    post_telegram.txt ein. Klappt es nicht: *_ohne.txt (Pflicht, falls Platzhalter) und ein Hinweis an Tobias."""
+    from social import kurse, reel
+    spec = json.loads((ziel / "post_chart.json").read_text(encoding="utf-8"))
+    try:
+        p, werte = reel.chart_szene(ziel, {"bild": "post.png", "chart": spec["chart"]}, ziel.name,
+                                    kerzen_holen or (lambda b, i, n: kurse.kerzen(b, i, n)))
+        shutil.move(p, ziel / "post.png")
+        for f in ("post_x.txt", "post_telegram.txt"):
+            if (ziel / f).exists():
+                t = (ziel / f).read_text(encoding="utf-8")
+                (ziel / f).write_text(t.format(**werte) if "{" in t else t, encoding="utf-8")
+        return "\n📈 Echter Kursverlauf im Bild: " + ", ".join(f"{k} {v}" for k, v in werte.items())
+    except Exception as e:
+        for f in ("post_x.txt", "post_telegram.txt"):
+            ohne = ziel / f.replace(".txt", "_ohne.txt")
+            if ohne.exists():
+                shutil.copy(ohne, ziel / f)
+        return f"\n⚠️ Kursverlauf nicht gezeichnet ({str(e)[:80]}), Text ohne Kurszahlen"
+
+
 def foto_nachladen(spec: dict, holen=None) -> bool:
     """12.11.2026 (MSTR-Eilmeldung ohne Saylor-Foto): fehlt die Person in der Bibliothek, sofort bei Wikimedia
     Commons nachladen (nur freie Lizenzen, wie fotos_holen.py), statt ohne Foto zu posten."""
@@ -118,6 +141,7 @@ def main() -> int:
             continue
         ziel = AUSGABE / f"chat_{o.name}"
         shutil.copytree(o, ziel, dirs_exist_ok=True)
+        chart_hw = post_chart(ziel) if (ziel / "post_chart.json").exists() else ""
         fehler = pruefen(ziel, cfg, sperr)
         ton = ""
         if (ziel / "reel.json").exists() and not (ziel / "video.mp4").exists():   # Reel: Server spricht + schneidet
@@ -129,7 +153,7 @@ def main() -> int:
         bild_hw = ""
         if (ziel / "hingucker.json").exists():   # 06.11.2026: Hingucker-Bild fuer X (Foto/Zitat/Vergleich)
             bild_hw = hingucker(ziel, geheim)
-        hinweis = ("💬 Aus dem Redaktions-Chat" + ton + bild_hw
+        hinweis = ("💬 Aus dem Redaktions-Chat" + ton + chart_hw + bild_hw
                    + ("\n⚠️ " + "; ".join(fehler) if fehler else ""))
         if not (ziel / "post.png").exists():
             gesendet = telegram.text_senden(geheim, hinweis)

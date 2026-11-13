@@ -22,3 +22,6 @@
 - {slug: dimon, name: Jamie Dimon, rolle: JPMorgan-Chef, suche: "Jamie Dimon", muss: Dimon}
 - {slug: xi, name: Xi Jinping, rolle: Chinas Präsident, suche: "Xi Jinping", muss: Xi}
 - {slug: putin, name: Wladimir Putin, rolle: Russlands Präsident, suche: "Vladimir Putin", muss: Putin}
+- {slug: huang, name: Jensen Huang, rolle: Nvidia-Gründer (bis 12.11.2026 CEO), suche: "Jensen Huang", muss: Huang}
+- {slug: kress, name: Colette Kress, rolle: Nvidia-Interims-CEO und CFO, suche: "Colette Kress", muss: Kress}
+- {slug: nvidia, name: Nvidia-Zentrale, rolle: Firmengebäude (kein Logo-Bild), suche: "Nvidia headquarters Santa Clara", muss: Nvidia}

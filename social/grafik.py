@@ -428,6 +428,11 @@ def echt_chart(img: Image.Image, t: Thema, box, kerzen: list[dict], art: str, in
         sichtbar = info["bruch_index"]
     k = kerzen[:sichtbar]
     tief_, hoch_ = min(x["l"] for x in kerzen), max(x["h"] for x in kerzen)
+    if art == "linien":   # 13.11.2026: EMA-Linien und Marken (z. B. 200-Tage-EMA) muessen ins Bild passen
+        werte = [v for li in info.get("linien") or [] for v in li["werte"] if v] + \
+                [m["preis"] for m in info.get("marken") or []]
+        if werte:
+            tief_, hoch_ = min(tief_, min(werte)), max(hoch_, max(werte))
     lo = tief_ - (hoch_ - tief_) * 0.30     # Platz unten fuer Zone und Beschriftung
     hi = hoch_ + (hoch_ - tief_) * 0.08
     innen = (x0 + 30, y0 + 70, x1 - 150, y1 - 60)
@@ -485,6 +490,21 @@ def echt_chart(img: Image.Image, t: Thema, box, kerzen: list[dict], art: str, in
                 d.line([(xx, ly), (xx + 12, ly)], fill=t.akzent2, width=3)
             lab = f"stops {_preis(z)}"
             d.text((innen[0] + 8, ly - fk.size - 6), lab, font=fk, fill=t.akzent2)
+    if art == "linien":   # gleitende Durchschnitte als Linie, Marken als gestrichelte Waagrechte mit Preis
+        for li in info.get("linien") or []:
+            pkt = [(X(i), Y(v)) for i, v in enumerate(li["werte"][:sichtbar]) if v]
+            if len(pkt) > 1:
+                d.line(pkt, fill=getattr(t, li.get("farbe", "akzent2"), t.akzent2), width=max(3, int(4 * sk)))
+                lab = f"{li['name']} {_preis([v for v in li['werte'][:sichtbar] if v][-1])}"
+                ly = pkt[-1][1]
+                d.text((innen[2] - d.textlength(lab, font=fk), ly + 8), lab, font=fk,
+                       fill=getattr(t, li.get("farbe", "akzent2"), t.akzent2))
+        for m in info.get("marken") or []:
+            ly = Y(m["preis"])
+            farbe = getattr(t, m.get("farbe", "text"), t.text)
+            for xx in range(int(innen[0]), int(innen[2]), 22):
+                d.line([(xx, ly), (xx + 12, ly)], fill=farbe, width=3)
+            d.text((innen[0] + 8, ly - fk.size - 6), f"{m['name']} {_preis(m['preis'])}", font=fk, fill=farbe)
     if art == "fib":   # „Why did it move?“: Linie, an der die Bewegung stoppte (rueckblickend, kein Ziel)
         ly = Y(info["preis"])
         for xx in range(int(innen[0]), int(innen[2]), 22):

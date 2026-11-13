@@ -97,12 +97,14 @@ def _text_passend(d, x: int, y: int, text: str, breite: int, hoehe: int, farbe, 
     return y
 
 
-def foto_titel(foto: dict, kopf: str, unter: str = "", etikett: str | None = "BREAKING", th=None) -> Image.Image:
+def foto_titel(foto: dict, kopf: str, unter: str = "", etikett: str | None = "BREAKING", th=None,
+               groesse: tuple[int, int] = (1080, 1350)) -> Image.Image:
     """Hochformat 1080x1350 (Instagram/Telegram/X-Karussell, Wunsch Tobias 12.11.2026): Foto oben gross,
     weich auslaufend, Schlagzeile darunter. Foto nur zugeschnitten, nicht veraendert; Credit klein im Bild."""
     from . import design
     th = th or design.THEMEN["nacht"]
-    w, h, fh = 1080, 1350, 880
+    w, h = groesse
+    fh = 880 if h <= 1350 else 1180   # 9:16 (Reel): Foto groesser, Untertitel-Platz unten bleibt frei
     img = design.hintergrund(th, w, h, saat=5)
     f = _foto(foto["pfad"], w, fh)
     maske = Image.new("L", f.size, 255)
