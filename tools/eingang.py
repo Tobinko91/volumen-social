@@ -57,7 +57,7 @@ def post_chart(ziel: Path, kerzen_holen=None) -> str:
     spec = json.loads((ziel / "post_chart.json").read_text(encoding="utf-8"))
     try:
         p, werte = reel.chart_szene(ziel, {"bild": "post.png", "chart": spec["chart"]}, ziel.name,
-                                    kerzen_holen or (lambda b, i, n: kurse.kerzen(b, i, n)))
+                                    kerzen_holen or (lambda b, i, n: kurse.kerzen(b, i, n, voll=i in ("1d", "1w"))))
         shutil.move(p, ziel / "post.png")
         for f in ("post_x.txt", "post_telegram.txt"):
             if (ziel / f).exists():

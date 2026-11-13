@@ -32,10 +32,13 @@ def verlauf(base: str, intervall: str = "1h", anzahl: int = 72, get=None) -> lis
     return []
 
 
-def kerzen(base: str, intervall: str = "1h", anzahl: int = 168, get=None) -> list[dict]:
-    """Kerzen mit Volumen in USD: [{t, o, h, l, c, v}] aufsteigend; leer, wenn keine Boerse antwortet."""
+def kerzen(base: str, intervall: str = "1h", anzahl: int = 168, get=None, voll: bool = False) -> list[dict]:
+    """Kerzen mit Volumen in USD: [{t, o, h, l, c, v}] aufsteigend; leer, wenn keine Boerse antwortet.
+    voll=True: reicht Bitunix nicht weit genug zurueck (z. B. 200 Wochen), die laengere Reihe von Binance nehmen
+    (nur fuer grosse Coins wie BTC sinnvoll, sonst kann dasselbe Kuerzel ein anderer Coin sein)."""
     get = get or (lambda url, p: requests.get(url, params=p, timeout=15).json())
     b = base.upper()
+    bitunix: list[dict] = []
     try:
         out, ende = [], None
         while len(out) < anzahl:   # Bitunix liefert hoechstens 200 je Abruf
@@ -52,17 +55,19 @@ def kerzen(base: str, intervall: str = "1h", anzahl: int = 168, get=None) -> lis
             if len(rows) < p["limit"]:
                 break
         out = sorted({k["t"]: k for k in out}.values(), key=lambda k: k["t"])
-        if len(out) >= 24:
+        if len(out) >= anzahl or (len(out) >= 24 and not voll):
             return out[-anzahl:]
+        bitunix = out   # 13.11.2026: lange Reihen (200 Wochen) reichen bei Bitunix nicht so weit zurueck -> Binance
     except Exception:
         pass
     try:
         rows = get(BINANCE, {"symbol": f"{b}USDT", "interval": intervall, "limit": min(anzahl, 1000)}) or []
         out = [{"t": int(r[0]), "o": float(r[1]), "h": float(r[2]), "l": float(r[3]), "c": float(r[4]),
                 "v": float(r[7])} for r in rows]
-        return out if len(out) >= 24 else []
     except Exception:
-        return []
+        out = []
+    beste = max((bitunix, out), key=len)
+    return beste[-anzahl:] if len(beste) >= 24 else []
 
 
 def volumenprofil(k: list[dict], faecher: int = 48) -> tuple[list[float], list[float]]:

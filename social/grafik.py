@@ -433,9 +433,10 @@ def echt_chart(img: Image.Image, t: Thema, box, kerzen: list[dict], art: str, in
                 [m["preis"] for m in info.get("marken") or []]
         if werte:
             tief_, hoch_ = min(tief_, min(werte)), max(hoch_, max(werte))
-    lo = tief_ - (hoch_ - tief_) * 0.30     # Platz unten fuer Zone und Beschriftung
+    lo = tief_ - (hoch_ - tief_) * (0.10 if art == "linien" else 0.30)   # Platz unten fuer Zone und Beschriftung
     hi = hoch_ + (hoch_ - tief_) * 0.08
-    innen = (x0 + 30, y0 + 70, x1 - 150, y1 - 60)
+    rsi_h = int(190 * sk) if art == "linien" and info.get("rsi") else 0   # 13.11.2026: RSI-Feld unter dem Chart
+    innen = (x0 + 30, y0 + 70, x1 - (190 if art == "linien" else 150), y1 - 60 - rsi_h)
     n = len(kerzen)
     bw = (innen[2] - innen[0]) / n
 
@@ -455,7 +456,7 @@ def echt_chart(img: Image.Image, t: Thema, box, kerzen: list[dict], art: str, in
                 e.rectangle([innen[0], Y(z["oben"] * 1.002), innen[2], Y(z["unten"] * 0.998)], fill=rgb(farbe, 60))
     img.alpha_composite(ebene)
     d = ImageDraw.Draw(img)
-    for v in (lo + (hi - lo) * f for f in (0.1, 0.5, 0.9)):     # Preisachse rechts
+    for v in (lo + (hi - lo) * f for f in ((0.9,) if art == "linien" else (0.1, 0.5, 0.9))):   # Preisachse rechts
         d.text((innen[2] + 16, Y(v) - fs.size / 2), _preis(v), font=fs, fill=t.neben)
     dicke = max(2, int(bw * 0.15))
     for i, x in enumerate(k):
@@ -491,20 +492,49 @@ def echt_chart(img: Image.Image, t: Thema, box, kerzen: list[dict], art: str, in
             lab = f"stops {_preis(z)}"
             d.text((innen[0] + 8, ly - fk.size - 6), lab, font=fk, fill=t.akzent2)
     if art == "linien":   # gleitende Durchschnitte als Linie, Marken als gestrichelte Waagrechte mit Preis
+        legende = []
         for li in info.get("linien") or []:
+            farbe = getattr(t, li.get("farbe", "akzent2"), t.akzent2)
             pkt = [(X(i), Y(v)) for i, v in enumerate(li["werte"][:sichtbar]) if v]
             if len(pkt) > 1:
-                d.line(pkt, fill=getattr(t, li.get("farbe", "akzent2"), t.akzent2), width=max(3, int(4 * sk)))
-                lab = f"{li['name']} {_preis([v for v in li['werte'][:sichtbar] if v][-1])}"
-                ly = pkt[-1][1]
-                d.text((innen[2] - d.textlength(lab, font=fk), ly + 8), lab, font=fk,
-                       fill=getattr(t, li.get("farbe", "akzent2"), t.akzent2))
+                d.line(pkt, fill=farbe, width=max(3, int(4 * sk)))
+                legende.append((f"{li['name']} {_preis([v for v in li['werte'][:sichtbar] if v][-1])}", farbe,
+                                pkt[-1][1]))
         for m in info.get("marken") or []:
             ly = Y(m["preis"])
             farbe = getattr(t, m.get("farbe", "text"), t.text)
             for xx in range(int(innen[0]), int(innen[2]), 22):
                 d.line([(xx, ly), (xx + 12, ly)], fill=farbe, width=3)
-            d.text((innen[0] + 8, ly - fk.size - 6), f"{m['name']} {_preis(m['preis'])}", font=fk, fill=farbe)
+            legende.append((f"{m['name']} {_preis(m['preis'])}", farbe, ly))
+        # Beschriftung rechts neben dem Chart auf Hoehe der Linie (nicht ueber den Kerzen); Ueberlappung vermeiden
+        belegt: list[float] = []
+        for lab, farbe, ly in sorted(legende, key=lambda z: z[2]):
+            yy = ly - fk.size / 2
+            while any(abs(yy - b_) < fk.size * 1.15 for b_ in belegt):
+                yy += fk.size * 1.15
+            belegt.append(yy)
+            name, _, wert = lab.rpartition(" ")
+            d.rounded_rectangle([innen[2] + 6, yy - 4, x1 - 10, yy + fk.size * 2.1], radius=8,
+                                fill=t.karte)
+            d.text((innen[2] + 14, yy), name, font=fs, fill=farbe)
+            d.text((innen[2] + 14, yy + fs.size + 2), wert, font=fk, fill=farbe)
+            belegt.append(yy + fk.size * 1.15)
+        r = info.get("rsi")
+        if r:   # RSI(14) im eigenen Feld: Linie, 30/70-Grenzen, aktueller Wert gross
+            ry0, ry1 = innen[3] + 40, y1 - 50
+            d.line([(innen[0], ry0 - 18), (innen[2], ry0 - 18)], fill=t.linie, width=1)
+            RY = lambda v: ry1 - (ry1 - ry0) * v / 100
+            for g in (30, 70):
+                for xx in range(int(innen[0]), int(innen[2]), 18):
+                    d.line([(xx, RY(g)), (xx + 9, RY(g))], fill=t.neben, width=1)
+                d.text((innen[2] + 14, RY(g) - fs.size / 2), str(g), font=fs, fill=t.neben)
+            pkt = [(X(i), RY(v)) for i, v in enumerate(r[:sichtbar]) if v is not None]
+            if len(pkt) > 1:
+                d.line(pkt, fill=t.akzent, width=max(2, int(3 * sk)))
+            letzter = [v for v in r[:sichtbar] if v is not None][-1]
+            zust = "oversold" if letzter < 30 else "overbought" if letzter > 70 else ""
+            d.text((innen[0], ry0 - 14), f"RSI 14 · {letzter:.0f}" + (f" · {zust}" if zust else ""), font=fk,
+                   fill=t.minus if letzter < 30 else t.plus if letzter > 70 else t.text)
     if art == "fib":   # „Why did it move?“: Linie, an der die Bewegung stoppte (rueckblickend, kein Ziel)
         ly = Y(info["preis"])
         for xx in range(int(innen[0]), int(innen[2]), 22):
