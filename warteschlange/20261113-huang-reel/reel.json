@@ -1,0 +1,29 @@
+{
+ "thema": "huang-reel",
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "foto": {
+    "person": "huang",
+    "kopf": "Nvidia staff want Jensen Huang back",
+    "unter": "1,600+ comments backing his return",
+    "etikett": "BREAKING"
+   },
+   "text": "Nvidia employees want Jensen Huang back as CEO. More than 1,600 comments back his return."
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "Billionaire shareholder Leo KoGuan: no further investment without Jensen."
+  },
+  {
+   "bild": "szene_2.png",
+   "foto": {
+    "person": "nvidia",
+    "kopf": "Two dates to watch",
+    "unter": "Nov 17 earnings \u00b7 Dec 1 Congress",
+    "etikett": "WHAT'S NEXT"
+   },
+   "text": "Next: earnings on November 17. And lawmakers want Huang to testify on December 1. Follow for updates."
+  }
+ ]
+}

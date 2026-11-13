@@ -1,0 +1,44 @@
+{
+ "thema": "btc-drop",
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "chart": {
+    "base": "BTC",
+    "intervall": "1d",
+    "anzahl": 90,
+    "box": [
+     40,
+     560,
+     1040,
+     1480
+    ],
+    "titel": "BTC \u00b7 daily \u00b7 90 days"
+   },
+   "text": "Bitcoin is down {vom_hoch} from its 90 day high. Now at {bis}.",
+   "text_ohne": "Bitcoin just broke below seventy thousand dollars."
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "More than 1.3 billion dollars in crypto futures got liquidated in 24 hours. The dollar is the strongest since April 2025, and the odds of a bigger Fed hike went up."
+  },
+  {
+   "bild": "szene_2.png",
+   "chart": {
+    "base": "BTC",
+    "intervall": "1d",
+    "anzahl": 90,
+    "ema": 200,
+    "box": [
+     40,
+     560,
+     1040,
+     1480
+    ],
+    "titel": "BTC \u00b7 daily \u00b7 EMA 200"
+   },
+   "text": "The key line now: the 200 day average at {ema}. Bitcoin trades {ema_lage} it. A daily close below it would be a bearish signal. Holding it leaves room for a bounce. Follow for the daily close.",
+   "text_ohne": "The key line now is the 200 day average. A daily close below it would be a bearish signal. Holding it leaves room for a bounce. Follow for the daily close."
+  }
+ ]
+}

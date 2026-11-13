@@ -1,0 +1,23 @@
+{
+ "thema": "ppi-reel",
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "foto": {
+    "person": "warsh",
+    "kopf": "US inflation data drops today",
+    "unter": "PPI \u00b7 8:30am ET \u00b7 13:30 UTC",
+    "etikett": "TODAY"
+   },
+   "text": "US producer inflation drops today. Expected: 6.6% a year, up from 6.3%. Fed chair Kevin Warsh is watching."
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "Hotter means more pressure on Bitcoin. In line means choppy trading. Cooler could mean relief."
+  },
+  {
+   "bild": "szene_2.png",
+   "text": "8:30 Eastern, 13:30 UTC. Follow for the number."
+  }
+ ]
+}
