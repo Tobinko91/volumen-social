@@ -52,11 +52,26 @@ class EilTest(unittest.TestCase):
         p, w = reel.chart_szene(self.o, {"bild": "post.png", "chart": {
             "base": "BTC", "intervall": "1d", "anzahl": 60, "ema": 200, "box": [60, 300, 1020, 1100],
             "titel": "BTC · daily"}}, "t", holen)
-        self.assertEqual(geholt, {"b": "BTC", "i": "1d", "n": 260})   # 200 Kerzen Vorlauf fuer die EMA
+        self.assertEqual(geholt, {"b": "BTC", "i": "1d", "n": 860})   # 4 x 200 Kerzen Vorlauf fuer die EMA
         self.assertTrue(p.exists())
         for key in ("chg", "ema", "ema_abstand", "ema_lage", "hoch", "vom_hoch"):
             self.assertIn(key, w)
         self.assertEqual(w["ema_lage"], "below")    # fallender Verlauf liegt unter der EMA
+
+    def test_ema_ohne_altlast(self):
+        """Fehler 13.11.2026: Startwert aus alten, hoeheren Kursen zog die EMA 200 nach oben (75k statt 68k)."""
+        hoch = [{"t": i, "o": 100.0, "h": 101.0, "l": 99.0, "c": 100.0, "v": 1} for i in range(1500)]
+        tief = [{"t": 1500 + i, "o": 60.0, "h": 61.0, "l": 59.0, "c": 60.0, "v": 1} for i in range(150)]
+        k = hoch + tief
+        ref = reel.ema(k, 200)[-1]   # EMA ueber die ganze Geschichte (wie TradingView)
+        p, w = reel.chart_szene(self.o, {"bild": "post.png", "chart": {
+            "base": "BTC", "intervall": "1d", "anzahl": 60, "ema": 200, "box": [60, 300, 1020, 1100]}}, "t",
+            lambda b, i, n: k[-n:])
+        self.assertAlmostEqual(float(w["ema"].strip("$").replace(",", "")), ref, delta=ref * 0.002)
+        with self.assertRaises(ValueError):    # zu wenig Vorlauf -> lieber kein Wert als ein falscher
+            reel.chart_szene(self.o, {"bild": "post.png", "chart": {
+                "base": "BTC", "intervall": "1d", "anzahl": 60, "ema": 200, "box": [60, 300, 1020, 1100]}}, "t",
+                lambda b, i, n: k[-300:])
 
     def test_post_chart_setzt_zahlen_ein_oder_faellt_zurueck(self):
         import eingang

@@ -28,12 +28,17 @@ def chart_szene(ordner: Path, s: dict, thema: str, kerzen_holen) -> tuple[Path, 
     from . import design, grafik
     c = s["chart"]
     ema_n = int(c.get("ema") or 0)   # 13.11.2026: z. B. 200-Tage-EMA, aus echten Kerzen gerechnet
-    alle = kerzen_holen(c.get("base", "BTC"), c.get("intervall", "15m"), int(c.get("anzahl", 48)) + ema_n)
+    # Fehler 13.11.2026 (Tobias: „EMA 200 bei 75.000 statt ca. 68.000“): Mit nur 200 Kerzen Vorlauf steckte im
+    # Startwert (Schnitt der ersten 200 Tage) noch zu viel alter, hoeherer Kurs. Eine EMA braucht ein Vielfaches
+    # ihrer Laenge als Vorlauf, damit sie wie bei TradingView aussieht: hier 4 x n (Restgewicht des Starts < 0,1 %).
+    vorlauf = 4 * ema_n
+    alle = kerzen_holen(c.get("base", "BTC"), c.get("intervall", "15m"), int(c.get("anzahl", 48)) + vorlauf)
     ema_werte = ema(alle, ema_n) if ema_n else []
     if ema_n:
-        if len(alle) < ema_n + 12:
-            raise ValueError(f"zu wenige Kerzen fuer EMA {ema_n} ({len(alle)})")
-        alle, ema_werte = alle[ema_n:], ema_werte[ema_n:]
+        if len(alle) < int(c.get("anzahl", 48)) + 3 * ema_n:
+            raise ValueError(f"zu wenige Kerzen fuer eine verlaessliche EMA {ema_n} ({len(alle)})")
+        weg = len(alle) - int(c.get("anzahl", 48))
+        alle, ema_werte = alle[weg:], ema_werte[weg:]
     k = alle
     if c.get("ab_ts"):   # ab der Stunde vor dem Ereignis (vorlauf_h: mehr Vorgeschichte, z. B. Kurs-Alarm)
         k = [x for x in alle if x["t"] >= (int(c["ab_ts"]) - float(c.get("vorlauf_h", 1)) * 3600) * 1000]
