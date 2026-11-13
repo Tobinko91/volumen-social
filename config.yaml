@@ -109,7 +109,7 @@ zeitplan:                    # S31 (Tobias 02.11.2026): einmal freigeben, jeder 
   nur_video: [tiktok]        # bei „Alle Kanäle“: TikTok nur Videos und Bilderserien (einzelner Knopf geht immer)
 
 youtube:
-  in_alle: false            # 02.11.2026 Tobias: YouTube nicht bei „Alle Kanäle“, nur per ▶️-Knopf; true nach der Google-Pruefung
+  in_alle: true             # 13.11.2026 Tobias: „Alle Kanäle“ heisst jetzt auch YouTube (vorher nur per ▶️-Knopf)
   sichtbarkeit: private      # bis Google die App geprueft hat (Audit), dann public
 
 tiktok:

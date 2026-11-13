@@ -69,7 +69,7 @@ class SucheTest(unittest.TestCase):
     def test_personenliste(self):
         import yaml
         p = yaml.safe_load((Path(__file__).resolve().parent.parent / "inhalte" / "personen.yaml").read_text())
-        self.assertEqual(len(p), 20)
+        self.assertGreaterEqual(len(p), 20)   # 13.11.2026: + Huang, Kress, Nvidia-Zentrale
         self.assertEqual(len({x["slug"] for x in p}), 20)
         self.assertTrue(all(x["muss"] and x["suche"] for x in p))
 

@@ -115,3 +115,23 @@ def waehlen(ziel: Path, slug: str, schluessel: str = "") -> dict | None:
         return None
     f = liste[int(hashlib.md5(schluessel.encode()).hexdigest(), 16) % len(liste)]
     return dict(f, pfad=str(ziel / f["datei"]))
+
+
+def sicher(ziel: Path, slug: str, schluessel: str = "", holen_=None) -> dict | None:
+    """Foto der Person; fehlt sie in der Bibliothek, sofort bei Wikimedia Commons nachladen (nur Personen aus
+    inhalte/personen.yaml, nur freie Lizenzen). Wunsch Tobias 12./13.11.2026: Eilmeldungen immer mit Bild."""
+    import yaml
+    f = waehlen(ziel, slug, schluessel)
+    if f:
+        return f
+    liste = yaml.safe_load((Path(__file__).resolve().parent.parent / "inhalte" / "personen.yaml")
+                           .read_text(encoding="utf-8")) or []
+    p = [x for x in liste if x.get("slug") == slug]
+    if not p:
+        return None
+    try:
+        (holen_ or holen)(ziel, p)
+    except Exception as e:
+        print("Foto nicht nachgeladen:", slug, e)
+        return None
+    return waehlen(ziel, slug, schluessel)

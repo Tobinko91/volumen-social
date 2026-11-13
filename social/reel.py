@@ -27,7 +27,13 @@ def chart_szene(ordner: Path, s: dict, thema: str, kerzen_holen) -> tuple[Path, 
     """-> (Bild mit echtem Chart, Werte {chg, von, bis} seit ab_ts bzw. seit der ersten Kerze)."""
     from . import design, grafik
     c = s["chart"]
-    alle = kerzen_holen(c.get("base", "BTC"), c.get("intervall", "15m"), int(c.get("anzahl", 48)))
+    ema_n = int(c.get("ema") or 0)   # 13.11.2026: z. B. 200-Tage-EMA, aus echten Kerzen gerechnet
+    alle = kerzen_holen(c.get("base", "BTC"), c.get("intervall", "15m"), int(c.get("anzahl", 48)) + ema_n)
+    ema_werte = ema(alle, ema_n) if ema_n else []
+    if ema_n:
+        if len(alle) < ema_n + 12:
+            raise ValueError(f"zu wenige Kerzen fuer EMA {ema_n} ({len(alle)})")
+        alle, ema_werte = alle[ema_n:], ema_werte[ema_n:]
     k = alle
     if c.get("ab_ts"):   # ab der Stunde vor dem Ereignis (vorlauf_h: mehr Vorgeschichte, z. B. Kurs-Alarm)
         k = [x for x in alle if x["t"] >= (int(c["ab_ts"]) - float(c.get("vorlauf_h", 1)) * 3600) * 1000]
@@ -46,11 +52,52 @@ def chart_szene(ordner: Path, s: dict, thema: str, kerzen_holen) -> tuple[Path, 
     titel = c.get("titel", "")
     if c.get("ab_ts"):
         titel = f"{titel} · {chg:+.1f}% since {c.get('ab_text', 'then')}".strip(" ·")
-    grafik.echt_chart(img, th, tuple(c["box"]), k, "linie", {}, 3, c.get("lang", "en"), titel)
+    preis = lambda x: f"${x:,.0f}" if x >= 100 else f"${x:,.2f}"
+    werte = {"chg": f"{chg:+.1f}%", "von": preis(von), "bis": preis(bis),
+             "hoch": preis(max(x["h"] for x in k)), "tief": preis(min(x["l"] for x in k)),
+             "vom_hoch": f"{(bis / max(x['h'] for x in k) - 1) * 100:+.1f}%"}
+    art, info = "linie", {}
+    if ema_n:
+        ew = ema_werte[-len(k):]
+        art, info = "linien", {"linien": [{"werte": ew, "name": f"EMA {ema_n}", "farbe": "akzent2"}]}
+        werte.update(ema=preis(ew[-1]), ema_abstand=f"{(bis / ew[-1] - 1) * 100:+.1f}%",
+                     ema_lage="above" if bis >= ew[-1] else "below")
+    grafik.echt_chart(img, th, tuple(c["box"]), k, art, info, 3, c.get("lang", "en"), titel)
     ziel = ordner / f"chart_{Path(s['bild']).stem}.png"
     img.convert("RGB").save(ziel)
-    preis = lambda x: f"${x:,.0f}" if x >= 100 else f"${x:,.2f}"
-    return ziel, {"chg": f"{chg:+.1f}%", "von": preis(von), "bis": preis(bis)}
+    return ziel, werte
+
+
+def ema(kerzen: list[dict], n: int) -> list[float | None]:
+    """Exponentieller gleitender Durchschnitt der Schlusskurse (Start: einfacher Schnitt der ersten n)."""
+    out: list[float | None] = [None] * len(kerzen)
+    if n < 1 or len(kerzen) < n:
+        return out
+    a = 2 / (n + 1)
+    e = sum(x["c"] for x in kerzen[:n]) / n
+    out[n - 1] = e
+    for i in range(n, len(kerzen)):
+        e = kerzen[i]["c"] * a + e * (1 - a)
+        out[i] = e
+    return out
+
+
+def foto_szene(ordner: Path, s: dict, cfg: dict, fotos_dir: Path | None = None) -> Path:
+    """Hochformat-Foto mit Schlagzeile (bildpaket.foto_titel, 1080x1920). s["foto"] = {person, kopf, unter, etikett}."""
+    import os
+    from . import bildpaket, fotos
+    f = s["foto"]
+    fotos_dir = fotos_dir or Path(os.environ.get("SOCIAL_FOTOS", Path(os.environ.get("SOCIAL_GEHEIM",
+                                                                                  "/opt/volumen-social")) / "fotos"))
+    foto = fotos.sicher(fotos_dir, str(f["person"]).lower(), ordner.name)
+    if not foto:
+        raise ValueError(f"kein freies Foto: {f['person']}")
+    W, H = cfg["video"]["breite"], cfg["video"]["hoehe"]
+    img = bildpaket.foto_titel(foto, f.get("kopf", ""), f.get("unter", ""), f.get("etikett", "BREAKING"),
+                               groesse=(W, H))
+    ziel = ordner / f"foto_{Path(s['bild']).stem}.png"
+    img.convert("RGB").save(ziel)
+    return ziel
 
 
 def bauen(ordner: Path, cfg: dict, geheim: dict, kerzen_holen=None, sprechen=None, schneiden=None) -> str:
@@ -63,6 +110,11 @@ def bauen(ordner: Path, cfg: dict, geheim: dict, kerzen_holen=None, sprechen=Non
     bilder, hinweise, zeilen = [], [], []
     for s in spec["szenen"]:
         p, text = ordner / s["bild"], s["text"]
+        if s.get("foto"):   # 13.11.2026: Foto-Szene (Person aus der Bibliothek), sonst bleibt das Bild aus dem Chat
+            try:
+                p = foto_szene(ordner, s, cfg)
+            except Exception as e:
+                hinweise.append(f"Foto fehlt ({str(e)[:60]})")
         if s.get("chart"):
             try:
                 p, werte = chart_szene(ordner, s, spec.get("thema", ordner.name), kerzen_holen)
