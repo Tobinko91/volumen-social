@@ -70,7 +70,7 @@ class SucheTest(unittest.TestCase):
         import yaml
         p = yaml.safe_load((Path(__file__).resolve().parent.parent / "inhalte" / "personen.yaml").read_text())
         self.assertGreaterEqual(len(p), 20)   # 13.11.2026: + Huang, Kress, Nvidia-Zentrale
-        self.assertEqual(len({x["slug"] for x in p}), 20)
+        self.assertEqual(len({x["slug"] for x in p}), len(p))   # keine doppelten Kuerzel
         self.assertTrue(all(x["muss"] and x["suche"] for x in p))
 
 
