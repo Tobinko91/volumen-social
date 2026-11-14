@@ -140,6 +140,83 @@ def foto_szene(ordner: Path, s: dict, cfg: dict, fotos_dir: Path | None = None) 
     return ziel
 
 
+class Abbruch(RuntimeError):
+    """Live-Lage passt nicht mehr zum Text (z. B. Kurs eingebrochen, Funding gedreht): kein Reel, Tobias neu fragen."""
+
+
+def _preis_txt(x: float) -> str:
+    return f"${x:,.0f}" if x >= 100 else f"${x:,.2f}" if x >= 1 else f"${x:.4g}" if x >= 0.0001 else f"${x:.3g}"
+
+
+def live_werte(lv: dict, kerzen_holen, web_dir: Path, jetzt: float | None = None) -> dict:
+    """14.11.2026 Tobias (S30): „Posts nur mit LIVE-Daten“. Holt direkt vor dem Bauen Kurs (Boerse), Funding und das
+    Kerzenbild (Bot, 5-Minuten-Stand) und rechnet die Zahlen fuer den Text: {preis}, {vom_tief}, {fach}, {funding},
+    {funding_abs}, {marke_N_abstand}. Mit lv["abbruch"] = {preis_unter, funding_ueber} -> Abbruch statt alter Text."""
+    import time as _t
+    jetzt = jetzt or _t.time()
+    base = lv["base"].upper()
+    w: dict = {}
+    ab = int(lv.get("tief_ab_ts") or jetzt - 3 * 86400)
+    n = min(1000, int((jetzt - ab) / 3600) + 3)
+    k = [x for x in kerzen_holen(base, "1h", n) if x["t"] >= ab * 1000]
+    if len(k) < 3:
+        raise ValueError(f"keine Live-Kurse fuer {base}")
+    preis, tief = k[-1]["c"], min(x["l"] for x in k)
+    w.update(preis=_preis_txt(preis), vom_tief=f"+{(preis / tief - 1) * 100:.0f}%", fach=f"{preis / tief:.1f}",
+             tief=_preis_txt(tief), _preis=preis)
+    try:   # Funding: Bot-Stand je Coin (alle 5 Min.), in Prozent
+        c = json.loads((Path(web_dir) / "coins" / f"{base}.json").read_text())
+        if c.get("funding") is not None and jetzt - float(c.get("ts") or 0) < 1800:
+            f = float(c["funding"])
+            w.update(funding=f"{f:+.2f}%", funding_abs=f"{abs(f):.2f}%", _funding=f)
+    except Exception:
+        pass
+    try:   # Kerzenbild des Bots (Funding-Extrem oder Eilmeldung), hoechstens 6 Std. alt
+        liq = json.loads((Path(web_dir) / "liquiditaet.json").read_text())
+        for e in reversed((liq.get("funding_extrem") or []) + (liq.get("eilmeldungen") or [])):
+            if str(e.get("base", "")).upper() == base and e.get("kerzen_png"):
+                p = Path(web_dir) / e["kerzen_png"]
+                if p.exists() and jetzt - p.stat().st_mtime < 6 * 3600:
+                    w["_kerzen_png"] = str(p)
+                    if "_funding" not in w and e.get("funding") is not None:
+                        f = float(e["funding"])
+                        w.update(funding=f"{f:+.2f}%", funding_abs=f"{abs(f):.2f}%", _funding=f)
+                    break
+    except Exception:
+        pass
+    for i, m in enumerate(lv.get("marken") or []):
+        w[f"marke_{i}_abstand"] = f"{(float(m['preis']) / preis - 1) * 100:+.0f}%"
+    a = lv.get("abbruch") or {}
+    if a.get("preis_unter") is not None and preis < float(a["preis_unter"]):
+        raise Abbruch(f"{base} steht bei {_preis_txt(preis)}, unter {a['preis_unter']}: Text passt nicht mehr")
+    if a.get("funding_ueber") is not None and "_funding" in w and w["_funding"] > float(a["funding_ueber"]):
+        raise Abbruch(f"{base}-Funding ist wieder {w['funding']}: Text passt nicht mehr")
+    if a.get("funding_pflicht") and "_funding" not in w:
+        raise Abbruch(f"kein aktuelles Funding fuer {base}")
+    return w
+
+
+def bot_bild_szene(ordner: Path, s: dict, png: str, cfg: dict) -> Path:
+    """Kerzenbild des Bots in die Szene setzen (unter die Schlagzeile), optional Zoom-Ziel s["fokus"] = [fx, fy]
+    als Anteil des Bot-Bilds (z. B. [0.9, 0.6] = rechtes Liquidationsprofil)."""
+    img = Image.open(ordner / s["bild"]).convert("RGBA")
+    bot = Image.open(png).convert("RGBA")
+    W = img.width - 40
+    bot = bot.resize((W, int(bot.height * W / bot.width)))
+    y = int(s.get("bot_y", 430))
+    if y + bot.height > img.height - 330:   # Platz fuer Untertitel lassen
+        h = img.height - 330 - y
+        bot = bot.resize((int(bot.width * h / bot.height), h))
+    x = (img.width - bot.width) // 2
+    img.alpha_composite(bot, (x, y))
+    ziel = ordner / f"bot_{Path(s['bild']).stem}.png"
+    img.convert("RGB").save(ziel)
+    if s.get("fokus"):
+        fx, fy = s["fokus"]
+        ziel.with_suffix(".fokus.json").write_text(json.dumps({"fokus": [x + bot.width * fx, y + bot.height * fy]}))
+    return ziel
+
+
 def bauen(ordner: Path, cfg: dict, geheim: dict, kerzen_holen=None, sprechen=None, schneiden=None) -> str:
     """Baut ordner/video.mp4 aus reel.json. Gibt die Tonquelle zurueck ('elevenlabs', 'stille (...)', ...)."""
     from . import kurse, stimme, video
@@ -148,14 +225,38 @@ def bauen(ordner: Path, cfg: dict, geheim: dict, kerzen_holen=None, sprechen=Non
     schneiden = schneiden or video.bauen
     spec = json.loads((ordner / "reel.json").read_text(encoding="utf-8"))
     bilder, hinweise, zeilen = [], [], []
+    live: dict | None = None
+    if spec.get("live"):   # 14.11.2026: Zahlen direkt vor dem Bauen live holen; Abbruch geht durch
+        try:
+            live = live_werte(spec["live"], kerzen_holen, Path(cfg["daten"]["dir"]))
+            (ordner / "live_werte.json").write_text(json.dumps({k: v for k, v in live.items() if not k.startswith("_")}))
+            hinweise.append("Live: " + ", ".join(f"{k} {v}" for k, v in live.items() if not k.startswith("_")))
+        except Abbruch:
+            raise
+        except Exception as e:
+            hinweise.append(f"Live-Daten fehlen ({str(e)[:80]}), Texte ohne Zahlen")
     for s in spec["szenen"]:
         p, text = ordner / s["bild"], s["text"]
+        if spec.get("live"):
+            try:
+                text = text.format(**live) if live else s.get("text_ohne", text)
+            except KeyError:
+                text = s.get("text_ohne", text)
+        bot_ok = False
+        if s.get("bot_kerzen") and live and live.get("_kerzen_png"):
+            try:
+                p, bot_ok = bot_bild_szene(ordner, s, live["_kerzen_png"], cfg), True
+            except Exception as e:
+                hinweise.append(f"Bot-Chart fehlt ({str(e)[:60]})")
+        elif s.get("bot_kerzen"):
+            hinweise.append("Kein Live-Kerzenbild vom Bot (Telegram: /kerzen COIN)"
+                            + (", eigener Live-Chart statt dessen" if s.get("chart") else ", Szene ohne Chart"))
         if s.get("foto"):   # 13.11.2026: Foto-Szene (Person aus der Bibliothek), sonst bleibt das Bild aus dem Chat
             try:
                 p = foto_szene(ordner, s, cfg)
             except Exception as e:
                 hinweise.append(f"Foto fehlt ({str(e)[:60]})")
-        if s.get("chart"):
+        if s.get("chart") and not bot_ok:   # Ersatz, wenn das Bot-Bild fehlt
             try:
                 p, werte = chart_szene(ordner, s, spec.get("thema", ordner.name), kerzen_holen)
                 text = text.format(**werte) if "{" in text else text
