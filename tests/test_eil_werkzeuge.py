@@ -73,6 +73,49 @@ class EilTest(unittest.TestCase):
                 "base": "BTC", "intervall": "1d", "anzahl": 60, "ema": 200, "box": [60, 300, 1020, 1100]}}, "t",
                 lambda b, i, n: k[-300:])
 
+    def test_rsi_wie_wilder(self):
+        k = [{"c": float(c)} for c in [44.34, 44.09, 44.15, 43.61, 44.33, 44.83, 45.10, 45.42, 45.84, 46.08, 45.89,
+                                         46.03, 45.61, 46.28, 46.28, 46.00, 46.03, 46.41, 46.22, 45.64]]
+        r = reel.rsi(k, 14)
+        self.assertIsNone(r[13])
+        self.assertAlmostEqual(r[14], 70.46, delta=0.1)   # Lehrbuch-Beispiel (Wilder/StockCharts)
+        self.assertAlmostEqual(r[15], 66.25, delta=0.1)
+
+    def test_200_wochen_linie_und_rsi_im_chart(self):
+        """13.11.2026 Tobias: die ~68.000 sind die 200-Wochen-Linie; RSI unten ins Bild."""
+        tag = kerzen(1000, 90000, -20)
+        woche = [{"t": i, "o": 68000.0, "h": 69000.0, "l": 67000.0, "c": 68000.0, "v": 1} for i in range(200)]
+        geholt = []
+
+        def holen(b, i, n):
+            geholt.append((i, n))
+            return (woche if i == "1w" else tag)[-n:]
+
+        p, w = reel.chart_szene(self.o, {"bild": "post.png", "chart": {
+            "base": "BTC", "intervall": "1d", "anzahl": 90, "ema": 200, "wochen_ma": 200, "rsi": 14,
+            "box": [40, 300, 1040, 1250]}}, "t", holen)
+        self.assertIn(("1w", 200), geholt)
+        self.assertEqual(w["wma"], "$68,000")
+        self.assertIn(w["wma_lage"], ("above", "below"))
+        self.assertTrue(0 <= float(w["rsi"]) <= 100)
+        # zu wenige Wochen -> keine Linie, kein Platzhalter (lieber nichts als falsch)
+        p, w = reel.chart_szene(self.o, {"bild": "post.png", "chart": {
+            "base": "BTC", "intervall": "1d", "anzahl": 90, "wochen_ma": 200, "box": [40, 300, 1040, 1250]}}, "t",
+            lambda b, i, n: (woche[:150] if i == "1w" else tag)[-n:])
+        self.assertNotIn("wma", w)
+
+    def test_lange_reihen_von_binance(self):
+        from social import kurse
+        bitunix = [{"time": (1000 + i) * 1000, "open": 1, "high": 1, "low": 1, "close": 1, "quoteVol": 1}
+                   for i in range(150)]
+        binance = [[(i) * 1000, "2", "2", "2", "2", "0", 0, "1"] for i in range(200)]
+
+        def get(url, p):
+            return {"data": bitunix if not p.get("endTime") else []} if url == kurse.BITUNIX else binance
+
+        self.assertEqual(len(kurse.kerzen("BTC", "1w", 200, get=get, voll=True)), 200)   # Binance reicht weiter
+        self.assertEqual(len(kurse.kerzen("BTC", "1w", 200, get=get)), 150)              # sonst wie bisher Bitunix
+
     def test_post_chart_setzt_zahlen_ein_oder_faellt_zurueck(self):
         import eingang
         (self.o / "post_chart.json").write_text(json.dumps({"chart": {

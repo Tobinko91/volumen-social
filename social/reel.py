@@ -34,6 +34,7 @@ def chart_szene(ordner: Path, s: dict, thema: str, kerzen_holen) -> tuple[Path, 
     vorlauf = 4 * ema_n
     alle = kerzen_holen(c.get("base", "BTC"), c.get("intervall", "15m"), int(c.get("anzahl", 48)) + vorlauf)
     ema_werte = ema(alle, ema_n) if ema_n else []
+    alle_rsi = list(alle)
     if ema_n:
         if len(alle) < int(c.get("anzahl", 48)) + 3 * ema_n:
             raise ValueError(f"zu wenige Kerzen fuer eine verlaessliche EMA {ema_n} ({len(alle)})")
@@ -64,13 +65,47 @@ def chart_szene(ordner: Path, s: dict, thema: str, kerzen_holen) -> tuple[Path, 
     art, info = "linie", {}
     if ema_n:
         ew = ema_werte[-len(k):]
-        art, info = "linien", {"linien": [{"werte": ew, "name": f"EMA {ema_n}", "farbe": "akzent2"}]}
+        art, info = "linien", {"linien": [{"werte": ew, "name": c.get("ema_name", f"EMA {ema_n}"),
+                                           "farbe": "akzent2"}]}
         werte.update(ema=preis(ew[-1]), ema_abstand=f"{(bis / ew[-1] - 1) * 100:+.1f}%",
                      ema_lage="above" if bis >= ew[-1] else "below")
+    wn = int(c.get("wochen_ma") or 0)   # 13.11.2026 Tobias: die ~68.000 sind die 200-WOCHEN-Linie, nicht die 200-Tage-EMA
+    if wn:
+        wk = kerzen_holen(c.get("base", "BTC"), "1w", wn)
+        if len(wk) >= wn:
+            wma = sum(x["c"] for x in wk[-wn:]) / wn
+            art = "linien"
+            info.setdefault("marken", []).append({"preis": wma, "name": f"MA {wn}W", "farbe": "akzent"})
+            werte.update(wma=preis(wma), wma_abstand=f"{(bis / wma - 1) * 100:+.1f}%",
+                         wma_lage="above" if bis >= wma else "below")
+    rn = int(c.get("rsi") or 0)
+    if rn:
+        rw = rsi(alle_rsi, rn)[-len(k):]
+        if rw and rw[-1] is not None:
+            art = "linien"
+            info["rsi"] = rw
+            werte.update(rsi=f"{rw[-1]:.0f}")
     grafik.echt_chart(img, th, tuple(c["box"]), k, art, info, 3, c.get("lang", "en"), titel)
     ziel = ordner / f"chart_{Path(s['bild']).stem}.png"
     img.convert("RGB").save(ziel)
     return ziel, werte
+
+
+def rsi(kerzen: list[dict], n: int = 14) -> list[float | None]:
+    """RSI nach Wilder (wie TradingView), auf Schlusskursen."""
+    out: list[float | None] = [None] * len(kerzen)
+    if len(kerzen) <= n:
+        return out
+    d = [kerzen[i]["c"] - kerzen[i - 1]["c"] for i in range(1, len(kerzen))]
+    auf = sum(max(x, 0) for x in d[:n]) / n
+    ab = sum(max(-x, 0) for x in d[:n]) / n
+    for i in range(n, len(d) + 1):
+        if i > n:
+            x = d[i - 1]
+            auf = (auf * (n - 1) + max(x, 0)) / n
+            ab = (ab * (n - 1) + max(-x, 0)) / n
+        out[i] = 100.0 if ab == 0 else 100 - 100 / (1 + auf / ab)
+    return out
 
 
 def ema(kerzen: list[dict], n: int) -> list[float | None]:
@@ -108,7 +143,7 @@ def foto_szene(ordner: Path, s: dict, cfg: dict, fotos_dir: Path | None = None) 
 def bauen(ordner: Path, cfg: dict, geheim: dict, kerzen_holen=None, sprechen=None, schneiden=None) -> str:
     """Baut ordner/video.mp4 aus reel.json. Gibt die Tonquelle zurueck ('elevenlabs', 'stille (...)', ...)."""
     from . import kurse, stimme, video
-    kerzen_holen = kerzen_holen or (lambda b, i, n: kurse.kerzen(b, i, n))
+    kerzen_holen = kerzen_holen or (lambda b, i, n: kurse.kerzen(b, i, n, voll=i in ("1d", "1w")))
     sprechen = sprechen or stimme.sprechen
     schneiden = schneiden or video.bauen
     spec = json.loads((ordner / "reel.json").read_text(encoding="utf-8"))
