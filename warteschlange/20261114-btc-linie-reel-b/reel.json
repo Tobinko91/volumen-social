@@ -1,0 +1,51 @@
+{
+ "thema": "btc-drop",
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "chart": {
+    "base": "BTC",
+    "intervall": "1d",
+    "anzahl": 120,
+    "ema": 200,
+    "ema_name": "EMA 200D",
+    "wochen_ma": 200,
+    "rsi": 14,
+    "box": [
+     30,
+     440,
+     1050,
+     1500
+    ],
+    "titel": "BTC \u00b7 daily"
+   },
+   "text": "Bitcoin is at {bis}, {vom_hoch} from its 120 day high. Daily RSI: {rsi}.",
+   "text_ohne": "Bitcoin just had a brutal week."
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "This week: Nvidia's CEO resigned, the dollar hit its strongest level since April 2025, and the odds of a bigger Fed hike went up."
+  },
+  {
+   "bild": "szene_2.png",
+   "chart": {
+    "base": "BTC",
+    "intervall": "1d",
+    "anzahl": 120,
+    "ema": 200,
+    "ema_name": "EMA 200D",
+    "wochen_ma": 200,
+    "rsi": 14,
+    "box": [
+     30,
+     440,
+     1050,
+     1500
+    ],
+    "titel": "BTC \u00b7 daily"
+   },
+   "text": "The line to watch now: the 200 week average at {wma}. Bitcoin trades {wma_lage} it. The 200 day EMA at {ema} is already lost, and the daily RSI is {rsi}. A daily close below the 200 week line would be a bearish signal. Holding it leaves room for a bounce.",
+   "text_ohne": "The line to watch now: the 200 week average. A daily close below it would be a bearish signal. Holding it leaves room for a bounce."
+  }
+ ]
+}

@@ -1,0 +1,7 @@
+Bitcoin at {bis}, {vom_hoch} from its 120-day high.
+
+200-day EMA ({ema}): lost.
+200-week average ({wma}): the line to watch. A daily close below = bearish. Holding it = room for a bounce.
+Daily RSI: {rsi}
+
+Not financial advice.
