@@ -1,0 +1,10 @@
+📉 <b>Bitcoin: the line to watch now</b>
+
+Bitcoin is at {bis}, {vom_hoch} from its 120-day high. Daily RSI: {rsi}.
+This week: Nvidia's CEO resigned, the US dollar hit its strongest level since April 2025, and markets priced higher odds of a bigger Fed hike.
+
+<b>The line to watch</b>
+The 200-day EMA at {ema} is already lost. Now the 200-week average at {wma} is the line to watch.
+A daily close below it would be a bearish signal. Holding it leaves room for a bounce.
+
+<i>Not financial advice.</i>
