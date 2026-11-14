@@ -49,6 +49,26 @@ def pruefen(ordner: Path, cfg: dict, sperr: set[str]) -> list[str]:
     return fehler
 
 
+def live_texte(ziel: Path) -> None:
+    """Live-Zahlen des Reels (live_werte.json) in post_x.txt / post_telegram.txt einsetzen; sonst *_ohne.txt."""
+    try:
+        werte = json.loads((ziel / "live_werte.json").read_text())
+    except Exception:
+        werte = None
+    for f in ("post_x.txt", "post_telegram.txt"):
+        p = ziel / f
+        if not p.exists() or "{" not in p.read_text(encoding="utf-8"):
+            continue
+        try:
+            if werte is None:
+                raise KeyError("keine Live-Werte")
+            p.write_text(p.read_text(encoding="utf-8").format(**werte), encoding="utf-8")
+        except (KeyError, ValueError, IndexError):
+            ohne = ziel / f.replace(".txt", "_ohne.txt")
+            if ohne.exists():
+                shutil.copy(ohne, p)
+
+
 def post_chart(ziel: Path, kerzen_holen=None) -> str:
     """13.11.2026 (Wunsch Tobias: „Bilder vom Kursverlauf“): post_chart.json = {"chart": {...wie im Reel}} zeichnet
     den ECHTEN Kursverlauf (Kurse nur vom Server) in post.png und setzt {chg}, {ema}, {hoch} ... in post_x.txt und
@@ -148,6 +168,10 @@ def main() -> int:
             from social import reel
             try:
                 ton = "\n🎙 Ton: " + reel.bauen(ziel, cfg, geheim)
+                live_texte(ziel)
+            except reel.Abbruch as e:   # 14.11.2026: Lage gedreht -> nichts Altes posten, nur Hinweis
+                (ziel / "post.png").unlink(missing_ok=True)
+                fehler.append(f"Reel NICHT gebaut: {e}. Bitte im Redaktions-Chat neu texten lassen")
             except Exception as e:
                 fehler.append(f"Reel nicht gebaut ({str(e)[:120]}), nur Bild")
         bild_hw = ""
