@@ -1,0 +1,8 @@
+$AKE {vom_tief} in ~48h, and funding just flipped to {funding}. Shorts are crowding in.
+
+Biggest estimated long-liquidation cluster: ~0.006 ({marke_0_abstand}).
+Token unlock: Nov 21, ~9% of supply.
+
+Squeeze higher, or does the unlock win?
+
+Not financial advice.

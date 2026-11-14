@@ -1,0 +1,81 @@
+{
+ "thema": "ake-reel",
+ "live": {
+  "base": "AKE",
+  "tief_ab_ts": 1794441600,
+  "marken": [
+   {
+    "preis": 0.0062,
+    "name": "largest est. long-liq cluster"
+   }
+  ],
+  "abbruch": {
+   "preis_unter": 0.01,
+   "funding_ueber": 0,
+   "funding_pflicht": true
+  }
+ },
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "bot_kerzen": true,
+   "fokus": [
+    0.55,
+    0.45
+   ],
+   "text": "AKE is up {vom_tief} in about two days.",
+   "text_ohne": "AKE went almost vertical in two days.",
+   "chart": {
+    "base": "AKE",
+    "intervall": "1h",
+    "anzahl": 60,
+    "box": [
+     30,
+     480,
+     1050,
+     1540
+    ],
+    "titel": "AKE \u00b7 1h \u00b7 live"
+   }
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "And now shorts are paying longs {funding_abs}, every funding round. Last night it was still positive.",
+   "text_ohne": "And now shorts are paying longs, every funding round. Last night it was still positive."
+  },
+  {
+   "bild": "szene_2.png",
+   "text": "That means the crowd is betting on the top. If price keeps rising, those shorts get squeezed. If it falls, they cash in."
+  },
+  {
+   "bild": "szene_3.png",
+   "bot_kerzen": true,
+   "fokus": [
+    0.92,
+    0.7
+   ],
+   "text": "Our estimated liquidation map: the biggest pile of long liquidations sits around 0.006, that is {marke_0_abstand} from here.",
+   "text_ohne": "Our estimated liquidation map: the biggest pile of long liquidations sits around 0.006, more than half below the current price.",
+   "chart": {
+    "base": "AKE",
+    "intervall": "1h",
+    "anzahl": 60,
+    "box": [
+     30,
+     480,
+     1050,
+     1540
+    ],
+    "titel": "AKE \u00b7 1h \u00b7 live"
+   }
+  },
+  {
+   "bild": "szene_4.png",
+   "text": "And a token unlock is coming on November 21st, about 9% of the supply."
+  },
+  {
+   "bild": "szene_5.png",
+   "text": "Squeeze higher, or does the unlock win? Comment below."
+  }
+ ]
+}
