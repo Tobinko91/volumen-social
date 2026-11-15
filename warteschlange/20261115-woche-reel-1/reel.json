@@ -1,0 +1,29 @@
+{
+ "thema": "woche-1",
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "foto": {
+    "person": "warsh",
+    "kopf": "Monday: Fed Chair Warsh speaks",
+    "unter": "Any hint on a December hike moves everything",
+    "etikett": "WEEK AHEAD \u00b7 1/2"
+   },
+   "text": "Nine events can move crypto this week. Monday: Fed Chair Kevin Warsh speaks. Any hint on a December hike moves everything."
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "Tuesday: October retail sales at 8:30 Eastern. Strong spending means more pressure for higher rates. After the close, Nvidia reports, the first time without Jensen Huang."
+  },
+  {
+   "bild": "szene_2.png",
+   "foto": {
+    "person": "huang",
+    "kopf": "Nvidia earnings, Tuesday",
+    "unter": "First report without Jensen Huang",
+    "etikett": "TUESDAY"
+   },
+   "text": "When tech moves, crypto usually follows. Part two: the rest of the week. Follow."
+  }
+ ]
+}
