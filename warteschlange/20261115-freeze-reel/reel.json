@@ -1,0 +1,43 @@
+{
+ "thema": "freeze-reel",
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "foto": {
+    "person": "huang",
+    "kopf": "While everyone watched Nvidia\u2026",
+    "unter": "3 stories got far less attention",
+    "etikett": "OCT 21 \u2013 NOV 12"
+   },
+   "text": "While everyone talked about Nvidia's CEO scandal, three stories in the same three weeks got far less attention."
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "One: Paraguay seized Ueno Bank on November 3rd. About three million customers, sixty percent of all adults, could not withdraw or transfer their money."
+  },
+  {
+   "bild": "szene_2.png",
+   "text": "Two: Binance lost 6.3 billion dollars, the biggest crypto heist ever. The FBI blames North Korea."
+  },
+  {
+   "bild": "szene_3.png",
+   "text": "And here is the part that matters: Tether and Circle froze 2.37 billion dollars within a day. No judge. Courts only came later."
+  },
+  {
+   "bild": "szene_4.png",
+   "text": "Three: Washington finalized the rules for the GENIUS Act. From January 18th, US banks can issue their own digital dollars."
+  },
+  {
+   "bild": "szene_5.png",
+   "text": "Congress just flipped from red to blue. But this law passed with both parties, 68 to 30 in the Senate and 308 to 122 in the House."
+  },
+  {
+   "bild": "szene_6.png",
+   "text": "Our view: a digital dollar isn't cash. It can be frozen with one click. That's what is coming on January 18th."
+  },
+  {
+   "bild": "szene_7.png",
+   "text": "Safer money, or more control? Comment below and follow for what comes next."
+  }
+ ]
+}
