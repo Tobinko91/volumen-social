@@ -1,0 +1,21 @@
+{
+ "thema": "total3-reel",
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "text": "Altcoins just lost their most important line. This is TOTAL3, the market cap of all crypto except Bitcoin and Ether."
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "It dropped to 653 billion dollars, below its 200 week moving average near 680 billion. That line held for the whole cycle."
+  },
+  {
+   "bild": "szene_2.png",
+   "text": "The next key support sits around 540 billion, that's 17% lower."
+  },
+  {
+   "bild": "szene_3.png",
+   "text": "The 200 week average marked the floor of past bear markets. A weekly close below it would be a strong bearish signal. Weekly close is tonight at midnight UTC. Follow for the close."
+  }
+ ]
+}
