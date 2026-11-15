@@ -1,0 +1,14 @@
+🔎 <b>Real or panic? "BlackRock is dumping hundreds of millions in BTC and ETH"</b>
+
+A viral post shows BlackRock's IBIT and ETHA wallets sending 1,884.9 BTC ($213.7M) and 59,606 ETH ($254.5M) to Coinbase Prime, plus 900 BTC to other addresses.
+
+<b>Do the math</b>
+$34.01M ÷ 300 BTC = $113,367 per Bitcoin. $42.69M ÷ 10,000 ETH = $4,269 per Ether. Bitcoin is nowhere near that today, so the screenshot is old.
+
+<b>And even if it were new</b>
+Coinbase is the custodian of BlackRock's ETFs. When investors redeem ETF shares, coins move to Coinbase Prime. That is a redemption, not BlackRock "dumping" on its own.
+
+<b>What is real</b>
+Nearly $3 billion left US spot bitcoin ETFs from Oct 30 to Nov 13. That is the real pressure, and it shows up in the official flow data.
+
+<i>Not financial advice.</i>

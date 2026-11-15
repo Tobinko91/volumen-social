@@ -1,0 +1,34 @@
+{
+ "thema": "blackrock-check",
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "text": "A viral post says BlackRock is dumping hundreds of millions in Bitcoin and Ether. Real or panic? We checked the data."
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "Do the math. 34 million dollars for 300 Bitcoin is 113 thousand dollars per coin. And 42.7 million for 10 thousand Ether is 4,269 dollars."
+  },
+  {
+   "bild": "szene_2.png",
+   "chart": {
+    "base": "BTC",
+    "intervall": "1d",
+    "anzahl": 120,
+    "box": [
+     30,
+     470,
+     1050,
+     1530
+    ],
+    "titel": "BTC \u00b7 daily \u00b7 live"
+   },
+   "text": "Bitcoin today: {bis}. Not even close.",
+   "text_ohne": "Bitcoin today is far below that. Not even close."
+  },
+  {
+   "bild": "szene_3.png",
+   "text": "So the screenshot is old. And coins moving to Coinbase Prime are how BlackRock's ETFs handle redemptions, not a secret dump. What is real: nearly 3 billion dollars left the bitcoin ETFs in two weeks. Follow for facts, not fear."
+  }
+ ]
+}
