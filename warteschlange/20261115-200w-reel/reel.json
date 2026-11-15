@@ -1,0 +1,53 @@
+{
+ "thema": "200w-reel",
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "text": "The altcoin market is losing its most important line. All coins except Bitcoin and Ether are falling below their 200 week average. That line held through the whole cycle."
+  },
+  {
+   "bild": "szene_1.png",
+   "chart": {
+    "base": "BTC",
+    "intervall": "1d",
+    "anzahl": 200,
+    "wochen_ma": 200,
+    "rsi": 14,
+    "box": [
+     30,
+     470,
+     1050,
+     1530
+    ],
+    "titel": "BTC \u00b7 daily \u00b7 200 days",
+    "ema": 200,
+    "ema_name": "EMA 200D"
+   },
+   "text": "Bitcoin is at {bis}, {wma_lage} its own 200 week average at {wma}. Daily RSI: {rsi}.",
+   "text_ohne": "Bitcoin is fighting with its own 200 week average too."
+  },
+  {
+   "bild": "szene_2.png",
+   "chart": {
+    "base": "ETH",
+    "intervall": "1d",
+    "anzahl": 200,
+    "wochen_ma": 200,
+    "rsi": 14,
+    "box": [
+     30,
+     470,
+     1050,
+     1530
+    ],
+    "titel": "ETH \u00b7 daily \u00b7 200 days"
+   },
+   "text": "Ether is at {bis}, {wma_lage} its 200 week average at {wma}.",
+   "text_ohne": "Ether is under pressure at its 200 week average as well."
+  },
+  {
+   "bild": "szene_3.png",
+   "text": "Why it matters: the 200 week average marked the floor of past bear markets. A weekly close below it would be a strong bearish signal. The weekly close is tonight at midnight UTC. Follow, we'll show you how it closed."
+  }
+ ]
+}
