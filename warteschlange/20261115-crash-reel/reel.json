@@ -1,0 +1,68 @@
+{
+ "thema": "crash-reel",
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "chart": {
+    "base": "BTC",
+    "intervall": "1h",
+    "anzahl": 48,
+    "box": [
+     30,
+     470,
+     1050,
+     1530
+    ],
+    "titel": "BTC \u00b7 1h \u00b7 48h"
+   },
+   "text": "The whole crypto market just crashed. Bitcoin is {chg} in 48 hours, now at {bis}.",
+   "text_ohne": "The whole crypto market just crashed."
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "1.9 billion dollars got liquidated in 24 hours, mostly longs. Fear and Greed is at 10, extreme fear."
+  },
+  {
+   "bild": "szene_2.png",
+   "chart": {
+    "base": "ETH",
+    "intervall": "1h",
+    "anzahl": 48,
+    "box": [
+     30,
+     470,
+     1050,
+     1530
+    ],
+    "titel": "ETH \u00b7 1h \u00b7 48h"
+   },
+   "text": "Ether is {chg} in the same time.",
+   "text_ohne": "Ether got hit even harder."
+  },
+  {
+   "bild": "szene_3.png",
+   "text": "Behind it: markets price a Fed hike in December, and about 3 billion dollars left the bitcoin ETFs in two weeks."
+  },
+  {
+   "bild": "szene_4.png",
+   "chart": {
+    "base": "BTC",
+    "intervall": "1d",
+    "anzahl": 150,
+    "ema": 200,
+    "ema_name": "EMA 200D",
+    "wochen_ma": 200,
+    "rsi": 14,
+    "box": [
+     30,
+     470,
+     1050,
+     1530
+    ],
+    "titel": "BTC \u00b7 daily \u00b7 150 days"
+   },
+   "text": "Now the support zone. Bitcoin is below its 200 week average at {wma}. The July low sits at {tief}, the next big floor. Daily RSI: {rsi}. Follow for the daily close.",
+   "text_ohne": "Now the support zone: Bitcoin is below its 200 week average, and the July low is the next big floor. Follow for the daily close."
+  }
+ ]
+}

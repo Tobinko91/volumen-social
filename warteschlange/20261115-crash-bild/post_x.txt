@@ -1,0 +1,9 @@
+🚨 Crypto crash: Bitcoin at {bis}, {vom_hoch} from its 150-day high.
+
+$1.9B liquidated in 24h. Fear & Greed: 10.
+
+200-week average ({wma}): lost.
+Next floor: the July low at {tief}.
+Daily RSI: {rsi}
+
+Not financial advice.
