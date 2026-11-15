@@ -1,0 +1,48 @@
+{
+ "thema": "support-reel",
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "chart": {
+    "base": "BTC",
+    "intervall": "1d",
+    "anzahl": 150,
+    "ema": 200,
+    "ema_name": "EMA 200D",
+    "wochen_ma": 200,
+    "rsi": 14,
+    "box": [
+     30,
+     470,
+     1050,
+     1530
+    ],
+    "titel": "BTC \u00b7 daily \u00b7 150 days"
+   },
+   "text": "Bitcoin is back at {bis}, right in the zone where the August rally started. Daily RSI: {rsi}.",
+   "text_ohne": "Bitcoin is back in the zone where the August rally started."
+  },
+  {
+   "bild": "szene_1.png",
+   "chart": {
+    "base": "ZEC",
+    "intervall": "1d",
+    "anzahl": 150,
+    "rsi": 14,
+    "box": [
+     30,
+     470,
+     1050,
+     1530
+    ],
+    "titel": "ZEC \u00b7 daily \u00b7 150 days"
+   },
+   "text": "Zcash shows the same picture. {bis}, {vom_hoch} from its high, back at its old breakout zone.",
+   "text_ohne": "Zcash shows the same picture: back at its old breakout zone."
+  },
+  {
+   "bild": "szene_2.png",
+   "text": "These zones decide what comes next. If they hold, there is room for a bounce. A daily close below would be a bearish signal. Follow for the daily close."
+  }
+ ]
+}

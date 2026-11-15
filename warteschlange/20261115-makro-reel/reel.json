@@ -1,0 +1,31 @@
+{
+ "thema": "makro-reel",
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "foto": {
+    "person": "warsh",
+    "kopf": "Stocks, bonds, crypto: why now?",
+    "unter": "Four reasons in 20 seconds",
+    "etikett": "MARKETS"
+   },
+   "text": "Stocks, bonds and crypto are all under pressure. Here are four reasons, in twenty seconds."
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "One: rates. Markets see an 88 percent chance that the Fed hikes in December."
+  },
+  {
+   "bild": "szene_2.png",
+   "text": "Two: bonds. The 10 year Treasury yield climbed back above 5 percent. That makes money expensive for everyone."
+  },
+  {
+   "bild": "szene_3.png",
+   "text": "Three: oil. The US Iran war is in its seventh month, and Brent is near 100 dollars."
+  },
+  {
+   "bild": "szene_4.png",
+   "text": "Four: ETFs. Nearly 3 billion dollars left the US spot bitcoin ETFs in two weeks. Follow for what comes next."
+  }
+ ]
+}

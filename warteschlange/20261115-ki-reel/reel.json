@@ -1,0 +1,29 @@
+{
+ "thema": "ki-reel",
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "foto": {
+    "person": "nvidia",
+    "kopf": "Nvidia lost almost $1.6 trillion",
+    "unter": "\u221227% from its October peak",
+    "etikett": "AI BUBBLE?"
+   },
+   "text": "Is the AI bubble bursting? Nvidia fell 27 percent from its October peak. That's almost 1.6 trillion dollars in value."
+  },
+  {
+   "bild": "szene_1.png",
+   "foto": {
+    "person": "huang",
+    "kopf": "Jensen Huang is out",
+    "unter": "Next: earnings on Nov 17",
+    "etikett": "THE CEO SHOCK"
+   },
+   "text": "On top of that, Jensen Huang resigned as CEO on November 12th. Earnings come on November 17th, the first without him."
+  },
+  {
+   "bild": "szene_2.png",
+   "text": "Why does crypto care? When big tech sells off, investors cut risk everywhere. Bitcoin usually goes with it. Follow for the earnings."
+  }
+ ]
+}
