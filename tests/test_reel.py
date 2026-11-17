@@ -57,6 +57,25 @@ class ReelTest(unittest.TestCase):
         self.assertTrue((self.o / "video.mp4").exists())
         self.assertEqual(self.gesehen["texte"], ["Bitcoin dipped.", "Then it bounced."])   # Untertitel
 
+    def test_ruhig_ohne_untertitel(self):
+        spec = json.loads((self.o / "reel.json").read_text())
+        spec.update(ruhig=True, untertitel=False)
+        spec["szenen"][0].pop("chart")
+        (self.o / "reel.json").write_text(json.dumps(spec))
+        reel.bauen(self.o, CFG, {}, sprechen=self._sprechen, schneiden=self._schneiden)
+        self.assertIsNone(self.gesehen["texte"])
+        self.assertEqual([b[0][0].name for b in self.gesehen["bilder"]], ["szene_0.png", "szene_1.png"])
+
+    def test_ruhig_echtes_video_ohne_zoom(self):
+        import subprocess
+        from social import video
+        Image.new("RGB", (1080, 1920), (240, 240, 240)).save(self.o / "s.png")
+        ton = self.o / "t.mp3"
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "anullsrc=r=44100:cl=mono", "-t", "1",
+                        str(ton)], check=True)
+        ziel = video.bauen([[(self.o / "s.png", 0.1)]], [ton], [1.0], self.o / "v.mp4", CFG)
+        self.assertTrue(Path(ziel).exists())
+
     def test_ohne_kurse_trotzdem_video(self):
         q = reel.bauen(self.o, CFG, {}, kerzen_holen=lambda b, i, n: [], sprechen=self._sprechen,
                        schneiden=self._schneiden)
