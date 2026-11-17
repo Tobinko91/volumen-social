@@ -266,9 +266,58 @@ def bauen(ordner: Path, cfg: dict, geheim: dict, kerzen_holen=None, sprechen=Non
                 text = s.get("text_ohne") or text.replace("{chg}", "").replace("{von}", "").replace("{bis}", "")
         bilder.append(p)
         zeilen.append(text)
+    if spec.get("frage"):   # 17.11.2026 Tobias: Meldung zu handelbarem Coin/Aktie -> Abschlussfrage mit 5-s-Countdown
+        bilder.append(frage_szene(ordner, spec["frage"], cfg))
+        zeilen.append(frage_text(spec["frage"]))
     toene, dauern, quelle = sprechen(zeilen, ordner / "ton", cfg, stimme.schluessel(cfg, geheim))
+    if spec.get("frage"):
+        from .formation import ticken
+        dauern[-1] = max(dauern[-1], 5.3)
+        try:
+            toene[-1] = ticken(Path(toene[-1]), Path(toene[-1]).with_name("frage_tick.mp3"), dauern[-1])
+        except Exception as e:
+            hinweise.append(f"Countdown ohne Ticken ({str(e)[:50]})")
     schneiden(bilder, toene, dauern, ordner / "video.mp4", cfg, texte=zeilen)
     return "; ".join([quelle, *hinweise])
+
+
+def frage_text(f: dict) -> str:
+    return (f"What will {f['name'].lstrip('$')} do after this news? Up or down? "
+            "Write it in the comments before the timer runs out.")
+
+
+def frage_szene(ordner: Path, f: dict, cfg: dict) -> list:
+    """Schluss-Szene: „What will $X do after this news?“ + UP or DOWN + Countdown 5…1 (je 1 s, als Bildfolge).
+    Keine Kauf-/Verkaufsaufforderung: gefragt wird nach der Einschaetzung, nicht nach einem Trade."""
+    from PIL import ImageDraw
+    from . import design
+    from .design import font, rgb
+    th = design.THEMEN["nacht"]
+    W, H = cfg["video"]["breite"], cfg["video"]["hoehe"]
+    rahmen = []
+    for n in range(5, 0, -1):
+        img = design.hintergrund(th, W, H, saat=77)
+        design.marke(img, th, 70, 70, 64)
+        d = ImageDraw.Draw(img)
+        design.etikett(d, th, 70, 190, "YOUR CALL", farbe=th.akzent)
+        y = design.ueberschrift(d, th, 70, 260, f"What will {f['name']} do after this news?", W - 140, groesse=76,
+                                max_zeilen=3) + 70
+        for j, (t, farbe) in enumerate((("UP", th.plus), ("or", th.text), ("DOWN?", th.minus))):
+            fz = font("Bold", 130 if j != 1 else 70)
+            d.text(((W - d.textlength(t, font=fz)) / 2, y + (0, 160, 250)[j]), t, font=fz, fill=farbe)
+        y += 450
+        r = 120
+        d.ellipse([W / 2 - r, y, W / 2 + r, y + 2 * r], outline=rgb(th.akzent), width=10)
+        fz = font("Bold", 150)
+        d.text(((W - d.textlength(str(n), font=fz)) / 2, y + r - 95), str(n), font=fz, fill=th.akzent)
+        fk = font("SemiBold", 46)
+        t = "Comment before the timer runs out"
+        d.text(((W - d.textlength(t, font=fk)) / 2, y + 2 * r + 40), t, font=fk, fill=th.text)
+        design.fuss(img, th, "Not financial advice.")
+        p = ordner / f"frage_{n}.png"
+        img.convert("RGB").save(p)
+        rahmen.append((p, 1.0))
+    return rahmen
 
 
 # ---------------------------------------------------------------- Reel aus einem Bild-Vorschlag (Knopf „🎬 Als Reel“)

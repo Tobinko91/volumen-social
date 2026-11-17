@@ -88,3 +88,47 @@ class LiveTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FrageTest(unittest.TestCase):
+    """17.11.2026 Tobias: Abschlussfrage mit 5-s-Countdown bei Meldungen zu handelbaren Coins/Aktien."""
+
+    def test_frage_am_ende(self):
+        import yaml
+        cfg = yaml.safe_load((HIER / "config.yaml").read_text())
+        with tempfile.TemporaryDirectory() as t:
+            o = Path(t)
+            Image.new("RGB", (1080, 1920), "navy").save(o / "s.png")
+            (o / "reel.json").write_text(json.dumps({"thema": "x", "frage": {"name": "$NVDA"},
+                                                     "szenen": [{"bild": "s.png", "text": "Nvidia reports today."}]}))
+            gerufen = {}
+
+            def sprechen(zeilen, ordner, cfg_, key):
+                ordner.mkdir(parents=True, exist_ok=True)
+                gerufen["zeilen"] = zeilen
+                return [ordner / f"t{i}.mp3" for i in range(len(zeilen))], [2.0] * len(zeilen), "probe"
+
+            def schneiden(bilder, toene, dauern, ziel, cfg_, texte=None):
+                gerufen.update(bilder=bilder, dauern=dauern)
+
+            reel.bauen(o, cfg, {}, kerzen_holen=lambda *a: [], sprechen=sprechen, schneiden=schneiden)
+            self.assertEqual(len(gerufen["zeilen"]), 2)
+            self.assertIn("What will NVDA do after this news? Up or down?", gerufen["zeilen"][1])
+            self.assertNotIn("buy", gerufen["zeilen"][1].lower())
+            letzte = gerufen["bilder"][-1]
+            self.assertEqual(len(letzte), 5)                       # 5 Bilder: 5, 4, 3, 2, 1
+            self.assertGreaterEqual(gerufen["dauern"][-1], 5.0)     # Countdown passt ganz hinein
+            self.assertEqual(Image.open(letzte[0][0]).size, (1080, 1920))
+
+    def test_ohne_frage_unveraendert(self):
+        import yaml
+        cfg = yaml.safe_load((HIER / "config.yaml").read_text())
+        with tempfile.TemporaryDirectory() as t:
+            o = Path(t)
+            Image.new("RGB", (1080, 1920), "navy").save(o / "s.png")
+            (o / "reel.json").write_text(json.dumps({"thema": "x", "szenen": [{"bild": "s.png", "text": "Hi."}]}))
+            n = {}
+            reel.bauen(o, cfg, {}, kerzen_holen=lambda *a: [],
+                       sprechen=lambda z, o_, c, k: ([o_ / "t.mp3"], [2.0], "p"),
+                       schneiden=lambda b, t_, d, z, c, texte=None: n.update(b=b))
+            self.assertEqual(len(n["b"]), 1)
