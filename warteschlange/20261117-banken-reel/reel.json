@@ -1,0 +1,34 @@
+{
+ "thema": "banken-reel",
+ "frage": {
+  "name": "$JPM"
+ },
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "foto": {
+    "person": "huang",
+    "kopf": "Microsoft. Nvidia. Now the banks.",
+    "unter": "Three shocks in one week",
+    "etikett": "BREAKING"
+   },
+   "text": "Microsoft. Nvidia. And now the banks. Three shocks in one week."
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "Monday: thousands of Chase, Bank of America, Wells Fargo and U.S. Bank customers reported they could not log in or move their money. Over 4,600 outage reports for Chase alone."
+  },
+  {
+   "bild": "szene_2.png",
+   "text": "Chase calls it a technical issue. Bank of America and U.S. Bank gave no explanation at all."
+  },
+  {
+   "bild": "szene_3.png",
+   "text": "Last week, Nvidia lost its CEO, and a global Microsoft outage took down Outlook, Teams and Azure."
+  },
+  {
+   "bild": "szene_4.png",
+   "text": "Our view: the old system is starting to collapse. And a new one is being built. On January 18th, US banks may start issuing their own digital dollars. Coincidence? We don't think so."
+  }
+ ]
+}
