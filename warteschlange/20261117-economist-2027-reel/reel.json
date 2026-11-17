@@ -1,0 +1,33 @@
+{
+ "thema": "economist-2027",
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "text": "The Economist just released its cover for 2027. Look closely. What do you see?"
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "Missiles. Explosions. Tanks."
+  },
+  {
+   "bild": "szene_2.png",
+   "text": "A crashing chart, next to stacks of cash and coins."
+  },
+  {
+   "bild": "szene_3.png",
+   "text": "A broken pipeline. A boot stepping forward. A ballot box."
+  },
+  {
+   "bild": "szene_4.png",
+   "text": "Ships in chains, fighter jets overhead."
+  },
+  {
+   "bild": "szene_5.png",
+   "text": "Burning barrels, tents, and people sitting on the ground."
+  },
+  {
+   "bild": "szene_6.png",
+   "text": "We see nothing good. Want our full take on what this means? Comment YES."
+  }
+ ]
+}
