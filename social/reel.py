@@ -8,6 +8,7 @@ reel.json im Ordner:
    "szenen": [{"bild": "szene_0.png", "text": "Gesprochener Satz",
                "chart": {"base": "BTC", "intervall": "15m", "anzahl": 48, "box": [60, 700, 1020, 1500],
                          "titel": "BTC · 15m"}}, ...]}
+- "ruhig": true = Standbilder ohne Zoom; "untertitel": false = ohne eingeblendete Untertitel.
 - "bild" ist Pflicht (fertiges 1080x1920-Bild). Mit "chart" zeichnet der Server den echten Kursverlauf in
   die Box (Kurse holt nur der Server, der Chat erreicht die Boersen nicht). Klappt das nicht, bleibt das Bild.
 - Wunsch Tobias 05.11.2026: Ein Chart ohne Zahl sagt nichts. Mit "ab_ts" (Unix-Sekunden, z. B. Zeitpunkt einer
@@ -277,7 +278,10 @@ def bauen(ordner: Path, cfg: dict, geheim: dict, kerzen_holen=None, sprechen=Non
             toene[-1] = ticken(Path(toene[-1]), Path(toene[-1]).with_name("frage_tick.mp3"), dauern[-1])
         except Exception as e:
             hinweise.append(f"Countdown ohne Ticken ({str(e)[:50]})")
-    schneiden(bilder, toene, dauern, ordner / "video.mp4", cfg, texte=zeilen)
+    if spec.get("ruhig"):   # 17.11.2026 Tobias: feine Bilder (Cover, Grafiken) ohne Zoom, sonst wirken sie verzogen
+        bilder = [b if isinstance(b, list) else [(b, 0.1)] for b in bilder]
+    texte = zeilen if spec.get("untertitel", True) else None   # Untertitel abschaltbar, wenn das Bild alles zeigt
+    schneiden(bilder, toene, dauern, ordner / "video.mp4", cfg, texte=texte)
     return "; ".join([quelle, *hinweise])
 
 
