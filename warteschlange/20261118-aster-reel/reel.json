@@ -1,0 +1,51 @@
+{
+ "thema": "aster",
+ "frage": {
+  "name": "$ASTER"
+ },
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "foto": {
+    "person": "cz",
+    "kopf": "CZ hyped it. Now it keeps crashing.",
+    "unter": "The Aster story",
+    "etikett": "EXPOSED"
+   },
+   "text": "The biggest name in crypto promoted this token again and again. Now it keeps crashing. This is the Aster story."
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "March 2025. Astherus merges with APX Finance and becomes Aster. The CEO goes by Leonard. The money behind it: YZi Labs, the former Binance Labs."
+  },
+  {
+   "bild": "szene_2.png",
+   "text": "Then CZ stepped in. He posted about Aster again and again, and in November 2025 he said he had bought over two million tokens himself. Aster was sold as the Hyperliquid killer."
+  },
+  {
+   "bild": "szene_3.png",
+   "chart": {
+    "base": "ASTER",
+    "intervall": "1w",
+    "anzahl": 62,
+    "titel": "ASTER \u00b7 weekly",
+    "box": [
+     60,
+     560,
+     1020,
+     1500
+    ]
+   },
+   "text": "The result: today ASTER trades {vom_hoch} from its high.",
+   "text_ohne": "The result: today ASTER trades far below its record high."
+  },
+  {
+   "bild": "szene_4.png",
+   "text": "And on Monday it crashed within minutes. The CEO blames liquidations of leveraged traders and calls them likely malicious."
+  },
+  {
+   "bild": "szene_5.png",
+   "text": "Our view: when the biggest name in crypto shills a coin every day, ask yourself who is selling. Don't trust anyone in crypto. Not even CZ."
+  }
+ ]
+}
