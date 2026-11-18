@@ -1,0 +1,50 @@
+{
+ "thema": "trump-putin-xi",
+ "frage": {
+  "name": "$BTC"
+ },
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "foto": {
+    "person": "trump",
+    "kopf": "Trump. Putin. Xi.",
+    "unter": "Handshakes in China today",
+    "etikett": "BREAKING"
+   },
+   "text": "Trump. Putin. Xi. Today in Shenzhen, China, the three most powerful men on the planet shook hands."
+  },
+  {
+   "bild": "szene_1.png",
+   "foto": {
+    "person": "putin",
+    "kopf": "Trump meets Putin",
+    "unter": "First face-to-face since Alaska 2025",
+    "etikett": "TODAY"
+   },
+   "text": "Trump and Putin, face to face for the first time since their Alaska meeting in August 2025."
+  },
+  {
+   "bild": "szene_2.png",
+   "foto": {
+    "person": "xi",
+    "kopf": "Xi rolls out the red carpet",
+    "unter": "He greeted Trump at the airport himself",
+    "etikett": "THE HOST"
+   },
+   "text": "Xi greeted Trump at the airport himself. Red carpet, honour guard, a military flyover. Putin had already spent two hours with Xi."
+  },
+  {
+   "bild": "szene_3.png",
+   "text": "And tomorrow, Thursday, comes the first meeting ever of the presidents of the US, Russia and China. All three at one table."
+  },
+  {
+   "bild": "szene_4.png",
+   "text": "On the table: nuclear weapons, Iran, the war in Ukraine, trade and AI. Ukraine and Europe are not in the room."
+  },
+  {
+   "bild": "szene_5.png",
+   "text": "Our view: three men, one table, no Europe, no Ukraine. We think a new world order is being drawn right now. And markets will have to price it."
+  }
+ ]
+}
