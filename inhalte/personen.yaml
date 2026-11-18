@@ -17,6 +17,7 @@
 - {slug: thune, name: John Thune, rolle: Senats-Mehrheitsführer, suche: "John Thune", muss: Thune}
 - {slug: musk, name: Elon Musk, rolle: Unternehmer, suche: "Elon Musk", muss: Musk}
 - {slug: saylor, name: Michael Saylor, rolle: Strategy, suche: "Michael Saylor", muss: Saylor}
+- {slug: cz, name: Changpeng Zhao (CZ), rolle: Binance-Gründer, suche: "Changpeng Zhao", muss: Zhao}
 - {slug: armstrong, name: Brian Armstrong, rolle: Coinbase-Chef, suche: "Brian Armstrong Coinbase", muss: Armstrong}
 - {slug: fink, name: Larry Fink, rolle: BlackRock-Chef, suche: "Larry Fink", muss: Fink}
 - {slug: dimon, name: Jamie Dimon, rolle: JPMorgan-Chef, suche: "Jamie Dimon", muss: Dimon}
