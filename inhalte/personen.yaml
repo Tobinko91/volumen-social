@@ -21,6 +21,7 @@
 - {slug: armstrong, name: Brian Armstrong, rolle: Coinbase-Chef, suche: "Brian Armstrong Coinbase", muss: Armstrong}
 - {slug: fink, name: Larry Fink, rolle: BlackRock-Chef, suche: "Larry Fink", muss: Fink}
 - {slug: dimon, name: Jamie Dimon, rolle: JPMorgan-Chef, suche: "Jamie Dimon", muss: Dimon}
+- {slug: jobs, name: Steve Jobs, rolle: Apple-Gründer (†2011), suche: "Steve Jobs", muss: Jobs}
 - {slug: xi, name: Xi Jinping, rolle: Chinas Präsident, suche: "Xi Jinping", muss: Xi}
 - {slug: putin, name: Wladimir Putin, rolle: Russlands Präsident, suche: "Vladimir Putin", muss: Putin}
 - {slug: huang, name: Jensen Huang, rolle: Nvidia-Gründer (bis 12.11.2026 CEO), suche: "Jensen Huang", muss: Huang}

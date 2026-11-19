@@ -8,6 +8,7 @@ reel.json im Ordner:
    "szenen": [{"bild": "szene_0.png", "text": "Gesprochener Satz",
                "chart": {"base": "BTC", "intervall": "15m", "anzahl": 48, "box": [60, 700, 1020, 1500],
                          "titel": "BTC · 15m"}}, ...]}
+- "rennen": {...} = Spar-Rennen zweier Aktien als Bildfolge (social/rennen.py); "rennen_ende": true = Endstand als Bild.
 - "ruhig": true = Standbilder ohne Zoom; "untertitel": false = ohne eingeblendete Untertitel.
 - "bild" ist Pflicht (fertiges 1080x1920-Bild). Mit "chart" zeichnet der Server den echten Kursverlauf in
   die Box (Kurse holt nur der Server, der Chat erreicht die Boersen nicht). Klappt das nicht, bleibt das Bild.
@@ -218,7 +219,8 @@ def bot_bild_szene(ordner: Path, s: dict, png: str, cfg: dict) -> Path:
     return ziel
 
 
-def bauen(ordner: Path, cfg: dict, geheim: dict, kerzen_holen=None, sprechen=None, schneiden=None) -> str:
+def bauen(ordner: Path, cfg: dict, geheim: dict, kerzen_holen=None, sprechen=None, schneiden=None,
+          rennen_holen=None) -> str:
     """Baut ordner/video.mp4 aus reel.json. Gibt die Tonquelle zurueck ('elevenlabs', 'stille (...)', ...)."""
     from . import kurse, stimme, video
     kerzen_holen = kerzen_holen or (lambda b, i, n: kurse.kerzen(b, i, n, voll=i in ("1d", "1w")))
@@ -226,6 +228,8 @@ def bauen(ordner: Path, cfg: dict, geheim: dict, kerzen_holen=None, sprechen=Non
     schneiden = schneiden or video.bauen
     spec = json.loads((ordner / "reel.json").read_text(encoding="utf-8"))
     bilder, hinweise, zeilen = [], [], []
+    min_dauer: dict[int, float] = {}
+    rwerte: dict = {}   # Zahlen aus dem Rennen, auch fuer die Szenen danach
     live: dict | None = None
     if spec.get("live"):   # 14.11.2026: Zahlen direkt vor dem Bauen live holen; Abbruch geht durch
         try:
@@ -257,6 +261,24 @@ def bauen(ordner: Path, cfg: dict, geheim: dict, kerzen_holen=None, sprechen=Non
                 p = foto_szene(ordner, s, cfg)
             except Exception as e:
                 hinweise.append(f"Foto fehlt ({str(e)[:60]})")
+        if s.get("rennen"):   # 19.11.2026: Spar-Rennen zweier Aktien (Bildfolge, Kurse live von Yahoo)
+            try:
+                import os
+                from . import rennen
+                fd = Path(os.environ.get("SOCIAL_FOTOS", Path(os.environ.get("SOCIAL_GEHEIM", "/opt/volumen-social"))
+                                         / "fotos"))
+                p, werte, min_dauer[len(bilder)] = rennen.szene(ordner, s, fd, rennen_holen)
+                rwerte.update(werte, _ende=p[-1][0])
+                hinweise.append(f"Rennen: {werte['investiert']} -> {werte['a_wert']} / {werte['b_wert']}")
+            except Exception as e:
+                raise RuntimeError(f"Rennen ohne Kurse nicht moeglich ({str(e)[:80]})")
+        if rwerte and s.get("rennen_ende"):   # Endstand des Rennens als Standbild
+            p = rwerte["_ende"]
+        if rwerte and "{" in text:
+            try:
+                text = text.format(**rwerte)
+            except (KeyError, IndexError):
+                pass
         if s.get("chart") and not bot_ok:   # Ersatz, wenn das Bot-Bild fehlt
             try:
                 p, werte = chart_szene(ordner, s, spec.get("thema", ordner.name), kerzen_holen)
@@ -271,6 +293,8 @@ def bauen(ordner: Path, cfg: dict, geheim: dict, kerzen_holen=None, sprechen=Non
         bilder.append(frage_szene(ordner, spec["frage"], cfg))
         zeilen.append(frage_text(spec["frage"]))
     toene, dauern, quelle = sprechen(zeilen, ordner / "ton", cfg, stimme.schluessel(cfg, geheim))
+    for i, m in min_dauer.items():   # Bildfolge (Rennen) laeuft ganz durch, auch wenn der Satz kuerzer ist
+        dauern[i] = max(dauern[i], m + 1.5)
     if spec.get("frage"):
         from .formation import ticken
         dauern[-1] = max(dauern[-1], 5.3)
