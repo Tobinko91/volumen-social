@@ -1,0 +1,63 @@
+{
+ "thema": "trump-putin-xi-2",
+ "frage": {
+  "name": "$BTC"
+ },
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "foto": {
+    "person": "trump",
+    "kopf": "Trump. Putin. Xi. One table.",
+    "unter": "The first meeting of all three. Ever.",
+    "etikett": "IT HAPPENED"
+   },
+   "text": "It happened. Trump, Putin and Xi at one table in Shenzhen. The first meeting of all three. Ever. One hour."
+  },
+  {
+   "bild": "szene_1.png",
+   "foto": {
+    "person": "putin",
+    "kopf": "\u201cHe's my friend!\u201d",
+    "unter": "Trump about Putin",
+    "etikett": "TRUMP TO PUTIN"
+   },
+   "text": "Trump about Putin, in front of the cameras: He's my friend."
+  },
+  {
+   "bild": "szene_2.png",
+   "foto": {
+    "person": "xi",
+    "kopf": "\u201cUniquely positioned\u201d",
+    "unter": "Trump on cutting nuclear weapons",
+    "etikett": "NUCLEAR WEAPONS"
+   },
+   "text": "Trump says the US, China and Russia are uniquely positioned to talk about cutting nuclear weapons. No deal announced. Yet."
+  },
+  {
+   "bild": "szene_3.png",
+   "text": "Not in the room: Ukraine and Europe. Zelensky had warned of a new Yalta, big powers dividing up the world."
+  },
+  {
+   "bild": "szene_4.png",
+   "chart": {
+    "base": "BTC",
+    "intervall": "1h",
+    "anzahl": 48,
+    "titel": "BTC \u00b7 1h",
+    "box": [
+     60,
+     560,
+     1020,
+     1500
+    ]
+   },
+   "text": "And Bitcoin? Over the last forty-eight hours: {chg}.",
+   "text_ohne": "And Bitcoin? Watch the chart."
+  },
+  {
+   "bild": "szene_5.png",
+   "text": "Our view: three men, one table. A new world order is being drawn, and markets will have to price it."
+  }
+ ]
+}
