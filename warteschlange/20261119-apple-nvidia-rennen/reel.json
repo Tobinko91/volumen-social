@@ -1,0 +1,45 @@
+{
+ "thema": "apple-nvidia-rennen",
+ "ruhig": true,
+ "untertitel": false,
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "foto": {
+    "person": "huang",
+    "kopf": "$100 a month since 1999",
+    "unter": "Apple or NVIDIA?",
+    "etikett": "APPLE VS NVIDIA"
+   },
+   "text": "One hundred dollars a month, every month since 1999. Apple or Nvidia? Dividends reinvested. Watch this."
+  },
+  {
+   "bild": "szene_1.png",
+   "rennen": {
+    "a": {
+     "symbol": "AAPL",
+     "name": "Apple",
+     "person": "jobs"
+    },
+    "b": {
+     "symbol": "NVDA",
+     "name": "NVIDIA",
+     "person": "huang"
+    },
+    "ab": "1999-01",
+    "monat": 100,
+    "sekunden": 30
+   },
+   "text": "For years, Apple was the clear winner. Then came the AI boom."
+  },
+  {
+   "bild": "szene_2.png",
+   "rennen_ende": true,
+   "text": "You put in {investiert}. Apple turned it into {a_wert}. Nvidia turned it into {b_wert}."
+  },
+  {
+   "bild": "szene_3.png",
+   "text": "Be honest. Which one would you have held for twenty-seven years? Comment Apple or Nvidia."
+  }
+ ]
+}
