@@ -1,0 +1,26 @@
+{
+ "thema": "total2-coinbase",
+ "ruhig": true,
+ "untertitel": false,
+ "frage": {
+  "name": "altcoins"
+ },
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "text": "Altcoins look exactly like Coinbase did a month ago. And that did not end well."
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "Coinbase: three rising peaks, then back down to a horizontal support. A month ago that floor broke, and the stock kept falling."
+  },
+  {
+   "bild": "szene_2.png",
+   "text": "Now look at TOTAL2, the whole crypto market without Bitcoin. Same three peaks. And now it is sitting right on the same kind of floor."
+  },
+  {
+   "bild": "szene_3.png",
+   "text": "Our view: Coinbase is just leading. We expect TOTAL2 to break this support, and take the altcoins down with it."
+  }
+ ]
+}
