@@ -1,0 +1,53 @@
+{
+ "thema": "sec-nvidia",
+ "frage": {
+  "name": "$NVDA"
+ },
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "foto": {
+    "person": "nvidia",
+    "kopf": "The SEC is investigating Nvidia",
+    "unter": "Focus: the accounting",
+    "etikett": "BREAKING"
+   },
+   "text": "Breaking: the US Securities and Exchange Commission is investigating Nvidia. The focus: Nvidia's accounting."
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "The S&P 500 fell below seven thousand for the first time since April fifteenth. The Nasdaq one hundred was down more than four percent."
+  },
+  {
+   "bild": "szene_2.png",
+   "text": "The probe is confidential. The SEC declined to comment, Nvidia has not responded. And the Justice Department is already reviewing its twelve point nine billion dollar Hugging Face deal."
+  },
+  {
+   "bild": "szene_3.png",
+   "chart": {
+    "base": "BTC",
+    "intervall": "1h",
+    "anzahl": 24,
+    "titel": "BTC \u00b7 1h",
+    "box": [
+     60,
+     560,
+     1020,
+     1500
+    ]
+   },
+   "text": "And Bitcoin? Last twenty-four hours: {chg}.",
+   "text_ohne": "And Bitcoin? Watch the chart."
+  },
+  {
+   "bild": "szene_4.png",
+   "foto": {
+    "person": "kress",
+    "kopf": "The cracks are getting bigger.",
+    "unter": "Nvidia's interim CEO Colette Kress",
+    "etikett": "OUR VIEW"
+   },
+   "text": "Our view: Nvidia lost its CEO, the banks went dark, and now the SEC. Nvidia carried this whole market. The cracks are getting bigger."
+  }
+ ]
+}

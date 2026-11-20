@@ -1,0 +1,34 @@
+{
+ "thema": "anthropic",
+ "frage": {
+  "name": "$ANT"
+ },
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "text": "Anthropic's stock is back at its IPO price. In just two days."
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "Thursday, day one: IPO price eighty-three dollars. The first trade: one hundred eleven fifty. Valued at one point seven six trillion dollars."
+  },
+  {
+   "bild": "szene_2.png",
+   "text": "Friday, day two: down about fourteen percent, to eighty-three dollars and ten cents. Just ten cents above the IPO price."
+  },
+  {
+   "bild": "szene_3.png",
+   "foto": {
+    "person": "nvidia",
+    "kopf": "The AI trade is cracking",
+    "unter": "SEC probe into Nvidia, same day",
+    "etikett": "WHY"
+   },
+   "text": "Why? The same day, the SEC opened a probe into Nvidia's accounting, and investors dumped AI stocks."
+  },
+  {
+   "bild": "szene_4.png",
+   "text": "Our view: when the hottest IPO of the year can't hold for two days, the AI hype is running out of buyers."
+  }
+ ]
+}
