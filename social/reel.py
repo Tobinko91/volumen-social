@@ -186,6 +186,15 @@ def live_werte(lv: dict, kerzen_holen, web_dir: Path, jetzt: float | None = None
                     break
     except Exception:
         pass
+    if "_kerzen_png" not in w:   # 21.11.2026: Bild von /kerzen COIN [15m|1h|4h] (Telegram), hoechstens 6 Std. alt
+        try:
+            tf = lv.get("tf")
+            kand = [p for p in (Path(web_dir) / "kerzen").glob(f"{base}_*.png")
+                    if jetzt - p.stat().st_mtime < 6 * 3600 and (not tf or p.stem == f"{base}_{tf}")]
+            if kand:
+                w["_kerzen_png"] = str(max(kand, key=lambda p: p.stat().st_mtime))
+        except Exception:
+            pass
     for i, m in enumerate(lv.get("marken") or []):
         w[f"marke_{i}_abstand"] = f"{(float(m['preis']) / preis - 1) * 100:+.0f}%"
     a = lv.get("abbruch") or {}
