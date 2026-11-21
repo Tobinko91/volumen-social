@@ -1,0 +1,76 @@
+{
+ "thema": "evaa-liquiditaet",
+ "ruhig": true,
+ "untertitel": false,
+ "live": {
+  "base": "EVAA",
+  "tief_ab_ts": 1794087312
+ },
+ "frage": {
+  "name": "$EVAA"
+ },
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "bot_kerzen": true,
+   "chart": {
+    "base": "EVAA",
+    "intervall": "4h",
+    "anzahl": 84,
+    "titel": "EVAA \u00b7 4h",
+    "box": [
+     40,
+     430,
+     1040,
+     1560
+    ]
+   },
+   "bot_y": 430,
+   "text": "EVAA is at {preis}. That is {fach} times its low from two weeks ago. So where is the liquidity?",
+   "text_ohne": "EVAA went vertical in two weeks. So where is the liquidity?"
+  },
+  {
+   "bild": "szene_1.png",
+   "bot_kerzen": true,
+   "fokus": [
+    0.9,
+    0.45
+   ],
+   "chart": {
+    "base": "EVAA",
+    "intervall": "4h",
+    "anzahl": 84,
+    "titel": "EVAA \u00b7 4h",
+    "box": [
+     40,
+     430,
+     1040,
+     1560
+    ]
+   },
+   "text": "On the right: our estimated liquidation map. Red, the long liquidations, are stacked far below the price. Green, the short liquidations, sit right above it.",
+   "text_ohne": "Long liquidations are stacked far below the price. Short liquidations sit right above it."
+  },
+  {
+   "bild": "szene_2.png",
+   "chart": {
+    "base": "EVAA",
+    "intervall": "1d",
+    "anzahl": 400,
+    "titel": "EVAA \u00b7 daily \u00b7 all-time high",
+    "box": [
+     40,
+     430,
+     1040,
+     1560
+    ]
+   },
+   "text": "And the all-time high? {{hoch}}. EVAA is now {{vom_hoch}} away from it.",
+   "text_ohne": "And the all-time high is still above the price."
+  },
+  {
+   "bild": "szene_3.png",
+   "text": "Our view: above the price there is little in the way, and short liquidations are stacked up there. We think EVAA has room to run."
+  }
+ ]
+}
