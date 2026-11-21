@@ -52,6 +52,17 @@ class LiveTest(unittest.TestCase):
         self.assertEqual(w["marke_0_abstand"], "-55%")
         self.assertTrue(w["_kerzen_png"].endswith("AKE_15m.png"))
 
+    def test_kerzen_auf_abruf(self):
+        import os
+        (self.web / "liquiditaet.json").write_text("{}")   # kein Funding-Extrem, nur /kerzen AKE 4h aus Telegram
+        Image.new("RGB", (1200, 900), "black").save(self.web / "kerzen" / "AKE_4h.png")
+        os.utime(self.web / "kerzen" / "AKE_4h.png", (JETZT - 600, JETZT - 600))
+        os.utime(self.web / "kerzen" / "AKE_15m.png", (JETZT - 9 * 3600, JETZT - 9 * 3600))   # zu alt
+        w = reel.live_werte(self.lv(abbruch={}), lambda b, i, n: self.k, self.web, JETZT)
+        self.assertTrue(w["_kerzen_png"].endswith("AKE_4h.png"))
+        w = reel.live_werte(self.lv(abbruch={}, tf="15m"), lambda b, i, n: self.k, self.web, JETZT)
+        self.assertNotIn("_kerzen_png", w)
+
     def test_abbruch(self):
         k = kerzen([0.0024] * 5 + [0.013, 0.0090], self.start)
         with self.assertRaises(reel.Abbruch):
