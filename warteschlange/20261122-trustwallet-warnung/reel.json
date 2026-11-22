@@ -1,0 +1,39 @@
+{
+ "thema": "trustwallet-warnung",
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "text": "Warning. For weeks now, Trust Wallet users have been waking up to empty wallets."
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "On-chain investigators at Bitquery traced over five point four million dollars in USDT drained from reported wallets since early October."
+  },
+  {
+   "bild": "szene_2.png",
+   "text": "The biggest single hit: on November seventh, one wallet untouched since 2021 lost six hundred and one thousand USDT in one evening."
+  },
+  {
+   "bild": "szene_3.png",
+   "foto": {
+    "person": "cz",
+    "kopf": "\u201c.cam is not .com\u201d",
+    "unter": "CZ warns of a fake Trust Wallet site",
+    "etikett": "PHISHING"
+   },
+   "text": "CZ himself warned about a fake Trust Wallet site. Dot cam is not dot com."
+  },
+  {
+   "bild": "szene_3.png",
+   "text": "Fake sites like this ask for your recovery phrase. Type it in, and your wallet is gone."
+  },
+  {
+   "bild": "szene_4.png",
+   "text": "The cause of the other drains? Nobody knows yet. Trust Wallet has not confirmed a flaw. Many victims were on iPhones."
+  },
+  {
+   "bild": "szene_5.png",
+   "text": "Our advice: be careful. Big money does not belong in a phone wallet. Move it to a hardware wallet. Update your phone, revoke old approvals, and never type your seed phrase anywhere."
+  }
+ ]
+}

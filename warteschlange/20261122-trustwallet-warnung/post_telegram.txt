@@ -1,0 +1,15 @@
+⚠️ <b>Trust Wallet users: be careful</b>
+
+For weeks, Trust Wallet users have been reporting empty wallets. On-chain investigators traced over $5.4 million in USDT drained from reported wallets between Oct 5 and Nov 11. The biggest single loss: 601,752 USDT on Nov 7, from a wallet untouched since 2021.
+
+CZ warned about a fake Trust Wallet site (“.cam is not .com”). For the other drains the cause is unknown. Trust Wallet has not confirmed a flaw. Many victims were on iPhones.
+
+<b>Our advice</b>
+• Big amounts: move them to a hardware wallet
+• Update your phone
+• Revoke old token approvals
+• Never type your seed phrase on any website
+
+Has this happened to you? Comment below 👇
+
+<i>Not financial advice.</i>
