@@ -9,6 +9,7 @@ reel.json im Ordner:
                "chart": {"base": "BTC", "intervall": "15m", "anzahl": 48, "box": [60, 700, 1020, 1500],
                          "titel": "BTC · 15m"}}, ...]}
 - "rennen": {...} = Spar-Rennen zweier Aktien als Bildfolge (social/rennen.py); "rennen_ende": true = Endstand als Bild.
+- Szene "clip": "x.mp4" = echtes Video (1080x1920, laeuft ganz durch, ohne Originalton).
 - "ruhig": true = Standbilder ohne Zoom; "untertitel": false = ohne eingeblendete Untertitel.
 - "bild" ist Pflicht (fertiges 1080x1920-Bild). Mit "chart" zeichnet der Server den echten Kursverlauf in
   die Box (Kurse holt nur der Server, der Chat erreicht die Boersen nicht). Klappt das nicht, bleibt das Bild.
@@ -286,6 +287,8 @@ def bauen(ordner: Path, cfg: dict, geheim: dict, kerzen_holen=None, sprechen=Non
                 hinweise.append(f"Rennen: {werte['investiert']} -> {werte['a_wert']} / {werte['b_wert']}")
             except Exception as e:
                 raise RuntimeError(f"Rennen ohne Kurse nicht moeglich ({str(e)[:80]})")
+        if s.get("clip"):   # 23.11.2026 Tobias: echtes Video in der Szene (fertig 1080x1920 aufbereitet, ohne Ton)
+            p, min_dauer[len(bilder)] = clip_bilder(ordner, s["clip"], len(bilder))
         if rwerte and s.get("rennen_ende"):   # Endstand des Rennens als Standbild
             p = rwerte["_ende"]
         if rwerte and "{" in text:
@@ -321,6 +324,20 @@ def bauen(ordner: Path, cfg: dict, geheim: dict, kerzen_holen=None, sprechen=Non
     texte = zeilen if spec.get("untertitel", True) else None   # Untertitel abschaltbar, wenn das Bild alles zeigt
     schneiden(bilder, toene, dauern, ordner / "video.mp4", cfg, texte=texte)
     return "; ".join([quelle, *hinweise])
+
+
+def clip_bilder(ordner: Path, clip: str, n: int, fps: int = 15) -> tuple[list, float]:
+    """Video -> Bildfolge [(jpg, 1/fps)] fuer video.bauen, plus Laenge in Sekunden. Der Ton des Clips entfaellt
+    (Stimme + Musik wie immer)."""
+    import subprocess
+    ziel = ordner / f"clip_{n}"
+    ziel.mkdir(exist_ok=True)
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(ordner / clip), "-vf", f"fps={fps},scale=1080:1920",
+                    "-q:v", "3", str(ziel / "b_%04d.jpg")], check=True)
+    bilder = sorted(ziel.glob("b_*.jpg"))
+    if not bilder:
+        raise RuntimeError(f"Clip {clip} ohne Bilder")
+    return [(b, 1 / fps) for b in bilder], len(bilder) / fps
 
 
 def frage_text(f: dict) -> str:
