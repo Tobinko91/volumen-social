@@ -1,0 +1,17 @@
+⚠️ <b>iPhone + crypto: one ad can be enough</b>
+
+Security firm Confiant tracked a hacker group running ads in 47 countries, across more than 480 ad domains since May. On a vulnerable iPhone, simply opening the page behind an ad can trigger the attack.
+
+An invisible frame reads your iOS version and picks one of four exploit kits. They are built to take wallet seed phrases, saved passwords, messages and photos.
+
+At risk: iOS 18 or older, with wallets like MetaMask, Phantom or Trust Wallet. The flaw is in iOS, not in the wallet apps.
+
+<b>Do this today</b>
+• Update to iOS 26
+• Can't update? Turn on Lockdown Mode
+• Never keep your seed phrase in Notes, Photos or screenshots
+• Big amounts: hardware wallet
+
+Share this with someone who holds crypto on an iPhone 👇
+
+<i>Not financial advice.</i>

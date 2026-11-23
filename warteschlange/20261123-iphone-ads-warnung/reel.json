@@ -1,0 +1,33 @@
+{
+ "thema": "iphone-ads-warnung",
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "text": "Warning for every iPhone user with crypto. One ad can be enough to steal your seed phrase."
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "Security firm Confiant tracked a hacker group running these ads in forty-seven countries, across more than four hundred eighty ad domains since May."
+  },
+  {
+   "bild": "szene_2.png",
+   "text": "You see a normal ad. You open the page. An invisible frame checks your iPhone, reads your iOS version and picks one of four exploit kits. No download. No click on anything else."
+  },
+  {
+   "bild": "szene_3.png",
+   "text": "They take everything: wallet seed phrases, saved passwords, messages and photos."
+  },
+  {
+   "bild": "szene_4.png",
+   "text": "At risk: iPhones on iOS 18 or older, with wallets like MetaMask, Phantom or Trust Wallet. The flaw is in iOS itself, not in the wallet apps."
+  },
+  {
+   "bild": "szene_4.png",
+   "text": "Remember the Trust Wallet drains on iPhones? We think this could be part of the answer."
+  },
+  {
+   "bild": "szene_5.png",
+   "text": "Do this today: update to iOS 26, turn on Lockdown Mode if you can't update, never keep your seed phrase in Notes or Photos, and keep big amounts on a hardware wallet."
+  }
+ ]
+}
