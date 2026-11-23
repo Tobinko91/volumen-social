@@ -118,3 +118,26 @@ def long_short(base: str, get=None) -> dict | None:
                 "vor24": float(rows[0]["longShortRatio"]) if len(rows) >= 24 else None}
     except Exception:
         return None
+
+
+YAHOO = "https://query1.finance.yahoo.com/v8/finance/chart/{s}"
+_YAHOO_SPANNE = {"5m": "5d", "15m": "5d", "30m": "1mo", "1h": "1mo", "1d": "2y", "1wk": "10y", "1w": "10y"}
+
+
+def aktien_kerzen(symbol: str, intervall: str = "15m", anzahl: int = 48, get=None) -> list[dict]:
+    """23.11.2026 (Tobias: „Auch den Chart von NVIDIA zeigen“): Aktien/Indizes von Yahoo, mit Vor- und
+    Nachboerse. Gleiche Form wie kerzen(): [{t, o, h, l, c, v}] aufsteigend (v in Stueck, nicht USD)."""
+    iv = {"1w": "1wk", "4h": "1h"}.get(intervall, intervall)
+    get = get or (lambda url, p: requests.get(url, params=p, headers={"User-Agent": "Mozilla/5.0"}, timeout=20).json())
+    j = get(YAHOO.format(s=symbol.upper()), {"interval": iv, "range": _YAHOO_SPANNE.get(iv, "1mo"),
+                                              "includePrePost": "true"})
+    res = j["chart"]["result"][0]
+    q = res["indicators"]["quote"][0]
+    out = []
+    for i, t in enumerate(res.get("timestamp") or []):
+        o, h, l, c = (q[k][i] for k in ("open", "high", "low", "close"))
+        if None in (o, h, l, c):
+            continue
+        out.append({"t": int(t) * 1000, "o": float(o), "h": float(h), "l": float(l), "c": float(c),
+                    "v": float(q.get("volume", [0] * (i + 1))[i] or 0)})
+    return out[-anzahl:]

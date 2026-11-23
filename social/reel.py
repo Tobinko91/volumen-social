@@ -25,7 +25,7 @@ from pathlib import Path
 from PIL import Image
 
 
-def chart_szene(ordner: Path, s: dict, thema: str, kerzen_holen) -> tuple[Path, dict]:
+def chart_szene(ordner: Path, s: dict, thema: str, kerzen_holen, aktien_holen=None) -> tuple[Path, dict]:
     """-> (Bild mit echtem Chart, Werte {chg, von, bis} seit ab_ts bzw. seit der ersten Kerze)."""
     from . import design, grafik
     c = s["chart"]
@@ -34,7 +34,12 @@ def chart_szene(ordner: Path, s: dict, thema: str, kerzen_holen) -> tuple[Path, 
     # Startwert (Schnitt der ersten 200 Tage) noch zu viel alter, hoeherer Kurs. Eine EMA braucht ein Vielfaches
     # ihrer Laenge als Vorlauf, damit sie wie bei TradingView aussieht: hier 4 x n (Restgewicht des Starts < 0,1 %).
     vorlauf = 4 * ema_n
-    alle = kerzen_holen(c.get("base", "BTC"), c.get("intervall", "15m"), int(c.get("anzahl", 48)) + vorlauf)
+    if c.get("quelle") == "aktie":   # 23.11.2026: Aktie/Index (Yahoo), z. B. {"base": "NVDA", "quelle": "aktie"}
+        from . import kurse
+        holen = aktien_holen or kurse.aktien_kerzen
+        alle = holen(c["base"], c.get("intervall", "15m"), int(c.get("anzahl", 48)) + vorlauf)
+    else:
+        alle = kerzen_holen(c.get("base", "BTC"), c.get("intervall", "15m"), int(c.get("anzahl", 48)) + vorlauf)
     ema_werte = ema(alle, ema_n) if ema_n else []
     alle_rsi = list(alle)
     if ema_n:
@@ -229,7 +234,7 @@ def bot_bild_szene(ordner: Path, s: dict, png: str, cfg: dict) -> Path:
 
 
 def bauen(ordner: Path, cfg: dict, geheim: dict, kerzen_holen=None, sprechen=None, schneiden=None,
-          rennen_holen=None) -> str:
+          rennen_holen=None, aktien_holen=None) -> str:
     """Baut ordner/video.mp4 aus reel.json. Gibt die Tonquelle zurueck ('elevenlabs', 'stille (...)', ...)."""
     from . import kurse, stimme, video
     kerzen_holen = kerzen_holen or (lambda b, i, n: kurse.kerzen(b, i, n, voll=i in ("1d", "1w")))
@@ -290,7 +295,7 @@ def bauen(ordner: Path, cfg: dict, geheim: dict, kerzen_holen=None, sprechen=Non
                 pass
         if s.get("chart") and not bot_ok:   # Ersatz, wenn das Bot-Bild fehlt
             try:
-                p, werte = chart_szene(ordner, s, spec.get("thema", ordner.name), kerzen_holen)
+                p, werte = chart_szene(ordner, s, spec.get("thema", ordner.name), kerzen_holen, aktien_holen)
                 text = text.format(**werte) if "{" in text else text
                 hinweise.append(f"Chart {s['chart'].get('base', 'BTC')}: {werte['chg']}")
             except Exception as e:   # ohne Kurse trotzdem ein Video, Hinweis an Tobias
