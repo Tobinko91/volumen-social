@@ -1,0 +1,81 @@
+{
+ "thema": "huang-zurueck",
+ "frage": {
+  "name": "$NVDA"
+ },
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "foto": {
+    "person": "huang",
+    "kopf": "Jensen Huang is back.",
+    "unter": "CEO again, effective immediately",
+    "etikett": "BREAKING"
+   },
+   "text": "Breaking: Jensen Huang is back. Nvidia reinstated him as CEO, President and board member, effective immediately."
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "He resigned eleven days ago. Six days ago the board chair said they did not intend to bring him back. Today: a unanimous vote."
+  },
+  {
+   "bild": "szene_2.png",
+   "foto": {
+    "person": "trump",
+    "kopf": "\u201cInput from the US government\u201d",
+    "unter": "Trump: Nvidia should take him back",
+    "etikett": "WASHINGTON"
+   },
+   "text": "Trump said Nvidia should take him back. And the board says it received input from senior levels of the US government."
+  },
+  {
+   "bild": "szene_3.png",
+   "text": "Meanwhile the stock was down about fifty percent from its high, and the SEC is still examining Nvidia's accounting."
+  },
+  {
+   "bild": "szene_4.png",
+   "chart": {
+    "base": "NVDA",
+    "quelle": "aktie",
+    "intervall": "15m",
+    "anzahl": 80,
+    "titel": "NVDA \u00b7 15m \u00b7 since the news",
+    "box": [
+     60,
+     560,
+     1020,
+     1500
+    ],
+    "ab_ts": 1795442400,
+    "vorlauf_h": 3,
+    "zahl_ab_ereignis": true
+   },
+   "text": "The market's answer: Nvidia since the news, {chg}.",
+   "text_ohne": "The market's answer: here is Nvidia since the news."
+  },
+  {
+   "bild": "szene_6.png",
+   "chart": {
+    "base": "BTC",
+    "intervall": "15m",
+    "anzahl": 60,
+    "titel": "BTC \u00b7 15m \u00b7 since the news",
+    "box": [
+     60,
+     560,
+     1020,
+     1500
+    ],
+    "ab_ts": 1795442400,
+    "vorlauf_h": 2,
+    "zahl_ab_ereignis": true
+   },
+   "text": "And Bitcoin since the news: {chg}.",
+   "text_ohne": "And Bitcoin? Here is the chart since the news."
+  },
+  {
+   "bild": "szene_5.png",
+   "text": "Our view: the White House speaks, and a week later the board obeys. In the new system, Washington picks the CEO."
+  }
+ ]
+}
