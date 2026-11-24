@@ -1,0 +1,82 @@
+{
+ "thema": "gold-silber-crash",
+ "ruhig": true,
+ "untertitel": false,
+ "frage": {
+  "name": "gold"
+ },
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "chart": {
+    "base": "GC=F",
+    "quelle": "aktie",
+    "intervall": "1d",
+    "anzahl": 330,
+    "titel": "Gold \u00b7 daily",
+    "box": [
+     40,
+     300,
+     1040,
+     1250
+    ]
+   },
+   "text": "Gold just crashed below thirty-six hundred dollars. Now at {bis}. That is {vom_hoch} from its January high.",
+   "text_ohne": "Gold just crashed below thirty-six hundred dollars, down more than a third from its January high."
+  },
+  {
+   "bild": "szene_1.png",
+   "chart": {
+    "base": "SI=F",
+    "quelle": "aktie",
+    "intervall": "1d",
+    "anzahl": 330,
+    "titel": "Silver \u00b7 daily",
+    "box": [
+     40,
+     300,
+     1040,
+     1250
+    ]
+   },
+   "text": "And silver fell below forty-five dollars. Now at {bis}, {vom_hoch} from the top.",
+   "text_ohne": "And silver fell below forty-five dollars, down more than sixty percent from the top."
+  },
+  {
+   "bild": "szene_2.png",
+   "text": "Why is this happening right now? Five main reasons."
+  },
+  {
+   "bild": "szene_3.png",
+   "text": "First: inflation. US prices came in hotter than expected."
+  },
+  {
+   "bild": "szene_4.png",
+   "text": "So the Fed is expected to hike rates again in December."
+  },
+  {
+   "bild": "szene_5.png",
+   "text": "Second: higher rates mean US government bonds pay more. Gold and silver pay nothing. So money moves out of metals and into safe bonds."
+  },
+  {
+   "bild": "szene_6.png",
+   "text": "Third: the strong US dollar. It makes gold and silver more expensive for the rest of the world, so demand goes down."
+  },
+  {
+   "bild": "szene_7.png",
+   "text": "Fourth: the war with Iran pushed oil and inflation higher. More pressure for rate hikes."
+  },
+  {
+   "bild": "szene_8.png",
+   "text": "Fifth, and the most important: the AI selloff. When stocks crash, investors get margin calls and have to sell whatever they can. Gold and silver are among the most liquid assets, so they get sold first."
+  },
+  {
+   "bild": "szene_9.png",
+   "text": "But history tells us: gold crashed several times in the last fifty years, like in 2008 and 2020, and recovered within a few years. After 2011 it took much longer."
+  },
+  {
+   "bild": "szene_10.png",
+   "text": "Our view: as long as the Fed keeps hiking, the pressure is not over yet. Follow us for more. Like and comment: where do you think gold goes next?"
+  }
+ ]
+}
