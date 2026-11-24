@@ -1,0 +1,43 @@
+{
+ "thema": "huang-ovation",
+ "frage": {
+  "name": "$NVDA"
+ },
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "clip": "clip_0.mp4",
+   "text": "Jensen Huang walks back into Nvidia's headquarters. Eleven days after he resigned. And the whole building stands up."
+  },
+  {
+   "bild": "szene_1.png",
+   "clip": "clip_1.mp4",
+   "text": "His words to the staff: I'm going to be a better CEO the second time around."
+  },
+  {
+   "bild": "szene_2.png",
+   "chart": {
+    "base": "NVDA",
+    "quelle": "aktie",
+    "intervall": "15m",
+    "anzahl": 130,
+    "titel": "NVDA \u00b7 15m \u00b7 since the comeback",
+    "box": [
+     60,
+     560,
+     1020,
+     1500
+    ],
+    "ab_ts": 1795442400,
+    "vorlauf_h": 2,
+    "zahl_ab_ereignis": true
+   },
+   "text": "And the stock? Nvidia since the comeback: {chg}.",
+   "text_ohne": "And the stock? Here is Nvidia since the comeback."
+  },
+  {
+   "bild": "szene_3.png",
+   "text": "Our view: a comeback made in Washington. The employees cheer. The question is who really runs Nvidia now."
+  }
+ ]
+}
