@@ -1,0 +1,24 @@
+{
+ "thema": "naaim",
+ "frage": {
+  "name": "stocks"
+ },
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "text": "Wall Street's active fund managers are dumping stocks. Their exposure index fell to fifty-one, the lowest since April 2025."
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "Two weeks ago it was eighty-seven. That is minus forty-one percent in two weeks, the fastest drop since November 2023."
+  },
+  {
+   "bild": "szene_2.png",
+   "text": "But real panic looks different. In the 2020 crash the index hit eleven. In the 2022 bear market, thirteen."
+  },
+  {
+   "bild": "szene_3.png",
+   "text": "Our view: the big money is leaving fast, but this is not panic yet. We think the selling is not done."
+  }
+ ]
+}
