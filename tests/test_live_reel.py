@@ -110,7 +110,7 @@ class FrageTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as t:
             o = Path(t)
             Image.new("RGB", (1080, 1920), "navy").save(o / "s.png")
-            (o / "reel.json").write_text(json.dumps({"thema": "x", "frage": {"name": "$NVDA"},
+            (o / "reel.json").write_text(json.dumps({"schluss": False, "thema": "x", "frage": {"name": "$NVDA"},
                                                      "szenen": [{"bild": "s.png", "text": "Nvidia reports today."}]}))
             gerufen = {}
 
@@ -137,7 +137,7 @@ class FrageTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as t:
             o = Path(t)
             Image.new("RGB", (1080, 1920), "navy").save(o / "s.png")
-            (o / "reel.json").write_text(json.dumps({"thema": "x", "szenen": [{"bild": "s.png", "text": "Hi."}]}))
+            (o / "reel.json").write_text(json.dumps({"schluss": False, "thema": "x", "szenen": [{"bild": "s.png", "text": "Hi."}]}))
             n = {}
             reel.bauen(o, cfg, {}, kerzen_holen=lambda *a: [],
                        sprechen=lambda z, o_, c, k: ([o_ / "t.mp3"], [2.0], "p"),

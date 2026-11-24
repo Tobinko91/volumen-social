@@ -10,6 +10,8 @@ reel.json im Ordner:
                          "titel": "BTC · 15m"}}, ...]}
 - "rennen": {...} = Spar-Rennen zweier Aktien als Bildfolge (social/rennen.py); "rennen_ende": true = Endstand als Bild.
 - Szene "clip": "x.mp4" = echtes Video (1080x1920, laeuft ganz durch, ohne Originalton).
+- Jedes Reel bekommt am Ende die Schluss-Szene „Follow us for more. Like and comment: …“ ("schluss": false
+  schaltet sie ab, "schluss_frage" aendert die Frage). Steht „Follow us“ schon im Text, entfaellt sie.
 - "ruhig": true = Standbilder ohne Zoom; "untertitel": false = ohne eingeblendete Untertitel.
 - "bild" ist Pflicht (fertiges 1080x1920-Bild). Mit "chart" zeichnet der Server den echten Kursverlauf in
   die Box (Kurse holt nur der Server, der Chat erreicht die Boersen nicht). Klappt das nicht, bleibt das Bild.
@@ -306,6 +308,10 @@ def bauen(ordner: Path, cfg: dict, geheim: dict, kerzen_holen=None, sprechen=Non
                 text = s.get("text_ohne") or text.replace("{chg}", "").replace("{von}", "").replace("{bis}", "")
         bilder.append(p)
         zeilen.append(text)
+    if spec.get("schluss", True) and not any("follow us" in z.lower() for z in zeilen):
+        # 24.11.2026 Tobias: jedes Reel endet gleich – folgen, liken, kommentieren (einheitlich, Wiedererkennung)
+        bilder.append(schluss_szene(ordner, spec, cfg))
+        zeilen.append(schluss_text(spec))
     if spec.get("frage"):   # 17.11.2026 Tobias: Meldung zu handelbarem Coin/Aktie -> Abschlussfrage mit 5-s-Countdown
         bilder.append(frage_szene(ordner, spec["frage"], cfg))
         zeilen.append(frage_text(spec["frage"]))
@@ -338,6 +344,39 @@ def clip_bilder(ordner: Path, clip: str, n: int, fps: int = 15) -> tuple[list, f
     if not bilder:
         raise RuntimeError(f"Clip {clip} ohne Bilder")
     return [(b, 1 / fps) for b in bilder], len(bilder) / fps
+
+
+SCHLUSS_FRAGE = "where do you think the price goes next?"
+
+
+def schluss_text(spec: dict) -> str:
+    return f"Follow us for more. Like and comment: {spec.get('schluss_frage') or SCHLUSS_FRAGE}"
+
+
+def schluss_szene(ordner: Path, spec: dict, cfg: dict) -> Path:
+    """Einheitlicher Schluss jedes Reels: Like · Comment · Follow (Wunsch Tobias 24.11.2026)."""
+    from PIL import ImageDraw
+    from . import design
+    from .design import font, rgb
+    th = design.THEMEN["nacht"]
+    W, H = cfg["video"]["breite"], cfg["video"]["hoehe"]
+    img = design.hintergrund(th, W, H, saat=88)
+    design.marke(img, th, 70, 70, 64)
+    d = ImageDraw.Draw(img)
+    design.etikett(d, th, 70, 190, "YOUR TURN", farbe=th.akzent)
+    frage = (spec.get("schluss_frage") or SCHLUSS_FRAGE).rstrip("?")
+    y = design.ueberschrift(d, th, 70, 260, frage[0].upper() + frage[1:] + "?", W - 140, groesse=76, max_zeilen=3)
+    for i, (zeichen, t) in enumerate((("<3", "Like"), ("?", "Comment"), ("+", "Follow for more"))):
+        yy = y + 200 + i * 300
+        d.ellipse((120, yy, 300, yy + 180), outline=rgb(th.akzent), width=8)
+        fz = font("Bold", 100)
+        d.text((210 - d.textlength(zeichen, font=fz) / 2, yy + 20), zeichen, font=fz, fill=th.akzent)
+        d.text((350, yy + 55), t, font=font("Bold", 64), fill=th.text)
+    d.text((70, H - 260), "@whalesqueeze", font=font("Bold", 56), fill=th.akzent)
+    design.fuss(img, th, "Not financial advice.")
+    p = ordner / "schluss.png"
+    img.convert("RGB").save(p)
+    return p
 
 
 def frage_text(f: dict) -> str:

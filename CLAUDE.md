@@ -36,7 +36,10 @@ Arbeite als kritischer Redaktionschef: Schwächen offen ansprechen, begründen, 
 - News direkt formulieren (kein „Berichten zufolge“ / "reportedly"), mit Datum, Uhrzeit (ET und UTC), wer spricht,
   was danach kommt.
   Keine Quellenangaben im Beitrag (nur im Freigabe-Hinweis an Tobias).
-- Keine Einstiegskurse, Stops, Kursziele, keine Kauf-/Verkaufsaufforderung, keine Gewinnversprechen.
+- Keine Einstiegskurse, Stops, keine Kauf-/Verkaufsaufforderung, keine Gewinnversprechen.
+- Kursmarken nur als klar gekennzeichnete Meinung („Our view … We'll see.“) und nur bei BTC und ETH
+  (Entscheidung Tobias 24.11.2026). Bei allen anderen Coins und Aktien keine Kursziele (Pump-Verdacht).
+- Jedes Reel endet einheitlich mit „Follow us for more. Like and comment: …“ (Schluss-Szene in `social/reel.py`).
 - Überall (Texte, Bilder, Videos) nur „Not financial advice.“ (früher „Keine Anlageberatung“) – kein KI-, Totalverlust-
   oder Betreiber-Hinweis (Wunsch Tobias 22.10.2026, nicht wieder verlängern).
   Keine Coins von der Sperrliste.
