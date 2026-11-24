@@ -1,0 +1,68 @@
+{
+ "thema": "btc-unter-60k",
+ "frage": {
+  "name": "Bitcoin"
+ },
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "chart": {
+    "base": "BTC",
+    "intervall": "15m",
+    "anzahl": 48,
+    "titel": "BTC \u00b7 15m",
+    "box": [
+     40,
+     470,
+     1040,
+     1560
+    ]
+   },
+   "text": "Breaking: Bitcoin is below sixty thousand again. Now at {bis}. {chg} in twelve hours.",
+   "text_ohne": "Breaking: Bitcoin fell below sixty thousand dollars again."
+  },
+  {
+   "bild": "szene_1.png",
+   "chart": {
+    "base": "ETH",
+    "intervall": "15m",
+    "anzahl": 48,
+    "titel": "ETH \u00b7 15m",
+    "box": [
+     40,
+     470,
+     1040,
+     1560
+    ]
+   },
+   "text": "And Ethereum dropped below seventeen hundred. Now at {bis}.",
+   "text_ohne": "And Ethereum dropped below seventeen hundred dollars."
+  },
+  {
+   "bild": "szene_2.png",
+   "chart": {
+    "base": "BTC",
+    "intervall": "1d",
+    "anzahl": 365,
+    "titel": "BTC \u00b7 daily \u00b7 200-week average",
+    "box": [
+     40,
+     470,
+     1040,
+     1560
+    ],
+    "wochen_ma": 200
+   },
+   "text": "On the daily chart, Bitcoin is {wma_abstand} {wma_lage} its two-hundred-week average.",
+   "text_ohne": "On the daily chart, Bitcoin trades below its two-hundred-week average."
+  },
+  {
+   "bild": "szene_3.png",
+   "text": "Our view: this is not the bottom. We think Bitcoin goes lower, and we could see prices as low as forty thousand dollars soon. We'll see."
+  },
+  {
+   "bild": "szene_4.png",
+   "text": "Follow us for more. Like and comment: where do you think the price goes next?"
+  }
+ ]
+}
