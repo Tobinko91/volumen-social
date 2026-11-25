@@ -12,6 +12,20 @@ from pathlib import Path
 SCHWELLE = 4.0
 SPERRE_S = 3 * 3600
 COINS = ("BTC", "ETH")
+# 25.11.2026 Tobias: „Bitcoin falls below $57,500“ – runde Marken sind Eilmeldungen, auch ohne 4 % in 1 Std.
+MARKEN = {"BTC": 2500, "ETH": 100}
+
+
+def marke_gekreuzt(base: str, vorher: float | None, jetzt: float) -> int | None:
+    """Wurde seit dem letzten Lauf eine runde Marke durchbrochen? -> die zuletzt durchbrochene Marke."""
+    schritt = MARKEN.get(base)
+    if not schritt or not vorher or vorher == jetzt:
+        return None
+    if jetzt < vorher:   # nach unten: hoechste Marke m mit jetzt < m <= vorher
+        m = int(vorher // schritt) * schritt
+        return m if jetzt < m <= vorher else None
+    m = int(jetzt // schritt) * schritt   # nach oben: hoechste Marke m mit vorher < m <= jetzt
+    return m if vorher < m <= jetzt else None
 
 
 def bewegung(k: list[dict]) -> dict | None:
@@ -36,9 +50,19 @@ def pruefen(kerzen_holen, stand: dict, jetzt: float | None = None) -> list[dict]
                 m["kerzen"] = k[-48:]   # fuer den Chart im Bild (08.11.2026)
         except Exception:
             m = None
-        if not m or abs(m["chg1h"]) < SCHWELLE:
+        if not m:
             continue
-        key = f"{b}_{'hoch' if m['chg1h'] > 0 else 'runter'}"
+        vorher = stand.get(f"{b}_preis")
+        stand[f"{b}_preis"] = m["jetzt"]
+        marke = marke_gekreuzt(b, vorher, m["jetzt"])
+        if abs(m["chg1h"]) < SCHWELLE and not marke:
+            continue
+        if marke and abs(m["chg1h"]) < SCHWELLE:
+            m["marke"] = marke
+            m["runter"] = m["jetzt"] < vorher
+            key = f"{b}_marke_{marke}"
+        else:
+            key = f"{b}_{'hoch' if m['chg1h'] > 0 else 'runter'}"
         if key in stand and jetzt - stand[key] < SPERRE_S:
             continue
         stand[key] = jetzt
@@ -61,11 +85,14 @@ def bauen(alarme: list[dict], ordner_basis: Path, cfg: dict, jetzt: float | None
     t = dt.datetime.fromtimestamp(jetzt, dt.timezone.utc)
     stempel = time.strftime("%Y%m%d-%H%M", time.localtime(jetzt))
     th = thema_waehlen("markt", f"alarm-{stempel}")
-    a0 = max(alarme, key=lambda a: abs(a["chg1h"]))
-    runter = a0["chg1h"] < 0
+    a0 = max(alarme, key=lambda a: (abs(a["chg1h"]) >= SCHWELLE, abs(a["chg1h"])))
+    runter = a0.get("runter", a0["chg1h"] < 0)
     farbe = th.minus if runter else th.plus
     wort = "DROP" if runter else "JUMP"
-    kopf = f"{a0['base']} {'drops' if runter else 'jumps'} {abs(a0['chg1h']):.1f}% in one hour"
+    if a0.get("marke") and abs(a0["chg1h"]) < SCHWELLE:   # Marken-Alarm
+        kopf = f"{a0['base']} {'falls below' if runter else 'breaks above'} ${a0['marke']:,}"
+    else:
+        kopf = f"{a0['base']} {'drops' if runter else 'jumps'} {abs(a0['chg1h']):.1f}% in one hour"
     zeit = f"{t:%H:%M} UTC"
     hw = hinweis(cfg, "en")
     bo = ordner_basis / f"{stempel}_redaktion_alarm"
@@ -122,7 +149,8 @@ def bauen(alarme: list[dict], ordner_basis: Path, cfg: dict, jetzt: float | None
             f = font("Bold", 60)
             d.text((W - 110 - d.textlength(w_, font=f), y + 28 + j * 110), w_, font=f, fill=fa)
 
-    for i, (etik, k) in enumerate((("BREAKING", f"{a0['base']} in one hour"), ("THE CHART", f"{a0['base']} · last 7 hours"),
+    erst = kopf if a0.get("marke") and abs(a0["chg1h"]) < SCHWELLE else f"{a0['base']} in one hour"
+    for i, (etik, k) in enumerate((("BREAKING", erst), ("THE CHART", f"{a0['base']} · last 7 hours"),
                                    ("WHAT NOW?", "Panic or overreaction?"))):
         img = hintergrund(th, W, H, saat=80 + i)
         marke(img, th, 80, 90, 72)
@@ -140,7 +168,9 @@ def bauen(alarme: list[dict], ordner_basis: Path, cfg: dict, jetzt: float | None
         fuss(img, th, cfg["hinweise"]["fusszeile"])
         img.convert("RGB").save(ro / f"szene_{i}.png")
     szenen = [
-        {"bild": "szene_0.png", "text": f"Breaking: {a0['base']} {chg} in one hour. It now trades at {_pr(a0['jetzt'])}."},
+        {"bild": "szene_0.png", "text": (f"Breaking: {kopf}. It now trades at {_pr(a0['jetzt'])}."
+                                          if a0.get("marke") and abs(a0["chg1h"]) < SCHWELLE else
+                                          f"Breaking: {a0['base']} {chg} in one hour. It now trades at {_pr(a0['jetzt'])}.")},
         {"bild": "szene_1.png", "text": f"Here is the real chart. {a0['base']} is {{chg}} since the move started.",
          "text_ohne": f"Over 24 hours {a0['base']} is {chg24}.",
          "chart": {"base": a0["base"], "intervall": "5m", "anzahl": 100, "box": [60, 520, 1020, 1100],

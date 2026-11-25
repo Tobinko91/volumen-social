@@ -62,7 +62,7 @@ class SchnellTest(unittest.TestCase):
         self.assertEqual(geholt, [])   # nachts keine X-Abfrage (kostet Geld)
         (Path(self.t.name) / "schnellantwort_stand.json").write_text(json.dumps({"anzahl": {"2026-11-12": 12}}))
         self.s.main(lambda: geholt.append(1) or [], None, None, None, self.jetzt)
-        self.assertEqual(geholt, [])
+        self.assertEqual(geholt, [1])   # 25.11.2026: Limit gilt nur fuer Antworten, Eilmeldungen werden weiter erkannt
 
     def test_pruefung_verwirft_links_und_erfundene_zahlen(self):
         gesendet = []

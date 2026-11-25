@@ -39,7 +39,8 @@ def nachricht(k: dict, minuten: int) -> str:
         f"DE: {e(k.get('deutsch', ''))}"])
 
 
-def main(posts_holen=None, schreiber=None, markt="auto", senden=None, jetzt: float | None = None) -> int:
+def main(posts_holen=None, schreiber=None, markt="auto", senden=None, jetzt: float | None = None,
+         eil_schreiber=None, eil_reel=None) -> int:
     cfg = yaml.safe_load((HIER / "config.yaml").read_text(encoding="utf-8"))
     s = cfg.get("schnellantwort") or {}
     if not s.get("aktiv"):
@@ -61,7 +62,8 @@ def main(posts_holen=None, schreiber=None, markt="auto", senden=None, jetzt: flo
         stand = {}
     tag = time.strftime("%Y-%m-%d", time.localtime(jetzt))
     heute = stand.get("anzahl", {}).get(tag, 0)
-    if heute >= int(s.get("max_pro_tag", 12)):
+    eil_an = (cfg.get("eil_x") or {}).get("aktiv", True)
+    if heute >= int(s.get("max_pro_tag", 12)) and not eil_an:
         return 0
     # nur Posts seit dem letzten Lauf (spart Kosten), hoechstens schnellantwort.minuten alt
     letzter = float(stand.get("letzter", 0))
@@ -73,6 +75,20 @@ def main(posts_holen=None, schreiber=None, markt="auto", senden=None, jetzt: flo
         print("X-Posts nicht geholt (Schnell-Antwort):", e)
         return 1
     stand["letzter"] = jetzt
+    if eil_an:   # 25.11.2026 Tobias: Eilmeldungen der grossen Konten selbst erkennen und als Reel vorschlagen
+        try:
+            from social import eil_x
+            schicken = None
+            if "--senden" in sys.argv or senden:
+                from social import telegram
+                schicken = telegram.vorschlag_senden
+            eil_x.verarbeiten(posts, cfg, g, AUSGABE, schreiber=eil_schreiber, senden=schicken,
+                              reel_bauen=eil_reel, jetzt=jetzt)
+        except Exception as e:
+            print("Eil-X Fehler:", e)
+    if heute >= int(s.get("max_pro_tag", 12)):
+        stand_p.write_text(json.dumps(stand))
+        return 0
     k_stand_p = AUSGABE / "kommentare_stand.json"   # gemeinsam mit dem Kommentar-Assistenten: nie doppelt
     try:
         k_stand = json.loads(k_stand_p.read_text())
