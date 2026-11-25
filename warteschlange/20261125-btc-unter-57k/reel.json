@@ -1,0 +1,54 @@
+{
+ "thema": "btc-unter-60k",
+ "frage": {
+  "name": "Bitcoin"
+ },
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "chart": {
+    "base": "BTC",
+    "intervall": "15m",
+    "anzahl": 48,
+    "titel": "BTC \u00b7 15m",
+    "box": [
+     40,
+     470,
+     1040,
+     1560
+    ]
+   },
+   "text": "Breaking: the crypto selloff is speeding up. Bitcoin fell below fifty-seven thousand five hundred. Now at {bis}. {chg} in twelve hours.",
+   "text_ohne": "Breaking: the crypto selloff is speeding up. Bitcoin fell below fifty-seven thousand five hundred dollars."
+  },
+  {
+   "bild": "szene_1.png",
+   "chart": {
+    "base": "ETH",
+    "intervall": "15m",
+    "anzahl": 48,
+    "titel": "ETH \u00b7 15m",
+    "box": [
+     40,
+     470,
+     1040,
+     1560
+    ]
+   },
+   "text": "Ethereum is nearing sixteen hundred. Now at {bis}.",
+   "text_ohne": "Ethereum is nearing sixteen hundred dollars."
+  },
+  {
+   "bild": "szene_2.png",
+   "text": "Another five hundred million dollars in leveraged positions got liquidated in the last twenty-four hours."
+  },
+  {
+   "bild": "szene_3.png",
+   "text": "We said it yesterday: this is not the bottom. Our view stays the same. We could see forty thousand dollars soon. We'll see."
+  },
+  {
+   "bild": "szene_4.png",
+   "text": "Follow us for more. Like and comment: where do you think the price goes next?"
+  }
+ ]
+}
