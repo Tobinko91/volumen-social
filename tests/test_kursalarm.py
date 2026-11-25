@@ -45,3 +45,31 @@ class KursAlarmTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MarkenTest(unittest.TestCase):
+    """25.11.2026 Tobias: „Bitcoin falls below $57,500“ als Eilmeldung, auch ohne 4 % in einer Stunde."""
+
+    def test_marke_gekreuzt(self):
+        self.assertEqual(kursalarm.marke_gekreuzt("BTC", 58_100, 57_400), 57_500)
+        self.assertEqual(kursalarm.marke_gekreuzt("BTC", 57_400, 60_100), 60_000)   # mehrere Marken: die letzte
+        self.assertIsNone(kursalarm.marke_gekreuzt("BTC", 58_100, 57_600))
+        self.assertIsNone(kursalarm.marke_gekreuzt("BTC", None, 57_400))
+        self.assertEqual(kursalarm.marke_gekreuzt("ETH", 1_650, 1_590), 1_600)
+        self.assertIsNone(kursalarm.marke_gekreuzt("SOL", 150, 140))
+
+    def test_alarm_und_reel(self):
+        def kerzen(preis):
+            return lambda b, i, n: [dict(x, c=preis if b == "BTC" else 2000, o=preis if b == "BTC" else 2000)
+                                    for x in _k(0.0)]
+        stand = {}
+        self.assertEqual(kursalarm.pruefen(kerzen(58_100), stand, jetzt=1000), [])   # erster Lauf merkt den Preis
+        a = kursalarm.pruefen(kerzen(57_400), stand, jetzt=1600)
+        self.assertEqual([(x["base"], x["marke"], x["runter"]) for x in a], [("BTC", 57_500, True)])
+        self.assertEqual(kursalarm.pruefen(kerzen(57_600), stand, jetzt=2200), [])
+        self.assertEqual(kursalarm.pruefen(kerzen(57_400), stand, jetzt=2800), [])   # gleiche Marke: 3 Std. Sperre
+        with tempfile.TemporaryDirectory() as d:
+            bo, ro = kursalarm.bauen(a, Path(d), CFG, jetzt=1_793_895_000)
+            self.assertIn("BTC falls below $57,500", (bo / "post_telegram.txt").read_text())
+            r = json.loads((ro / "reel.json").read_text())
+            self.assertTrue(r["szenen"][0]["text"].startswith("Breaking: BTC falls below $57,500."))
