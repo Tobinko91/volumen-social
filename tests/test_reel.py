@@ -27,7 +27,7 @@ class ReelTest(unittest.TestCase):
         self.o.mkdir(parents=True)
         for i in range(2):
             Image.new("RGB", (1080, 1920), (20, 15, 46)).save(self.o / f"szene_{i}.png")
-        (self.o / "reel.json").write_text(json.dumps({"thema": "midterms-3", "szenen": [
+        (self.o / "reel.json").write_text(json.dumps({"schluss": False, "thema": "midterms-3", "szenen": [
             {"bild": "szene_0.png", "text": "Bitcoin dipped.",
              "chart": {"base": "BTC", "intervall": "15m", "anzahl": 48, "box": [60, 700, 1020, 1500]}},
             {"bild": "szene_1.png", "text": "Then it bounced."}]}))
@@ -109,7 +109,7 @@ class ChartZahlTest(unittest.TestCase):
         o = Path(tempfile.mkdtemp())
         try:
             Image.new("RGB", (1080, 1920)).save(o / "s.png")
-            (o / "reel.json").write_text(json.dumps({"thema": "t", "szenen": [
+            (o / "reel.json").write_text(json.dumps({"schluss": False, "thema": "t", "szenen": [
                 {"bild": "s.png", "text": "Bitcoin is {chg} since the Senate call, now {bis}.",
                  "text_ohne": "Here is Bitcoin since the Senate call.",
                  "chart": {"base": "BTC", "intervall": "1h", "anzahl": 60, "box": [60, 700, 1020, 1500],
@@ -308,7 +308,7 @@ class KursAlarmChartTest(unittest.TestCase):
         o = Path(tempfile.mkdtemp())
         try:
             Image.new("RGB", (1080, 1920)).save(o / "s.png")
-            (o / "reel.json").write_text(json.dumps({"thema": "t", "szenen": [
+            (o / "reel.json").write_text(json.dumps({"schluss": False, "thema": "t", "szenen": [
                 {"bild": "s.png", "text": "BTC {chg}.", "text_ohne": "x",
                  "chart": {"base": "BTC", "intervall": "15m", "anzahl": 48, "box": [60, 700, 1020, 1500],
                            "ab_ts": 1_000_000}}]}))
