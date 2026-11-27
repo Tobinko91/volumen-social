@@ -12,6 +12,7 @@ reel.json im Ordner:
 - Szene "clip": "x.mp4" = echtes Video (1080x1920, laeuft ganz durch, ohne Originalton).
 - Jedes Reel bekommt am Ende die Schluss-Szene „Follow us for more. Like and comment: …“ ("schluss": false
   schaltet sie ab, "schluss_frage" aendert die Frage). Steht „Follow us“ schon im Text, entfaellt sie.
+- Chart "macd": true = MACD-Feld (12/26/9) unter dem Chart; Platzhalter {macd_lage} {macd_trend}.
 - "ruhig": true = Standbilder ohne Zoom; "untertitel": false = ohne eingeblendete Untertitel.
 - "bild" ist Pflicht (fertiges 1080x1920-Bild). Mit "chart" zeichnet der Server den echten Kursverlauf in
   die Box (Kurse holt nur der Server, der Chat erreicht die Boersen nicht). Klappt das nicht, bleibt das Bild.
@@ -95,10 +96,48 @@ def chart_szene(ordner: Path, s: dict, thema: str, kerzen_holen, aktien_holen=No
             art = "linien"
             info["rsi"] = rw
             werte.update(rsi=f"{rw[-1]:.0f}")
+    if c.get("macd"):   # 27.11.2026 Tobias: echter MACD (12/26/9) statt Schema, z. B. Monats-MACD von BTC
+        m_, s_, h_ = macd(alle_rsi)
+        if m_ and m_[-1] is not None and s_[-1] is not None:
+            art = "linien"
+            info["macd"] = {"macd": m_[-len(k):], "signal": s_[-len(k):], "hist": h_[-len(k):]}
+            werte.update(macd_lage="above" if m_[-1] >= s_[-1] else "below",
+                         macd_trend="rising" if len(h_) > 1 and h_[-2] is not None and h_[-1] > h_[-2] else "falling")
     grafik.echt_chart(img, th, tuple(c["box"]), k, art, info, 3, c.get("lang", "en"), titel)
     ziel = ordner / f"chart_{Path(s['bild']).stem}.png"
     img.convert("RGB").save(ziel)
     return ziel, werte
+
+
+def macd(kerzen: list[dict], schnell: int = 12, langsam: int = 26, signal: int = 9):
+    """MACD wie TradingView: EMA12 - EMA26 der Schlusskurse, Signal = EMA9 des MACD, Histogramm = MACD - Signal.
+    -> (macd, signal, hist), Listen gleicher Laenge wie kerzen (None, solange zu wenig Daten)."""
+    n = len(kerzen)
+    if n < langsam + signal:
+        return [None] * n, [None] * n, [None] * n
+
+    def ema_(werte, p):
+        out, e = [], None
+        for i, v in enumerate(werte):
+            if v is None:
+                out.append(None)
+                continue
+            if e is None:
+                gueltig = [x for x in werte[:i + 1] if x is not None]
+                if len(gueltig) < p:
+                    out.append(None)
+                    continue
+                e = sum(gueltig[-p:]) / p
+            else:
+                e = v * 2 / (p + 1) + e * (1 - 2 / (p + 1))
+            out.append(e)
+        return out
+    c = [x["c"] for x in kerzen]
+    e1, e2 = ema_(c, schnell), ema_(c, langsam)
+    m = [a - b if a is not None and b is not None else None for a, b in zip(e1, e2)]
+    s = ema_(m, signal)
+    h = [a - b if a is not None and b is not None else None for a, b in zip(m, s)]
+    return m, s, h
 
 
 def rsi(kerzen: list[dict], n: int = 14) -> list[float | None]:
@@ -240,7 +279,7 @@ def bauen(ordner: Path, cfg: dict, geheim: dict, kerzen_holen=None, sprechen=Non
           rennen_holen=None, aktien_holen=None) -> str:
     """Baut ordner/video.mp4 aus reel.json. Gibt die Tonquelle zurueck ('elevenlabs', 'stille (...)', ...)."""
     from . import kurse, stimme, video
-    kerzen_holen = kerzen_holen or (lambda b, i, n: kurse.kerzen(b, i, n, voll=i in ("1d", "1w")))
+    kerzen_holen = kerzen_holen or (lambda b, i, n: kurse.kerzen(b, i, n, voll=i in ("1d", "1w", "1M")))
     sprechen = sprechen or stimme.sprechen
     schneiden = schneiden or video.bauen
     spec = json.loads((ordner / "reel.json").read_text(encoding="utf-8"))

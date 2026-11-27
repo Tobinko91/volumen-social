@@ -435,7 +435,8 @@ def echt_chart(img: Image.Image, t: Thema, box, kerzen: list[dict], art: str, in
             tief_, hoch_ = min(tief_, min(werte)), max(hoch_, max(werte))
     lo = tief_ - (hoch_ - tief_) * (0.10 if art == "linien" else 0.30)   # Platz unten fuer Zone und Beschriftung
     hi = hoch_ + (hoch_ - tief_) * 0.08
-    rsi_h = int(190 * sk) if art == "linien" and info.get("rsi") else 0   # 13.11.2026: RSI-Feld unter dem Chart
+    felder = sum(1 for f_ in ("rsi", "macd") if art == "linien" and info.get(f_))
+    rsi_h = int(190 * sk) * felder   # 13.11.2026: RSI-Feld unter dem Chart; 27.11.2026: MACD-Feld (je 190 px)
     innen = (x0 + 30, y0 + 70, x1 - (190 if art == "linien" else 150), y1 - 60 - rsi_h)
     n = len(kerzen)
     bw = (innen[2] - innen[0]) / n
@@ -521,7 +522,7 @@ def echt_chart(img: Image.Image, t: Thema, box, kerzen: list[dict], art: str, in
             belegt.append(yy + fk.size * 1.15)
         r = info.get("rsi")
         if r:   # RSI(14) im eigenen Feld: Linie, 30/70-Grenzen, aktueller Wert gross
-            ry0, ry1 = innen[3] + 40, y1 - 50
+            ry0, ry1 = innen[3] + 40, (innen[3] + int(190 * sk) - 10 if info.get("macd") else y1 - 50)
             d.line([(innen[0], ry0 - 18), (innen[2], ry0 - 18)], fill=t.linie, width=1)
             RY = lambda v: ry1 - (ry1 - ry0) * v / 100
             for g in (30, 70):
@@ -535,6 +536,30 @@ def echt_chart(img: Image.Image, t: Thema, box, kerzen: list[dict], art: str, in
             zust = "oversold" if letzter < 30 else "overbought" if letzter > 70 else ""
             d.text((innen[0], ry0 - 14), f"RSI 14 · {letzter:.0f}" + (f" · {zust}" if zust else ""), font=fk,
                    fill=t.minus if letzter < 30 else t.plus if letzter > 70 else t.text)
+    mi = info.get("macd") if art == "linien" else None
+    if mi:   # 27.11.2026: MACD (12/26/9) im eigenen Feld: Histogramm, MACD- und Signal-Linie
+        ph = int(190 * sk)
+        my1 = y1 - 70
+        my0 = my1 - ph + 40
+        d.line([(innen[0], my0 - 18), (innen[2], my0 - 18)], fill=t.linie, width=1)
+        hs = [v for v in mi["hist"][:sichtbar] if v is not None] + \
+             [v for v in mi["macd"][:sichtbar] if v is not None] + [v for v in mi["signal"][:sichtbar] if v is not None]
+        if hs:
+            amp = max(abs(v) for v in hs) or 1
+            MY = lambda v: (my0 + my1) / 2 - (my1 - my0) / 2 * v / amp
+            d.line([(innen[0], MY(0)), (innen[2], MY(0))], fill=t.neben, width=1)
+            for i, v in enumerate(mi["hist"][:sichtbar]):
+                if v is not None:
+                    d.rectangle([X(i) - bw * 0.35, min(MY(0), MY(v)), X(i) + bw * 0.35, max(MY(0), MY(v))],
+                                fill=t.plus if v >= 0 else t.minus)
+            for key, farbe in (("macd", t.akzent), ("signal", t.akzent2)):
+                pkt = [(X(i), MY(v)) for i, v in enumerate(mi[key][:sichtbar]) if v is not None]
+                if len(pkt) > 1:
+                    d.line(pkt, fill=farbe, width=max(2, int(3 * sk)))
+            mm = [v for v in mi["macd"][:sichtbar] if v is not None][-1]
+            ss = [v for v in mi["signal"][:sichtbar] if v is not None][-1]
+            d.text((innen[0], my0 - 14), "MACD 12/26/9 · " + ("bullish" if mm >= ss else "bearish"), font=fk,
+                   fill=t.plus if mm >= ss else t.minus)
     if art == "fib":   # „Why did it move?“: Linie, an der die Bewegung stoppte (rueckblickend, kein Ziel)
         ly = Y(info["preis"])
         for xx in range(int(innen[0]), int(innen[2]), 22):
