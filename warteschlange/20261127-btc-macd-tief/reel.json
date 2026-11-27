@@ -1,0 +1,35 @@
+{
+ "thema": "btc-macd-tief",
+ "frage": {
+  "name": "Bitcoin"
+ },
+ "schluss_frage": "where do you think the bottom is?",
+ "szenen": [
+  {
+   "bild": "szene_0.png",
+   "chart": {
+    "base": "BTC",
+    "intervall": "1w",
+    "anzahl": 210,
+    "titel": "BTC \u00b7 weekly \u00b7 200-week average",
+    "box": [
+     40,
+     470,
+     1040,
+     1560
+    ],
+    "wochen_ma": 200
+   },
+   "text": "One year ago the monthly MACD confirmed the Bitcoin bear market. Since then Bitcoin is {vom_hoch} from its high, now at {bis}.",
+   "text_ohne": "One year ago the monthly MACD confirmed the Bitcoin bear market. It is still trending down."
+  },
+  {
+   "bild": "szene_1.png",
+   "text": "The monthly MACD is still falling. It looks like it bottoms in the first half of 2027, and only crosses bullish in the second half."
+  },
+  {
+   "bild": "szene_2.png",
+   "text": "Our view: the bottom comes in the first quarter of 2027. Most likely between thirty-five and forty-five thousand dollars. We'll see."
+  }
+ ]
+}
